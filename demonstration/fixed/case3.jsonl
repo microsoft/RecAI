@@ -1,0 +1,6 @@
+{"request": "Hello? How is it today", "plan": "Don't use tool"}
+{"request": "GAME is an interesting game, I want to find some similar games with it.", "plan": "1. soft filter tool (GAME); 2. ranking tool (by similarity); 3. mapping tool"}
+{"request": "I played GAME1, GAME2, GAME3 in the past, please suggest games for me to play next.", "plan": "1. ranking tool (by perference); 2. mapping tool"}
+{"request": "My history is GAME1, GAME2, GAME3, please suggest games for me to play next.", "plan": "1. ranking tool (by perference); 2. mapping tool"}
+{"request": "Recently I want to play some TYPE games, do you have some suggestions?", "plan": "1. hard filter tool (TYPE); 2. mapping tool"}
+{"request": "Do you know any TYPE games? I want one like GAME.", "plan": "1. hard filter tool (TYPE); 2. soft filter tool (GAME); 3. ranking tool (by similarity); 4. mapping tool"}

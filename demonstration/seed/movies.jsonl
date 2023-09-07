@@ -1,0 +1,15 @@
+{"request": "Hello? Could you explain what is TYPE movie?", "plan": "Don't use tool"}
+{"request": "Please tell me what type the MOVIE is.", "plan": "1. LookUpTool"}
+{"request": "When was the MOVIE released?", "plan": "1. LookUpTool"}
+{"request": "I want to watch TYPE movies now, do you have any suggestions?", "plan": "1. HardFilterTool (TYPE); 2. RankingTool (by popularity); 3. MapTool"}
+{"request": "MOVIE is interesting, can you find some similar movies with it?", "plan": "1. SoftFilterTool (MOVIE); 2. RankingTool (by similarity); 3. MapTool"}
+{"request": "TYPE movies sounds interesting, please recommend one like MOVIE.", "plan": "1. HardFilterTool (TYPE); 2. SoftFilterTool (MOVIE); 2. RankingTool (by similarity); 3. MapTool"}
+{"request": "My history is MOVIE1, MOVIE2, MOVIE3, please suggest movies for me to play next.", "plan": "1. RankingTool (by perference); 2. MapTool"}
+{"request": "I have watched MOVIE1, MOVIE2, MOVIE3 in the past, please suggest movies for me to play next.", "plan": "1. RankingTool (by perference); 2. MapTool"}
+{"request": "I watched MOVIE1, MOVIE2, MOVIE3, MOVIE4 in the past, which one is the most suitable in above movies?", "plan": "1. BufferStoreTool (store above movies);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "I watched MOVIE1, MOVIE2, MOVIE3, MOVIE4, now I want to watch some new movies.", "plan": "1. HardFilterTool (release_date);  2.RankingTool (by popularity); 3. MapTool"}
+{"request": "Which of the above movies is more similar to MOVIE?", "plan": "1.BufferStoreTool (store above movies); 2. SoftFilterTool (calculate similarity score); 3. RankingTool (by similarity); 4. MapTool"}
+{"request": "Some of my favorite movies include MOVIE1, MOVIE2. I'm looking for TYPE1 movies with TYPE2", "plan": "1.HardFilterTool (TYPE1, TYPE2); 2.RankingTool (by perference); 3.MapTool"}
+{"request": "Is there any TYPE1 or TYPE2 movies?", "plan": "1. HardFilterTool (TYPE1 or TYPE2); 2. RankingTool (by popularity); 3.MapTool"}
+{"request": "In above moveis, which is the latest?", "plan": "1.LookUpTool (release date of above movies)"}
+{"request": "Can you recommend me some games based on my previous history?", "plan": "Don't use tool if there is no history."}

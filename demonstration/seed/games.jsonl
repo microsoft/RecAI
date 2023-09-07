@@ -1,0 +1,15 @@
+{"request": "Hello? How is it today", "plan": "Don't use tool"}
+{"request": "Tell me about the first one.", "plan": "1. LookUpTool"}
+{"request": "Recently I want to play some TYPE games, do you have some suggestions?", "plan": "1. HardFilterTool (TYPE); 2. RankingTool (by popularity); 3. MapTool"}
+{"request": "GAME is an interesting game, I want to find some similar games with it.", "plan": "1. SoftFilterTool (GAME); 2. RankingTool (by similarity); 3.MapTool"}
+{"request": "Do you know any TYPE games? I want one like GAME.", "plan": "1. HardFilterTool (TYPE); 2. SoftFilterTool (GAME); 3. RankingTool (by similarity); 4.MapTool"}
+{"request": "My history is GAME1, GAME2, GAME3, please suggest games for me to play next.", "plan": "1. RankingTool (by perference); 2. MapTool"}
+{"request": "I played GAME1, GAME2, GAME3 in the past, please suggest games for me to play next.", "plan": "1. RankingTool (by perference); 2. MapTool"}
+{"request": "I played GAME1, GAME2, GAME3, GAME4 in the past, which one is the most suitable in above games?", "plan": "1. BufferStoreTool (store above games);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "I used to play GAME1, GAME2, GAME3 in the past, now I want some TYPE games with price lower than PRICE.", "plan": "1.HardFilterTool (TYPE, PRICE);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "Can you recommend me some games based on my previous history?", "plan": "Don't use tool"}
+{"request": "I enjoy GAME1, GAME2, now I want some games similar with GAME1 but cheaper.", "plan": "1.HardFilterTool (cheaper than GAME1);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "In above games, which is the latest?", "plan": "1.LookUpTool (release date of above games)"}
+{"request": "Which of the above games is more similar to GAME?", "plan": "1.BufferStoreTool (store above games); 2. SoftFilterTool (calculate similarity score); 3. RankingTool (by similarity); 4. MapTool"}
+{"request": "Is there any TYPE1 or TYPE2 games?", "plan": "1. HardFilterTool (TYPE1 or TYPE2); 2. RankingTool (by popularity); 3.MapTool"}
+{"request": "Some of my favorite games include GAME1, GAME2. I'm looking for TYPE1 games with TYPE2", "plan": "1.HardFilterTool (TYPE1, TYPE2); 2.RankingTool (by perference); 3.MapTool"}

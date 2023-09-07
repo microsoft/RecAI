@@ -1,0 +1,17 @@
+pandasql==0.7.3
+langchain==0.0.275
+gradio==3.40.1
+loguru==0.7.0
+faiss-cpu==1.7.4
+rapidfuzz==3.2.0
+chromadb==0.4.7
+openai==0.27.9
+sentence_transformers==2.2.2
+tiktoken==0.4.0
+guidance==0.0.64
+SQLAlchemy==1.4.46
+--extra-index-url https://download.pytorch.org/whl/cu113
+torch==1.12.1+cu113
+torchvision==0.13.1
+torchaudio==0.12.1
+unirec==0.0.1a2

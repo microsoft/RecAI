@@ -1,0 +1,15 @@
+{"request": "Hello? How is it today", "plan": "Don't use tool"}
+{"request": "Tell me about the first product.", "plan": "1. LookUpTool"}
+{"request": "Recently I want to buy some TYPE products, do you have some suggestions?", "plan": "1. HardFilterTool (TYPE); 2. RankingTool (by popularity); 3. MapTool"}
+{"request": "PRODUCT1 is suitable for me, I want to find some similar products with it.", "plan": "1. SoftFilterTool (PRODUCT1); 2. RankingTool (by similarity); 3.MapTool"}
+{"request": "Do you know any TYPE products? I want one like PRODUCT1.", "plan": "1. HardFilterTool (TYPE); 2. SoftFilterTool (PRODUCT1); 3. RankingTool (by similarity); 4.MapTool"}
+{"request": "My history is PRODUCT1, PRODUCT2, PRODUCT3, please suggest products for me to buy next.", "plan": "1. RankingTool (by perference); 2. MapTool"}
+{"request": "I bought PRODUCT1, PRODUCT2, PRODUCT3 in the past, please suggest products for me to play next.", "plan": "1. RankingTool (by perference); 2. MapTool"}
+{"request": "I tried PRODUCT1, PRODUCT2, PRODUCT3, PRODUCT4 in the past, which one is the most suitable in above products?", "plan": "1. BufferStoreTool (store possible products mentioned in conversation before as candidates);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "I used to use PRODUCT1, PRODUCT2, PRODUCT3 in the past, now I want some TYPE product with price lower than PRICE.", "plan": "1.HardFilterTool (TYPE, PRICE);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "Can you recommend me some products based on my previous history?", "plan": "Don't use tool, ask for more information"}
+{"request": "I like PRODUCT1, PRODUCT2, now I want some products similar with PRODUCT1 but cheaper.", "plan": "1.HardFilterTool (cheaper than PRODUCT1);  2.RankingTool (by perference); 3. MapTool"}
+{"request": "In above products, which is the cheapest?", "plan": "1.LookUpTool (price of products mentioned before)"}
+{"request": "Which of the above products is more similar to PRODUCT?", "plan": "1.BufferStoreTool (store possible products mentioned in conversation before as candidates); 2. SoftFilterTool (calculate similarity score); 3. RankingTool (by similarity); 4. MapTool"}
+{"request": "Is there any TYPE1 or TYPE2 products?", "plan": "1. HardFilterTool (TYPE1 or TYPE2); 2. RankingTool (by popularity); 3.MapTool"}
+{"request": "Some of my favorite products include PRODUCT1, PRODUCT2. I'm looking for TYPE1 products with TYPE2", "plan": "1.HardFilterTool (TYPE1, TYPE2); 2.RankingTool (by perference); 3.MapTool"}
