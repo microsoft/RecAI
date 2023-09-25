@@ -1,4 +1,7 @@
-DIR="/home/v-huangxu/work/LLM4CRS"
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+DIR="/path/to/LLM4CRS"
 
 EVAL_DIR=$DIR"/eval"
 

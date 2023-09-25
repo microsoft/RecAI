@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # The script is used to filter out unreasonable demonstrations 
 # Here are some rules:
 # 1. tool using order: 'candidate store tool' > 'look up tool' > 'hard candidate filter tool' > 'soft condition filter tool' > 'ranking tool' > 'map tool'

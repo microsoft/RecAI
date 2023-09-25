@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 _ERR_PREFIX = 'LLM4CRS Error'
 
 def raise_error(err_cls, msg: str):

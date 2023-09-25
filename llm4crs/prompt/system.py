@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 SYSTEM_PROMPT = \
 """
 You are a conversational {item} recommendation assistant. Your task is to help human find {item}s they are interested in. \

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # two optional methods for generation
 #   1. one-step: generating user query and plans at the same time
 # √ 2. two-step: generating user query first, and then come up the plans. But the way is not friendly to multi-turn conversation
