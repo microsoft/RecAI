@@ -1,16 +1,5 @@
----
-title: ChatBot
-emoji: 🏃
-colorFrom: gray
-colorTo: gray
-sdk: gradio
-sdk_version: 3.29.0
-app_file: app.py
-pinned: false
----
-
 # Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations
-This is the Repo for InteRecAgent, a conversational recommendation agent, which applies Large Language Model(LLM) in Conversational Recommender System(CRS). 
+This is the Repo for InteRecAgent, a interactive recommender agent, which applies Large Language Model(LLM) to bridge the gap between traditional recommender systems and  conversational recommender system(CRS). 
 
 
 ## Table of Contents
@@ -32,7 +21,11 @@ This is the Repo for InteRecAgent, a conversational recommendation agent, which 
   <b>Figure 1</b>: InteRecAgent Framework
 </p>
 
-
+InteRecAgent (**Inte**ractive **Rec**ommender **Agent**) is a framework to utilize pre-trained domain-specific recommendation tools (such as SQL tools, id-based recommendation models) and large language models (LLM) to implement an interactive, conversational recommendation agent. In this framework, the LLM primarily engages in user interaction and parses user interests as input for the recommendation tools, which are responsible for finding suitable items.   
+  
+Within the InteRecAgent framework, recommendation tools are divided into three main categories: query, retrieval, and ranking. You need to provide the API for the LLM and the pre-configured domain-specific recommendation tools to build an interactive recommendation agent using the InteRecAgent framework. Neither the LLM nor the recommendation tools will be updated or modified within InteRecAgent.
+  
+This repository mainly implements the right-hand side of the figure, i.e., the communication between the LLM and the recommendation tools. For more details, please refer to our paper [*Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations*](https://arxiv.org/abs/2308.16505).
 
 InteRecAgent consists of 4 necessary components:
 
