@@ -1,5 +1,5 @@
 pandasql==0.7.3
-langchain==0.0.275
+langchain==0.0.308
 gradio==3.40.1
 loguru==0.7.0
 faiss-cpu==1.7.4
