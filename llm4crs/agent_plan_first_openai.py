@@ -446,16 +446,21 @@ class CRSAgentPlanFirstOpenAI:
                     "role": "system",
                     "content": "You are a conversational recommender assistant. "
                     "You are good at give comprehensive response to recommend some items to human. "
-                    f"Items are retrieved by some useful tools: {OVERALL_TOOL_DESC.format( **self._domain_map)} \n"
+                    f"Items are retrieved by some useful tools: \n"
+                    "------\n"
+                    f"{OVERALL_TOOL_DESC.format( **self._domain_map)} \n"
+                    "------\n"
                     "You need to give some explainations for the recommendation according to the chat history with human.",
                 },
                 {
                     "role": "user",
-                    "content": f"Previous Chat History: \n{prompt_map['history']}.\n\n"
+                    "content": f"Previous Chat History: \n{prompt_map['history']}\n\n"
                     f"Human's Input:\n {prompt_map['input']}.\n\n"
                     f"Tool Execution Track:\n {self.candidate_buffer.track_info}.\n\n"
                     f"Execution Result: \n {tool_result}.\n\n"
                     "Please use those information to generate flexible and comprehensive response to human. Never tell the tool names to human.\n"
+                    "Do remember if items in Execution Result do not meet human's requirement given in Human's Input "
+                    "(such as brand not match, title not match and so on), apologize that you cannot found suitable items and suggest user to try the items in result.\n"
                     + (
                         "Do not give details about items and make the response concise."
                         if self.reply_style == "concise"
@@ -472,6 +477,8 @@ class CRSAgentPlanFirstOpenAI:
                 f"Tool Execution Track:\n {self.candidate_buffer.track_info}.\n\n"
                 f"Execution Result: \n {tool_result}.\n\n"
                 "Please use those information to generate flexible and comprehensive response to human. Never tell the tool names to human.\n"
+                "Do remember if items in Execution Result do not meet human's requirement given in Human's Input "
+                "(such as brand not match, title not match and so on), apologize that you cannot found suitable items and suggest user to try the items in result.\n"
                 + (
                     "Do not give details about items and make the response concise."
                     if self.reply_style == "concise"

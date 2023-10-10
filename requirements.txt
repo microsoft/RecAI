@@ -11,7 +11,5 @@ tiktoken==0.4.0
 guidance==0.0.64
 SQLAlchemy==1.4.46
 --extra-index-url https://download.pytorch.org/whl/cu113
-torch==1.13.1
-torchvision==0.13.1
-torchaudio==0.12.1
+torch==1.12.1
 unirec==0.0.1a2
