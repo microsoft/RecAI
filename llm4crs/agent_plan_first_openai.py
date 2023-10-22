@@ -301,7 +301,6 @@ class CRSAgentPlanFirstOpenAI:
         tools_desc = "\n".join([f"{tool.name}: {tool.desc}" for tool in self._tools])
         tool_names = "[" + ", ".join([f"{tool.name}" for tool in self._tools]) + "]"
         template = SYSTEM_PROMPT_PLAN_FIRST.format(
-            table_info=self.item_corups.info(),
             tools_desc=tools_desc,
             tool_exe_name=self.toolbox.name,
             tool_names=tool_names,
@@ -347,6 +346,7 @@ class CRSAgentPlanFirstOpenAI:
             "history": "",  # chat history
             "input": inputs["input"],
             "reflection": "" if not reflection else reflection,
+            "table_info": self.item_corups.info(query=inputs['input'])
         }
 
         self.toolbox.failed_times = 0

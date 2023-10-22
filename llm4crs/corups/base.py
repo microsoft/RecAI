@@ -40,6 +40,10 @@ class BaseGallery:
         self.fpath = fpath
         self.name = name    # name of the table
         self.corups = self._read_file(fpath, columns, sep, parquet_engine)
+        # tags to be displayed to LLM: topk query-related tags +  random selected tags
+        self.disp_cate_topk: int = 6
+        self.disp_cate_total: int = 10
+        self._fuzzy_bert_base = "BAAI/bge-base-en-v1.5"
         self._required_columns_validate()
         self.column_meaning = self._load_col_desc_file(column_meaning_file)
 
@@ -53,8 +57,8 @@ class BaseGallery:
                 self.corups[col] = self.corups[col].apply(lambda x: ', '.join(x))
 
         self.fuzzy_engine: Dict[str:SentBERTEngine] = {
-            col : SentBERTEngine(self.corups[col].to_numpy(), self.corups['id'].to_numpy(), case_sensitive=False) if col not in categorical_cols
-            else SentBERTEngine(self.categorical_col_values[col], np.arange(len(self.categorical_col_values[col])), case_sensitive=False) 
+            col : SentBERTEngine(self.corups[col].to_numpy(), self.corups['id'].to_numpy(), case_sensitive=False, model_name=self._fuzzy_bert_base) if col not in categorical_cols
+            else SentBERTEngine(self.categorical_col_values[col], np.arange(len(self.categorical_col_values[col])), case_sensitive=False, model_name=self._fuzzy_bert_base) 
             for col in fuzzy_cols
         }
         # title as index
@@ -92,7 +96,7 @@ class BaseGallery:
         return len(self.corups)
         
 
-    def info(self, remove_game_titles: bool=False):
+    def info(self, remove_game_titles: bool=False, query: str=None):
         prefix = 'Table information:'
         table_name = f"Table Name: {self.name}"
         cols_info = "Column Names, Data Types and Column meaning:"
@@ -103,7 +107,8 @@ class BaseGallery:
             dtype = _pd_type_to_sql_type(self.corups[col])
             cols_info += f"\n    - {col}({dtype}): {self.column_meaning[col]}"
             if col == 'tags':
-                _prefix = f" Such as [{', '.join(random.sample(self.categorical_col_values[col].tolist(), k=10))}]."
+                disp_values = self.sample_categoricol_values(col, total_n=self.disp_cate_total, query=query, topk=self.disp_cate_topk)
+                _prefix = f" Related values: [{', '.join(disp_values)}]."
                 cols_info += _prefix
             
             if dtype in {'float', 'datetime', 'integer'}:
@@ -121,6 +126,24 @@ class BaseGallery:
             res += f"\n{i}. {s}"
         res = prefix + res
         return res
+
+    def sample_categoricol_values(self, col_name: str, total_n: int, query: str=None, topk: int=None) -> List:
+        # Select topk related tags according to query and sample (total_n-topk) tags
+        if query is None:
+            result = random.sample(self.categorical_col_values[col_name], k=total_n)
+        else:
+            if topk is None:
+                topk = total_n
+            assert total_n >= topk, f"`topk` must be smaller than `total_n`, while got {topk} > {total_n}."
+            topk_values = self.fuzzy_engine[col_name](query, return_doc=True, topk=topk)
+            topk_values = list(topk_values)
+            result = topk_values
+            if total_n > topk:
+                while (len(result) < total_n) and (len(result) < len(self.categorical_col_values[col_name])):
+                    random_values = random.choice(self.categorical_col_values[col_name])
+                    if random_values not in result:
+                        result.append(random_values)
+        return result
 
 
     def convert_id_2_info(self, id: Union[int, List[int], np.ndarray], col_names: Union[str, List[str]]=None) -> Union[Dict, List[Dict]]:
