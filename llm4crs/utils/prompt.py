@@ -21,6 +21,7 @@ class CRSChatPrompt(StringPromptTemplate):
     memory: str
     examples: str
     reflection: str
+    table_info: str
 
 
     def format(self, **kwargs: Any) -> str:
@@ -45,6 +46,7 @@ class CRSChatPrompt(StringPromptTemplate):
             kwargs["reflection"] = self.reflection
         else:
             kwargs["reflection"] = ''
+        kwargs["table_info"] = self.table_info
         return self.template.format(**kwargs)
 
 

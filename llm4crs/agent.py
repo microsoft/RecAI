@@ -7,7 +7,7 @@ import time
 from typing import *
 
 import openai
-from langchain import OpenAI
+from langchain.llms import OpenAI
 from langchain.agents import (AgentExecutor, LLMSingleActionAgent, Tool)
 from langchain.callbacks import get_openai_callback
 from langchain.chains import LLMChain
@@ -128,6 +128,7 @@ class CRSAgent:
 
     def setup_prompts(self, tools: List[Tool]):
         prompt = CRSChatPrompt(
+            table_info=self.item_corups.info(),
             intermediate_steps="",
             template=SYSTEM_PROMPT.format(table_info=self.item_corups.info(), **self._tool_names, **self._domain_map),
             tools=tools,
@@ -156,6 +157,7 @@ class CRSAgent:
                 self.prompt.memory = self.memory.buffer
         if self.selector:
             self.prompt.examples = self.selector(input['input'])
+        self.prompt.table_info = self.item_corups.info(query=input['input'])
         
         try:
             response = self.agent_exe.run(input)

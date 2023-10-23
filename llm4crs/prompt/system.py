@@ -36,7 +36,7 @@ You should use those tools step by step. And not all tools are necessary in some
 
 All SQL commands are used to search in the {item} information table (a sqlite3 table). The information of the table is listed below: \
 
-{table_info}
+{{table_info}}
 
 First you need to think:
 
@@ -114,7 +114,7 @@ Here are the tools could be used:
 
 All SQL commands are used to search in the {item} information table (a sqlite3 table). The information of the table is listed below: \
 
-{table_info}
+{{table_info}}
 
 If human is looking up information of {item}s, such as the description of {item}s, number of {item}s, price of {item}s and so on, use the {LookUpTool}. \
 

@@ -53,6 +53,8 @@ OPENAI_API_KEY=$API_KEY \
 OPENAI_API_BASE=$API_BASE \
 OPENAI_API_VERSION=$API_VERSION \
 OPENAI_API_TYPE=$API_TYPE \
+TOKENIZERS_PARALLELISM=false \
+PYTHONPATH=$(pwd) \
 python ./app.py \
     --engine=$engine \
     --bot_type=$bot_type \

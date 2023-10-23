@@ -75,10 +75,11 @@ class CRSAgentPlanFirst(CRSAgent):
     def setup_prompts(self, tools: List[Tool]):
         tools_desc = "\n".join([f"{tool.name}: {tool.desc}" for tool in self._tools])
         tool_names = "[" + ", ".join([f"{tool.name}" for tool in self._tools]) + "]"
-        template = SYSTEM_PROMPT_PLAN_FIRST.format(table_info=self.item_corups.info(), tools_desc=tools_desc, 
+        template = SYSTEM_PROMPT_PLAN_FIRST.format(tools_desc=tools_desc, 
                                                    tool_exe_name=self.tools[0].name, tool_names=tool_names, 
                                                    **self._tool_names, **self._domain_map)
         prompt = CRSChatPrompt(
+            table_info=self.item_corups.info(),
             intermediate_steps="",
             template=template,
             tools=tools,
