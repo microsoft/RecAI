@@ -252,11 +252,11 @@ css = """
 """
 with gr.Blocks(css=css, elem_id="chatbot") as demo:
     with gr.Row(visible=True) as btn_raws:
-        with gr.Column(scale=0.5):
+        with gr.Column(scale=5):
             mode = gr.Radio(
                 ["diversity", "accuracy"], value="accuracy", label="Recommendation Mode"
             )
-        with gr.Column(scale=0.5):
+        with gr.Column(scale=5):
             style = gr.Radio(
                 ["concise", "detailed"], value=getattr(bot, 'reply_style', 'concise'), label="Reply Style"
             )
@@ -265,13 +265,13 @@ with gr.Blocks(css=css, elem_id="chatbot") as demo:
     )
     state = gr.State([])
     with gr.Row(visible=True) as input_raws:
-        with gr.Column(scale=0.6):
+        with gr.Column(scale=4):
             txt = gr.Textbox(
                 show_label=False, placeholder="Enter text and press enter", container=False
             )
-        with gr.Column(scale=0.15, min_width=0):
+        with gr.Column(scale=1, min_width=0):
             send = gr.Button(value="Send", elem_id="send", variant="primary")
-        with gr.Column(scale=0.15, min_width=0):
+        with gr.Column(scale=1, min_width=0):
             clear = gr.ClearButton(value="Clear")
 
     state.value = [default_chat_value]

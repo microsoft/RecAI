@@ -130,7 +130,7 @@ class BaseGallery:
     def sample_categoricol_values(self, col_name: str, total_n: int, query: str=None, topk: int=None) -> List:
         # Select topk related tags according to query and sample (total_n-topk) tags
         if query is None:
-            result = random.sample(self.categorical_col_values[col_name], k=total_n)
+            result = random.sample(self.categorical_col_values[col_name].tolist(), k=total_n)
         else:
             if topk is None:
                 topk = total_n
