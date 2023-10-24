@@ -106,6 +106,17 @@ InteRecAgent consists of 4 necessary components:
 
     We also provide a shell script `run.sh`, where commonly used arguments are given. You could directly set the API related information in `run.sh`, or create a new shell script `oai.sh` that would be loaded in `run.sh`. GPT-4 API is highly recommended for the InteRecAgent since it has remarkable instruction-following capability.
 
+    Here is an example of the `oai.sh` script:
+
+    ```bash
+    API_KEY="xxxxxx" # your api key
+    API_BASE="https://xxxx.azure.com/" # [https://xxxx.azure.com, https://api.openai.com/v1]
+    API_VERSION="2023-03-15-preview"
+    API_TYPE="azure" # ['open_ai', 'azure']
+    engine="gpt4"   # model name for OpenAI or deployment name for Azure OpenAI. GPT-4 is recommended.
+    bot_type="chat" # model type, ["chat", "completetion"]. For gpt-3.5-turbo and gpt-4, it should be "chat". For text-davinci-003, it should be "completetion" 
+    ```
+
 
 4. Features    
 
@@ -183,6 +194,7 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 
 Thanks to the open source codes of the following projects:
 
+[UniRec](https://github.com/microsoft/UniRec) &#8194;
 [VisualChatGPT](https://github.com/microsoft/TaskMatrix/blob/main/visual_chatgpt.py) &#8194;
 [JARVIS](https://github.com/microsoft/JARVIS) &#8194;
 [LangChain](https://github.com/langchain-ai/langchain) &#8194;

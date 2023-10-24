@@ -12,4 +12,4 @@ guidance==0.0.64
 SQLAlchemy==1.4.46
 --extra-index-url https://download.pytorch.org/whl/cu113
 torch>=1.12.1,<=1.13.1
-unirec==0.0.1a2
+unirec>=0.0.1a4
