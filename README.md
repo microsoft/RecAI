@@ -200,3 +200,6 @@ Thanks to the open source codes of the following projects:
 [LangChain](https://github.com/langchain-ai/langchain) &#8194;
 [guidance](https://github.com/microsoft/guidance) &#8194;
 
+## Responsible AI FAQ
+
+Please refer to [RecAI: Responsible AI FAQ](./RAI_FAQ.md) for document on the purposes, capabilities, and limitations of the RecAI systems. 
