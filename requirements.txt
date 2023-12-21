@@ -1,6 +1,6 @@
 pandasql==0.7.3
 langchain==0.0.312
-gradio==3.40.1
+gradio==4.11.0
 loguru==0.7.0
 faiss-cpu==1.7.4
 rapidfuzz==3.2.0
