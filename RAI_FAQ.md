@@ -54,3 +54,7 @@ Below is a detailed list of choices that end users can customize:
 6.	Item similarity tool: The tools aims to retrieve items according to item similarity. Sometimes, user's intention is not clear enough to organized as SQL command, for example, "I want some games similar with Call of Duty", where the requirements is expressed implicitly through item similarity instead of explicit item features.
 
 7.	Ranking module: Refine the rank of item candidates according to schema (popularity, similarity, preference). User preference comprises prefer and unwanted. The module could be a traditional recommender model, which inputs user and item features and outputs relevant score.
+
+## What system prompt framework should be considered for reponsible AI?
+
+We have followed the instructions in https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/system-message to design the system prompts. For users who want to add or change prompts to fit specific scenarios, please also consider these instructions.
