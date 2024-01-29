@@ -16,7 +16,7 @@ bot_type="chat" # model type, ["chat", "completetion"]. For gpt-3.5-turbo and gp
 OAI_FILE="oai.sh"
 if [ -f "$OAI_FILE" ]; then
     # check if the file exists
-    source "$OAI_FILE"
+    source $OAI_FILE
     echo "File $OAI_FILE loaded."
 else
     echo "File $OAI_FILE does not exist."

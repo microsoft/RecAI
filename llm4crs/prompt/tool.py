@@ -18,7 +18,7 @@ CANDIDATE_STORE_TOOL_DESC = """
 The tool is useful to save candidate {item}s into buffer as the initial candidates, following tools would filter or ranking {item}s from those canidates. \
 For example, "Please select the most suitable {item} from those {item}s". \
 Don't use this tool when the user hasn't specified that they want to select from a specific set of {item}s. \
-The input of the tool should be a list of {item} names split by two ';', such as "{ITEM}1;; {ITEM}2;; {ITEM}3". 
+The input of the tool should be a string of {item} names split by two ';', such as "{ITEM}1;; {ITEM}2;; {ITEM}3". 
 """
 
 
@@ -43,7 +43,8 @@ The input of the tool should be a one-line SQL SELECT command converted from har
 3. always use pattern match logic for columns with string type;
 4. only one {item} information table is allowed to appear in SQL command;
 5. select all {item}s that meet the conditions, do not use the LIMIT keyword;
-6. try to use OR instead of AND.
+6. try to use OR instead of AND;
+7. use given related values for categorical columns instead of human's description.
 """
 
 

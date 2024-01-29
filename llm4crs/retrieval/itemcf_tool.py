@@ -5,6 +5,7 @@ import json
 import os
 import numpy as np
 from loguru import logger
+from ast import literal_eval
 
 from llm4crs.corups import BaseGallery
 from llm4crs.buffer import CandidateBuffer
@@ -25,7 +26,7 @@ class SimilarItemTool:
     def run(self, inputs):
         logger.debug(f"\n{self.name} input: {inputs}")
         try:
-            games = eval(inputs)
+            games = literal_eval(inputs)
         except Exception as e:
             logger.debug(e)
             games = []

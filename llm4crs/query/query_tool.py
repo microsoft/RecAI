@@ -9,6 +9,7 @@ from copy import deepcopy
 
 from llm4crs.utils import num_tokens_from_string, cut_list
 from llm4crs.corups import BaseGallery
+from llm4crs.utils.sql import extract_columns_from_where
 
 
 
@@ -110,6 +111,20 @@ class QueryTool:
 
     def rewrite_sql(self, sql: str) -> str:
         """Rewrite SQL command using fuzzy search"""
+        sql = re.sub(r'\bFROM\s+(\w+)\s+WHERE', f'FROM {self.item_corups.name} WHERE', sql, flags=re.IGNORECASE)
+        
+        # groudning cols
+        cols = extract_columns_from_where(sql)
+        existing_cols = set(self.item_corups.column_meaning.keys())
+        col_replace_dict = {}
+        for col in cols:
+            if col not in existing_cols:
+                mapped_col = self.item_corups.fuzzy_match(col, 'sql_cols')
+                col_replace_dict[col] = f"{mapped_col}"
+        for k, v in col_replace_dict.items():
+            sql = sql.replace(k, v)
+
+        # grounding categorical values
         pattern = r"([a-zA-Z0-9_]+) (?:NOT )?LIKE '\%([^\%]+)\%'" 
         res = re.findall(pattern, sql)
         replace_dict = {}
