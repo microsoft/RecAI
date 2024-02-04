@@ -14,7 +14,7 @@ from loguru import logger
 
 from llm4crs.critic import Critic
 from llm4crs.demo.base import DemoSelector
-from llm4crs.prompt import SYSTEM_PROMPT_PLAN_FIRST, TOOLBOX_DESC, OVERALL_TOOL_DESC, SYSTEM_PROMPT_FOR_TOOLLLAMA
+from llm4crs.prompt import SYSTEM_PROMPT_PLAN_FIRST, TOOLBOX_DESC, OVERALL_TOOL_DESC
 from llm4crs.utils import OpenAICall, num_tokens_from_string, format_prompt
 from llm4crs.utils.open_ai import get_openai_tokens
 from llm4crs.memory.memory import UserProfileMemory
@@ -260,7 +260,6 @@ class CRSAgentPlanFirstOpenAI:
         user_profile_update: int = -1,
         planning_recording_file: str = None,
         enable_summarize: int = 1,
-        tool_llama_mode: int = 0,
         **kwargs,
     ):
         self.domain = domain
@@ -326,7 +325,6 @@ class CRSAgentPlanFirstOpenAI:
         self._plan_record_cache = {"traj": [], "conv": [], "reward": 0}
 
         self.enable_summarize = enable_summarize
-        self.tool_llama_mode = tool_llama_mode
 
     def _check_file(self, fpath: str):
         if fpath:
@@ -345,8 +343,6 @@ class CRSAgentPlanFirstOpenAI:
         )
         self.prompt = self.setup_prompts(self._tools)
         stopwords = ["Obsersation", "observation", "Observation:", "observation:"]
-        if self.tool_llama_mode:
-            stopwords.append("<END>")
         self.agent = OpenAICall(
             model=self.engine,
             api_key=os.environ["OPENAI_API_KEY"],
@@ -362,10 +358,6 @@ class CRSAgentPlanFirstOpenAI:
             self.user_profile = UserProfileMemory(llm_engine=self.agent)
 
     def setup_prompts(self, tools: List[Tool]):
-        if self.tool_llama_mode:
-            map_dict = {'item': self.domain, 'tool_exe_name': self.toolbox.name}
-            template = format_prompt(map_dict, SYSTEM_PROMPT_FOR_TOOLLLAMA)
-            return template
         tools_desc = "\n".join([f"{tool.name}: {tool.desc}" for tool in self._tools])
         tool_names = "[" + ", ".join([f"{tool.name}" for tool in self._tools]) + "]"
         template = SYSTEM_PROMPT_PLAN_FIRST.format(
@@ -488,11 +480,7 @@ class CRSAgentPlanFirstOpenAI:
         return response
 
     def plan_and_exe(self, prompt: str, prompt_map: Dict) -> str:
-        if self.tool_llama_mode:
-            map_dict = {"table_info": prompt_map['table_info'], 'history': prompt_map['history'], 'input': prompt_map['input']}
-            prompt = format_prompt(map_dict, prompt)
-        else:
-            prompt = prompt.format(**prompt_map)
+        prompt = prompt.format(**prompt_map)
         llm_output = self.agent.call(user_prompt=prompt)
         finish, info = self._parse_llm_output(llm_output)
 

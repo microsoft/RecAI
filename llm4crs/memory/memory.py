@@ -24,12 +24,13 @@ User: I don't like those items, give me more options.
 {"history": ["ITEM-89", "ITEM-11", "ITEM-78", "ITEM-67"], "like": [], "unwanted": ["ITEM-10", "ITEM-88", "ITEM-70"]}
 
 """
-# profile的删除操作 【unwanted建模】
-# long-term short-term memory fusion 问题
-# tool learning: finetuning
-# tool，参数 两步（待考虑）
 
 class UserProfileMemory:
+    """
+    The memory is used to store long-term user profile. It can be updated by the conversation and used as the input for recommendation tool.
+
+    The memory consists of three parts: history, like and unwanted. Each part is a set. The history is a set of items that the user has interacted with. The like is a set of items that the user likes. The unwanted is a set of items that the user dislikes.
+    """
     def __init__(self, llm_engine=None, **kwargs) -> None:
         if llm_engine:
             self.llm_engine = llm_engine

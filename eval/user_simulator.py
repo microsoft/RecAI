@@ -173,6 +173,10 @@ class OpenAIBot:
 
 
 class ChatRec:
+    """ ChatRec method, referred in the paper "Chat-rec: Towards interactive and explainable llms-augmented recommender system". Paper link: https://arxiv.org/abs/2303.14524
+
+    The main idea of ChatRec is to combine a text-embedding model with ChatGPT. 
+    """
     def __init__(
         self,
         domain: str,
@@ -507,8 +511,7 @@ def main():
     parser.add_argument('--plan_first', type=int, choices=[0,1], default=0, help="Whether to use plan first agent")
 
     parser.add_argument("--langchain", type=int, choices=[0, 1], default=0, help="Whether to use langchain in plan-first agent")
-    parser.add_argument("--tool_llama_mode", type=int, choices=[0, 1], default=0, help="Whether to use ToolLlama-friendly prompt in recagent")
-
+    
     parser.add_argument("--plan_record_file", type=str, help="The file path to save records of plans")
     
     args, _ = parser.parse_known_args()
@@ -605,7 +608,6 @@ def main():
                     critic=critic, reflection_limits=args.reflection_limits, reply_style='concise',   # reflexion
                     planning_recording_file=args.plan_record_file,   # save plan, default None
                     enable_summarize=0,
-                    tool_llama_mode=args.tool_llama_mode,
                 )   
         
         bot.init_agent()

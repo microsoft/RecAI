@@ -4,6 +4,21 @@
 import sqlparse
 
 def extract_columns_from_where(sql_query):
+    """
+    Extract column names from the WHERE clause of a SQL query.
+
+    Args:
+        sql_query (str): The SQL query to extract columns from.
+
+    Returns:
+        list: A list of column names extracted from the WHERE clause of the SQL query.
+
+    Examples:
+        >>> extract_columns_from_where("SELECT * FROM table1 WHERE game_tag = 'value1' AND game_desc = 'value2'")
+        ['game_tag', 'game_desc']
+        >>> extract_columns_from_where("SELECT * FROM table1 WHERE column1 = 'value1' OR column2 = 'value2'")
+        ['column1', 'column2']
+    """
     # Parse the SQL statement using sqlparse
     parsed = sqlparse.parse(sql_query)
 
