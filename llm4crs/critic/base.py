@@ -86,13 +86,10 @@ class Critic:
             answer=answer,
             **TOOL_NAMES,
         )
-        if self.bot_type == "chat":
-            prompt = [
-                {"role": "system", "content": sys_msg},
-                {"role": "user", "content": usr_msg},
-            ]
-        else:
-            prompt = f"{sys_msg}\n{usr_msg}"
 
-        reply = self.bot.call(prompt, max_tokens=128)
+        reply = self.bot.call(
+            sys_prompt=sys_msg,
+            user_prompt=usr_msg,
+            max_tokens=128
+        )
         return reply

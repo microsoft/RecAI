@@ -65,7 +65,13 @@ class OpenAICall:
                 f"Only chat_completion and completion types are supported, while got {model_type}"
             )
 
-    def call(self, prompt: Union[List, str], max_tokens: int = 512, temperature: float = None) -> str:
+    def call(
+            self,
+            user_prompt: str,
+            sys_prompt: str="You are a helpful assistent.",
+            max_tokens: int = 512, 
+            temperature: float = None
+            ) -> str:
         self._set()
         errors = [
             openai.error.Timeout,
@@ -76,21 +82,35 @@ class OpenAICall:
         ]
         temperature = temperature if (temperature is not None) else self.temperature
         retry = False
-        sleep_time = 4
+        success = False
+        sleep_time = 2
         for _ in range(self.retry_limits):
             try:
                 if self.model_type.startswith("chat"):
+                    prompt = [
+                        {
+                            "role": "system",
+                            "content": sys_prompt
+                        },
+                        {
+                            "role": "user",
+                            "content": user_prompt
+                        }
+                    ]
                     result = self._chat_completion(prompt, max_tokens, temperature)
                 else:
+                    prompt = f"{sys_prompt} {user_prompt}"
                     result = self._completion(prompt, max_tokens, temperature)
-                break
+                if result[0]:   # content is not None
+                    success = True
+                    break
             except Exception as e:
                 for err in errors:
                     if isinstance(e, err):
                         retry = True
                         break
                 if retry:
-                    result = "Something went wrong in API connection, please retry.", {}
+                    result = "Something went wrong, please retry.", {}
                     time.sleep(sleep_time)
                     sleep_time = min(1.5 * sleep_time, 10)
                 else:
@@ -105,7 +125,11 @@ class OpenAICall:
         }
         _total_usuage["OAI"] = _prev_usuage.get("OAI", 0) + 1
         TOKEN_USAGE_VAR.set(_total_usuage)
-        return result[0]
+        if not success:
+            reply = "Something went wrong, please retry."
+        else:
+            reply = result[0]
+        return reply
 
     def _set(self):
         for attr in ["api_key", "api_type", "api_version", "api_base"]:
@@ -132,7 +156,9 @@ class OpenAICall:
         if "choices" in resp:
             message = resp["choices"][0].get("message", None)
             if message:
-                content: str = message.get("content", None).strip()
+                content: str = message.get("content", None)
+                if content:
+                    content = content.strip()
             else:
                 content = None
         else:
@@ -156,7 +182,9 @@ class OpenAICall:
             kwargs["stop"] = self.stop_words
         resp = openai.Completion.create(**kwargs)
         if "choices" in resp:
-            content: str = resp["choices"][0].get("text", None).strip()
+            content: str = resp["choices"][0].get("text", None)
+            if content:
+                content = content.strip()
         else:
             content = None
 
@@ -181,6 +209,7 @@ if __name__ == "__main__":
         api_base=azure_api_base,
         api_version=azure_api_version,
         model_type="chat_completion",
+        stop_words=["\n"]
     )
 
     # personal OpenAI key
@@ -198,10 +227,7 @@ if __name__ == "__main__":
         model_type="chat_completion",
     )
 
-    prompt_msgs = [
-        {"role": "system", "content": "You are a helpful assistent."},
-        {"role": "user", "content": "Which city is the capital of the US?"},
-    ]
+    prompt_msgs = "Which city is the capital of the US?"
 
     print("Azure OpenAI: ", llm0.call(prompt_msgs))
     print("OpenAI: ", llm1.call(prompt_msgs))

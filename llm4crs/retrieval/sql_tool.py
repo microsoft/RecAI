@@ -8,6 +8,7 @@ from loguru import logger
 
 from llm4crs.corups import BaseGallery
 from llm4crs.buffer import CandidateBuffer
+from llm4crs.utils.sql import extract_columns_from_where
 
 
 
@@ -37,22 +38,23 @@ class SQLSearchTool:
             inputs = self.rewrite_sql(inputs)
             logger.debug(f"Rewrite SQL: {inputs}")
             info += f"{self.name}: The input SQL is rewritten as {inputs} because some {list(self.item_corups.categorical_col_values.keys())} are not existing. \n"
-        except:
-            info += f"{self.name}: some thing went wrong in execution, the tool is broken for current input. \n"
+        except Exception as e:
+            logger.exception(e)
+            info += f"{self.name}: something went wrong in execution, the tool is broken for current input. The candidates are not modified.\n"
             return info
 
         try:
             candidates = self.item_corups(inputs, corups=corups)    # list of ids
             n = len(candidates)
-            _info = f"After {self.name}: There are {n} eligible games. "
+            _info = f"After {self.name}: There are {n} eligible items. "
             if self.max_candidates_num is not None:
                 if len(candidates) > self.max_candidates_num:
                     if "order" in inputs.lower():
                         candidates = candidates[: self.max_candidates_num]
-                        _info += f"Select the first {self.max_candidates_num} games from all eligible games ordered by the SQL. "
+                        _info += f"Select the first {self.max_candidates_num} items from all eligible items ordered by the SQL. "
                     else:
                         candidates = random.sample(candidates, k=self.max_candidates_num)
-                        _info += f"Random sample {self.max_candidates_num} games from all eligible games. "
+                        _info += f"Random sample {self.max_candidates_num} items from all eligible items. "
                 else:
                     pass
             else:
@@ -63,7 +65,7 @@ class SQLSearchTool:
         except Exception as e:
             logger.debug(e)
             candidates = []
-            info = f"{self.name}: some thing went wrong in execution, the tool is broken for current input."
+            info = f"{self.name}: something went wrong in execution, the tool is broken for current input. The candidates are not modified."
 
         self.buffer.track(self.name, inputs, info)
 
@@ -75,6 +77,20 @@ class SQLSearchTool:
 
     def rewrite_sql(self, sql: str) -> str:
         """Rewrite SQL command using fuzzy search"""
+        sql = re.sub(r'\bFROM\s+(\w+)\s+WHERE', f'FROM {self.item_corups.name} WHERE', sql, flags=re.IGNORECASE)
+        
+        # groudning cols
+        cols = extract_columns_from_where(sql)
+        existing_cols = set(self.item_corups.column_meaning.keys())
+        col_replace_dict = {}
+        for col in cols:
+            if col not in existing_cols:
+                mapped_col = self.item_corups.fuzzy_match(col, 'sql_cols')
+                col_replace_dict[col] = f"{mapped_col}"
+        for k, v in col_replace_dict.items():
+            sql = sql.replace(k, v)
+
+        # grounding categorical values
         pattern = r"([a-zA-Z0-9_]+) (?:NOT )?LIKE '\%([^\%]+)\%'" 
         res = re.findall(pattern, sql)
         replace_dict = {}
@@ -88,17 +104,3 @@ class SQLSearchTool:
         for k, v in replace_dict.items():
             sql = sql.replace(k, v)
         return sql
-
-
-if __name__ == '__main__':
-    item_info_fpath = "/home/v-huangxu/work/RecoGPT3/resources/games_llm.ftr"
-
-    from llm4crs.corups import BaseGallery
-
-    item_corups = BaseGallery(item_info_fpath, fuzzy_cols=['title', 'tags'])
-    tool = SQLSearchTool(item_corups)
-
-    sql = r"SELECT * FROM Item_Information WHERE tags LIKE '%shooting%' AND tags NOT LIKE '%first-person%'"
-    res = tool.run(sql)
-
-    logger.debug("End.")

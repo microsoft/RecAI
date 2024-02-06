@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
+import json
 import random
 import re
 import threading
@@ -146,6 +147,19 @@ def replace_substrings_regex(s: str, replace_dict: Dict):
 
     return pattern.sub(replacer, s)
 
+def read_jsonl(fpath: str) -> List[Dict]:
+    res = []
+    with open(fpath, 'r', encoding='utf-8') as f:
+        for line in f:
+            data = json.loads(line)
+            res.append(data)
+    return res
+
+def format_prompt(args_dict, prompt):
+    for k,v in args_dict.items():
+        prompt = prompt.replace(f"{{{k}}}", str(v))
+    return prompt
+
 
 __all__ = [
     "get_topk_index",
@@ -156,4 +170,6 @@ __all__ = [
     "FuncToolWrapper",
     "replace_substrings",
     "replace_substrings_regex",
+    "read_jsonl",
+    "format_prompt"
 ]

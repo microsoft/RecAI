@@ -10,6 +10,8 @@ import pandas as pd
 
 from pandasql import sqldf
 from pandas.api.types import is_integer_dtype, is_bool_dtype, is_float_dtype, is_datetime64_dtype, is_object_dtype, is_categorical_dtype
+from sentence_transformers import SentenceTransformer
+import torch
 
 from llm4crs.utils import raise_error, SentBERTEngine
 
@@ -34,16 +36,14 @@ def _pd_type_to_sql_type(col: pd.Series) -> str:
 
 
 class BaseGallery:
-
     def __init__(self, fpath: str, column_meaning_file: str, name: str='Item_Information', columns: List[str]=None, sep: str=',', parquet_engine: str='pyarrow', 
                  fuzzy_cols: List[str]=['title'], categorical_cols: List[str]=['tags']) -> None:
         self.fpath = fpath
         self.name = name    # name of the table
         self.corups = self._read_file(fpath, columns, sep, parquet_engine)
-        # tags to be displayed to LLM: topk query-related tags +  random selected tags
         self.disp_cate_topk: int = 6
         self.disp_cate_total: int = 10
-        self._fuzzy_bert_base = "BAAI/bge-base-en-v1.5"
+        self._fuzzy_bert_base = "thenlper/gte-base"
         self._required_columns_validate()
         self.column_meaning = self._load_col_desc_file(column_meaning_file)
 
@@ -56,11 +56,33 @@ class BaseGallery:
             else:
                 self.corups[col] = self.corups[col].apply(lambda x: ', '.join(x))
 
-        self.fuzzy_engine: Dict[str:SentBERTEngine] = {
-            col : SentBERTEngine(self.corups[col].to_numpy(), self.corups['id'].to_numpy(), case_sensitive=False, model_name=self._fuzzy_bert_base) if col not in categorical_cols
-            else SentBERTEngine(self.categorical_col_values[col], np.arange(len(self.categorical_col_values[col])), case_sensitive=False, model_name=self._fuzzy_bert_base) 
+        if torch.cuda.is_available():
+            device = 'cuda'
+        else:
+            device = 'cpu'
+        _fuzzy_bert_engine = SentenceTransformer(self._fuzzy_bert_base, device=device)
+        self.fuzzy_engine: Dict[str, SentBERTEngine] = {
+            col: SentBERTEngine(
+                self.corups[col].to_numpy(),
+                self.corups["id"].to_numpy(),
+                case_sensitive=False,
+                model=_fuzzy_bert_engine
+            )
+            if col not in categorical_cols
+            else SentBERTEngine(
+                self.categorical_col_values[col],
+                np.arange(len(self.categorical_col_values[col])),
+                case_sensitive=False,
+                model=_fuzzy_bert_engine
+            )
             for col in fuzzy_cols
         }
+        self.fuzzy_engine['sql_cols'] = SentBERTEngine(
+            np.array(columns), 
+            np.arange(len(columns)),
+            case_sensitive=False,
+            model=_fuzzy_bert_engine
+        )   # fuzzy engine for column names
         # title as index
         self.corups_title = self.corups.set_index('title', drop=True)
         # id as index
@@ -76,25 +98,18 @@ class BaseGallery:
         Returns:
             list: the result represents by id
         """
-        try:
-            if corups is None:
-                res = sqldf(sql, {self.name: self.corups})    # all games
-            else:
-                res = sqldf(sql, {self.name: corups})   # games in buffer
+        if corups is None:
+            result = sqldf(sql, {self.name: self.corups})    # all games
+        else:
+            result = sqldf(sql, {self.name: corups})   # games in buffer
 
-            if return_id_only:
-                res = res[self.corups.index.name].to_list()
-            else:
-                pass
-            return res
-        except Exception as e:
-            print(e)
-            return []
+        if return_id_only:
+            result = result[self.corups.index.name].to_list()
+        return result
 
 
     def __len__(self) -> int:
         return len(self.corups)
-        
 
     def info(self, remove_game_titles: bool=False, query: str=None):
         prefix = 'Table information:'
@@ -110,7 +125,7 @@ class BaseGallery:
                 disp_values = self.sample_categoricol_values(col, total_n=self.disp_cate_total, query=query, topk=self.disp_cate_topk)
                 _prefix = f" Related values: [{', '.join(disp_values)}]."
                 cols_info += _prefix
-            
+
             if dtype in {'float', 'datetime', 'integer'}:
                 _min = self.corups[col].min()
                 _max = self.corups[col].max()
@@ -120,9 +135,10 @@ class BaseGallery:
                 cols_info += _prefix
 
         primary_key = f"Primary Key: {self.corups.index.name}"
-        foreign_key = f"Foreign Key: None"
+        categorical_cols = list(self.categorical_col_values.keys())
+        note = f"Note that [{','.join(categorical_cols)}] columns are categorical, must use related values to search otherwise no result would be returned."
         res = ''
-        for i, s in enumerate([table_name, cols_info, primary_key, foreign_key]):
+        for i, s in enumerate([table_name, cols_info, primary_key, note]):
             res += f"\n{i}. {s}"
         res = prefix + res
         return res
@@ -130,7 +146,7 @@ class BaseGallery:
     def sample_categoricol_values(self, col_name: str, total_n: int, query: str=None, topk: int=None) -> List:
         # Select topk related tags according to query and sample (total_n-topk) tags
         if query is None:
-            result = random.sample(self.categorical_col_values[col_name].tolist(), k=total_n)
+            result = random.sample(self.categorical_col_values[col_name], k=total_n)
         else:
             if topk is None:
                 topk = total_n
@@ -146,11 +162,11 @@ class BaseGallery:
         return result
 
 
-    def convert_id_2_info(self, id: Union[int, List[int], np.ndarray], col_names: Union[str, List[str]]=None) -> Union[Dict, List[Dict]]:
-        """Given game id, get game informations.
+    def convert_id_2_info(self, item_id: Union[int, List[int], np.ndarray], col_names: Union[str, List[str]]=None) -> Union[Dict, List[Dict]]:
+        """Given game item_id, get game informations.
         
         Args:
-            - id: game ids. 
+            - item_id: game ids. 
             - col_names: column names to be returned
 
         Returns:
@@ -167,13 +183,13 @@ class BaseGallery:
             else:
                 raise_error(TypeError, "Not supported type for `col_names`.")
 
-        if isinstance(id, int):
-            items = self.corups.loc[id][col_names].to_dict()
-        elif isinstance(id, list) or isinstance(id, np.ndarray):
-            items = self.corups.loc[id][col_names].to_dict(orient='list')
+        if isinstance(item_id, int):
+            items = self.corups.loc[item_id][col_names].to_dict()
+        elif isinstance(item_id, list) or isinstance(item_id, np.ndarray):
+            items = self.corups.loc[item_id][col_names].to_dict(orient='list')
         else:
-            raise_error(TypeError, "Not supported type for `id`.")
-    
+            raise_error(TypeError, "Not supported type for `item_id`.")
+
         return items
 
 
@@ -204,7 +220,7 @@ class BaseGallery:
             items = self.corups_title.loc[titles][col_names].to_dict(orient='list')
         else:
             raise_error(TypeError, "Not supported type for `titles`.")
-    
+
         return items
 
 
@@ -225,15 +241,14 @@ class BaseGallery:
 
     def _load_col_desc_file(self, fpath: str) -> Dict:
         assert fpath.endswith('.json'), "Only support json file now."
-        with open(fpath, 'r') as f:
+        with open(fpath, 'r', encoding='utf-8') as f:
             return json.load(f)
 
-    
+
     def _required_columns_validate(self) -> None:
         for col in _REQUIRED_COLUMNS:
             if col not in self.corups.columns:
                 raise_error(ValueError, f"`id` and `name` are required in item corups table but {col} not found, please check the table file `{self.fpath}`.")
-            
 
     def fuzzy_match(self, value: Union[str, List[str]], col: str) -> Union[str, List[str]]:
         if col not in self.fuzzy_engine:
@@ -244,9 +259,8 @@ class BaseGallery:
             return res
 
 
-    
 if __name__ == '__main__':
-    from llm4crs.environ_variables import *
+    from llm4crs.environ_variables import GAME_INFO_FILE, TABLE_COL_DESC_FILE
     gallery = BaseGallery(GAME_INFO_FILE, column_meaning_file=TABLE_COL_DESC_FILE)
     print(gallery.info())
 
