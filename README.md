@@ -69,7 +69,7 @@ Evaluation is crucial for assessing the true capabilities of models and identify
 </div>
 
 ## License
-RecAI uses [MIT](./LICENSE) license. All data and code in this project can only be used for academic purposes.
+RecAI uses [MIT](./LICENSE) license. 
 
 
 ## Contributing

@@ -4,10 +4,6 @@ This is a project to evaluate how various LLMs perform on recommendation tasks, 
 
 # Usage
 
-## Clone this repo
-```bash
-git clone repo_url
-```
 ## Environment
 ```bash
 conda create -n receval python==3.8
