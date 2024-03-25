@@ -1,0 +1,13 @@
+.idea/
+data/dataset/steam/*
+data/dataset/sub_movie/*
+data/dataset/share_chat_gpt2.pickle
+
+teacher_model/dataset/steam/*
+teacher_model/dataset/sub_movie/*
+teacher_model/log/*
+teacher_model/saved/*
+
+unirec/data/*
+
+teacher_model

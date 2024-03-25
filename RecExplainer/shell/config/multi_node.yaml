@@ -1,0 +1,19 @@
+compute_environment: LOCAL_MACHINE
+deepspeed_config:
+  deepspeed_config_file: ./shell/config/deepspeed_config_templates/zero_stage2_config.json
+  deepspeed_multinode_launcher: standard
+  zero3_init_flag: false
+distributed_type: DEEPSPEED
+downcast_bf16: 'no'
+machine_rank: 0
+main_process_ip: 10.226.99.31
+main_process_port: 47201
+main_training_function: main
+num_machines: 3
+num_processes: 24
+rdzv_backend: c10d
+same_network: false
+tpu_env: []
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false

@@ -1,171 +1,76 @@
-# Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations
-This is the Repo for InteRecAgent, a interactive recommender agent, which applies Large Language Model(LLM) to bridge the gap between traditional recommender systems and  conversational recommender system(CRS). 
+<div align="center">
 
+<img src="./assets/logo.png" alt="Recommender System with AI"/>
 
-## Table of Contents
+</div>
 
-- [Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations](#recommender-ai-agent-integrating-large-language-models-for-interactive-recommendations)
-  - [Table of Contents](#table-of-contents)
-  - [InteRecAgent Framework](#interecagent-framework)
-  - [Usage](#usage)
-  - [License](#license)
-  - [Citation](#citation)
-  - [Contributing](#contributing)
-  - [Trademarks](#trademarks)
-  - [Acknowledge](#acknowledge)
+<div align="center">
 
-## InteRecAgent Framework
-<p align="center">
-  <img src="./assets/framework.png" alt="InteRecAgnet Framework" width="100%">
-  <br>
-  <b>Figure 1</b>: InteRecAgent Framework
-</p>
+# RecAI: Leveraging Large Language Models for Next-Generation Recommender Systems
 
-InteRecAgent (**Inte**ractive **Rec**ommender **Agent**) is a framework to utilize pre-trained domain-specific recommendation tools (such as SQL tools, id-based recommendation models) and large language models (LLM) to implement an interactive, conversational recommendation agent. In this framework, the LLM primarily engages in user interaction and parses user interests as input for the recommendation tools, which are responsible for finding suitable items.   
-  
-Within the InteRecAgent framework, recommendation tools are divided into three main categories: query, retrieval, and ranking. You need to provide the API for the LLM and the pre-configured domain-specific recommendation tools to build an interactive recommendation agent using the InteRecAgent framework. Neither the LLM nor the recommendation tools will be updated or modified within InteRecAgent.
-  
-This repository mainly implements the right-hand side of the figure, i.e., the communication between the LLM and the recommendation tools. For more details, please refer to our paper [*Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations*](https://arxiv.org/abs/2308.16505).
+</div>
 
-InteRecAgent consists of 4 necessary components:
+Large Language Models (LLMs) offer significant potential for the development of cutting-edge recommender systems, particularly in terms of enhancing interactivity, explainability, and controllability. These are aspects that have traditionally posed challenges. However, the direct application of a general-purpose LLM for recommendation purposes is not viable due to the absence of specific domain knowledge.
 
-1. LLM: A large language model, which serves as conversational agent.
- 
-2. Item profile table: A table containing item informations, whose columns consists of id, title, tag, description, price, release_date, visited_num, et al.
+The RecAI project aims to bridge this gap by investigating various strategies to integrate LLMs into recommender systems, a concept people usually term as LLM4Rec. Our goal is to reflect the real-world needs of LLM4Rec through holistic views and methodologies.
 
+We believe that by adopting a holistic perspective, we can incorporate the majority of practical requirements of LLM4Rec into one or more of the techniques explored in the RecAI project. These techniques include, but are not limited to, Recommender AI agents, the injection of knowledge through personalized prompting, fine-tuning language models as recommenders, evaluation, and LLMs as model explainers. The ultimate objective is to create a more sophisticated, interactive, and user-centric recommender system.
 
-3. Query module: A SQL module to query item information in the item profile table.
-    - Input: SQL command
-    - Output: information queried with SQL
+<div align="center" style="background-image:url(./assets/background/background.png);background-color:rgba(255, 255, 255, 0.8);background-blend-mode:overlay;background-position:right;background-repeat:no-repeat;background-size:100% 100%;">
 
+<table>  
+  <tr>  
+    <td> <img src="./assets/recagent.png" alt="Recommender AI agent" /> </td>  
+    <td> 
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/InteRecAgent/README.md" style="color: #0000FF; text-decoration: underline;">Recommender AI Agent</a> </strong> <br> LLMs provide natural interactions and respond smartly to human instructions but lack domain-specific expertise. In contrast, traditional recommender systems excel with in-domain data training yet are constrained to structured data and lack interactivity. InteRecAgent introduces an AI agent that combines the strengths of both: it employs an LLM as the brain and traditional recommender models as tools. Consequently, traditional models like matrix factorization can be transformed into conversational, interactive, and explainable recommender systems..
+     </td>  
+  </tr> 
 
-4. Retrieval module: The module aims to retrieve item candidates from the all item corups according to user's intention(requirements). Note that the module does not function in deal with user's personal profile, like user history, user age, et al. Instead, it focuses on what user wants, like "give me some sports games", "I want some popular games". The module should consist of at least two kinds of retrieval tools:
-    - SQL tool: The tools is used to deal with complex search condition, which is related to item information. For example, "I want some popular sports games". Then the tool would use SQL command to search in the item profile table.
-        - Input: SQL command
-        - Output: execution log
-    
-    - Item similarity tool: The tools aims to retrieve items according to item similarity. Sometimes, user's intention is not clear enough to organized as SQL command, for example, "I want some games similar with Call of Duty", where the requirements is expressed implicitly through item similarity instead of explicit item features. 
-        - Input: item name list as string. 
-        - Output: execution log
+  <tr>  
+    <td> <img src="./assets/knowledge-plugin.png" alt="Selective Knowledge Plugin" /> </td>  
+    <td> 
+     <strong style="font-size:3vw"> Selective Knowledge Plugin </strong> </br>
+     How can we enhance an LLM's domain-specific ability without finetuning the model? Then the prompt is the key. In this work, we introduce a method that augments LLMs with selective knowledge, so that large-scale, continuously evolving, and domain-specific data patterns can be injected by prompt. 
+     </td>  
+  </tr>   
 
+  <tr>  
+    <td> <img src="./assets/reclm-emb.png" alt="Embedding RecLM" /> </td>  
+    <td> 
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/RecLM-emb/README.md" style="color: #0000FF; text-decoration: underline;"> Embedding RecLM </a></strong> </br>
+     Dense retrieval is a crucial component in a range of scenarios, including recommender systems and retrieval-augmented generation (RAG). While generative language models such as GPTs are designed for sequential token generation, they are not optimized for retrieval-oriented embedding. This is where our project, RecLM-emb, comes into play. RecLM-emb aligns with text-embedding models like text-embedding-ada-002, but it is specifically optimized for item retrieval. The goal is to embed everything for item retrieval. Currently it only supports text modality, such as search query, item description, and user instructions.
+     </td>  
+  </tr> 
 
-5. Ranking module: Refine the rank of item candidates according to schema (popularity, similarity, preference). User prefernece comprises `prefer` and `unwanted`. The module could be a traditional recommender model, which inputs user and item features and outputs relevant score.
-    - Input: ranking schema, user's profile (prefer, unwanted)
-    - Output: execution log
+  <tr>  
+    <td> <img src="./assets/reclm-gen.png" alt="Generative RecLM " /> </td>  
+    <td> 
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/RecLM-gen/README.md" style="color: #0000FF; text-decoration: underline;"> Generative RecLM </a></strong> </br>
+  It's important to note that data patterns vary significantly across domains, meaning a general-purpose LLM may not deliver optimized performance within a specific domain. To adapt to specific domain data patterns, grounding to domain item catelogs, and enhance instruction-following capability, this project discusses the process of fine-tuning a generative Language Model for recommenders, referred to as RecLM-gen. Techniques include supervised finetuning (SFT) and reinforcement learning (RL). Potential applications of this approach include rankers, conversational recommenders, and user simulators.
+     </td>  
+  </tr> 
 
+  <tr>  
+    <td> <img src="./assets/recexplainer.png" alt="Recommendation model explainer" /> </td>  
+    <td> 
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/RecExplainer/README.md" style="color: #0000FF; text-decoration: underline;"> Model Explainer </a></strong> </br>
+     Deep learning-based recommender systems are widely used in various online services, thanks to their superiority in effectiveness and efficiency. However, these models often lack interpretability, making them less reliable and transparent for both users and developers. In this work, we propose a new model interpretation approach for recommender systems, call RecExplainer, by using LLMs as surrogate models and learn to mimic and comprehend target recommender models.
+     </td>  
+  </tr> 
 
-## Usage
-
-1. Environments
-
-    
-    First, install other packages listed in `requirements.txt`
-
-       ```bash
-       cd LLM4CRS
-       conda create -n llm4crs python==3.9
-       conda activate llm4crs
-       pip install -r requirements.txt
-       ```
-
-2. Copy resource
-
-   Copy all files in "InteRecAgent/{domain}" in [OneDrive](https://1drv.ms/f/s!Asn0lWVfky4FpF3saprFClmobx8g?e=lgeT0M) / [RecDrive](https://rec.ustc.edu.cn/share/baa4d930-48e1-11ee-b20c-3fee0ba82bbd) to  your local "./LLM4CRS/resources/{domain}".
-   If you cannot access those links, please contact <a href="mailto:jialia@microsoft.com">jialia@microsoft.com</a> or <a href="mailto:xuhuangcs@mail.ustc.edu.cn">xuhuangcs@mail.ustc.edu.cn</a>.
-
-3. Run
-
-    - Personal OpenAI API key:
-
-        ```bash
-        cd LLM4CRS
-        DOMAIN="game" OPENAI_API_KEY="xxxx" python app.py
-        ```
-
-    - Azure OpenAI API key:
-
-        ```bash
-        cd LLM4CRS
-        DOMAIN="game" OPENAI_API_KEY="xxx" OPENAI_API_BASE="xxx" OPENAI_API_VERSION="xxx" OPENAI_API_TYPE="xxx" python app.py
-        ```
-    
-    Note `DOMAIN` represents the item domain, supported `game`, `movie` and `beauty_product` now.
-
-    We support two types of OpenAI API: [Chat](https://platform.openai.com/docs/api-reference/chat) and [Completions](https://platform.openai.com/docs/api-reference/completions). Here are commands for running RecBot with GPT-3.5-turbo and text-davinci-003.
-
-    ```bash
-    cd LLMCRS
-
-    # Note that the engine should be your deployment id
-    # completion type: text-davinci-003
-    OPENAI_API_KEY="xxx" [OPENAI_API_BASE="xxx" OPENAI_API_VERSION="xxx" OPENAI_API_TYPE="xxx"] python app.py --engine text-davinci-003 --bot_type completion
-
-    # chat type: gpt-3.5-turbo, gpt-4 (Recommended)
-    OPENAI_API_KEY="xxx" [OPENAI_API_BASE="xxx" OPENAI_API_VERSION="xxx" OPENAI_API_TYPE="xxx"] python app.py --engine gpt-3.5-turbo/gpt-4 --bot_type chat
-    ```
-
-    We also provide a shell script `run.sh`, where commonly used arguments are given. You could directly set the API related information in `run.sh`, or create a new shell script `oai.sh` that would be loaded in `run.sh`. GPT-4 API is highly recommended for the InteRecAgent since it has remarkable instruction-following capability.
-
-    Here is an example of the `oai.sh` script:
-
-    ```bash
-    API_KEY="xxxxxx" # your api key
-    API_BASE="https://xxxx.azure.com/" # [https://xxxx.azure.com, https://api.openai.com/v1]
-    API_VERSION="2023-03-15-preview"
-    API_TYPE="azure" # ['open_ai', 'azure']
-    engine="gpt4"   # model name for OpenAI or deployment name for Azure OpenAI. GPT-4 is recommended.
-    bot_type="chat" # model type, ["chat", "completetion"]. For gpt-3.5-turbo and gpt-4, it should be "chat". For text-davinci-003, it should be "completetion" 
-    ```
-
-
-4. Features    
-
-    There are several optional features to enhance the agent.
-
-    1. History Shortening
-
-        - `enable_shorten`: if true, enable shortening chat history by LLM; else use all chat history
-
-    2. Demonstrations Selector
-        
-        - `demo_mode`: mode to choose demonstration. Optional values: [`zero`, `fixed`, `dynamic`]. If `zero`, no demonstration would be used (zero-shot). If `fixed`, the first `demo_nums` examples in `demo_dir_or_file` would be used. If `dynamic`, most `demo_nums` related examples would be selected for in-context learning. 
-        - `demo_dir_or_file`: the directory or file path of demostrations. If a directory path is given, all `.jsonl` file in the folder would be loaded. If `demo_mode` is `zero`, the argument is invalid. Default None.
-        - `demo_nums`: number of demonstrations used in prompt for in-context learning. The argument is invalid when `demo_dir` is not given. Default 3. 
-
-    3. Reflection
-
-        - `enable_reflection`: if true, enable reflection for better plan making
-        - `reflection_limits`: maximum times of reflection
-
-        Note that reflection happens after the plan is finished. That means the conversational agent would generate an answer first and then do reflection.
-
-    4. Plan First
-
-        - `plan_first`: if true, the agent would make tool using plan first. There would only a tool executor for LLM to call, where the plan is input. Default true.
-
-        Additionally, we have implemented a version without using the black-box API calling in langchain.
-        To enable it, use the following arguments.
-
-        - `langchain`: if true, use langchain in plan-first strategy. Otherwise, the API calls would be made by directly using openai. Default false.
-
+  <tr>  
+    <td> <img src="./assets/eval.png" alt="Recommendation Evaluator"/> </td>  
+    <td> 
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/RecLM-eval/README.md" style="color: #0000FF; text-decoration: underline;"> RecLM Evaluator </a></strong> </br>
+Evaluation is crucial for assessing the true capabilities of models and identifying areas of weakness for further improvement. In the era of using language models as recommenders, which function in a human-like manner, the evaluation method has significantly deviated from traditional styles. This project intends to offer a comprehensive service for the evaluation of LM-based recommender systems. Whether provided with a trained LM or an API (such as Azure OpenAI API), it assesses the model's performance from various perspectives, including retrieval, ranking, explanation capability, and general AI ability.
+     </td>  
+  </tr> 
+</table>  
+</div>
 
 ## License
-InteRecAgent uses [MIT](./LICENSE) license. All data and code in this project can only be used for academic purposes.
+RecAI uses [MIT](./LICENSE) license. All data and code in this project can only be used for academic purposes.
 
-
-## Citation
-Please cite the following paper as the reference if you use our code or data[![Paper](https://img.shields.io/badge/arxiv-PDF-red)](https://arxiv.org/abs/2308.16505).
-
-```
-@misc{huang2023recommender,
-      title={Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations}, 
-      author={Xu Huang and Jianxun Lian and Yuxuan Lei and Jing Yao and Defu Lian and Xing Xie},
-      year={2023},
-      eprint={2308.16505},
-      archivePrefix={arXiv},
-      primaryClass={cs.IR}
-}
-```
 
 ## Contributing
 
@@ -199,6 +104,7 @@ Thanks to the open source codes of the following projects:
 [JARVIS](https://github.com/microsoft/JARVIS) &#8194;
 [LangChain](https://github.com/langchain-ai/langchain) &#8194;
 [guidance](https://github.com/microsoft/guidance) &#8194;
+[FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding) &#8194;
 
 ## Responsible AI FAQ
 
