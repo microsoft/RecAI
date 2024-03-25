@@ -109,3 +109,17 @@ Thanks to the open source codes of the following projects:
 ## Responsible AI FAQ
 
 Please refer to [RecAI: Responsible AI FAQ](./RAI_FAQ.md) for document on the purposes, capabilities, and limitations of the RecAI systems. 
+
+
+
+## Citation
+If this project aids your research, please cite our following paper and any related paper in the respective subfolder.
+
+```
+@article{lian2024recai,
+  title={RecAI: Leveraging Large Language Models for Next-Generation Recommender Systems},
+  author={Lian, Jianxun and Lei, Yuxuan and Huang, Xu and Yao, Jing and Xu, Wei and Xie, Xing},
+  journal={arXiv preprint arXiv:2403.06465},
+  year={2024}
+}
+```
