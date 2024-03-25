@@ -1,0 +1,11 @@
+.vscode/
+__pycache__/
+*/__pycache__/
+*.py[cod]
+
+.ipynb_checkpoints/
+
+data/
+data_*/
+output/
+output_*/
