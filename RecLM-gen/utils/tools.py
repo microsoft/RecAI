@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from Levenshtein import distance
 from einops import rearrange
 from openai import OpenAI
+from openai.lib.azure import AzureOpenAI
 from torch.nn.utils.rnn import pad_sequence
 from collections import namedtuple
 
@@ -219,20 +220,30 @@ def get_complete_text(input_text: str, output_titles: str):
 
 
 class GPT:
-    def __init__(self, model_name='', port=8000) -> None:
+    def __init__(self, model_name='') -> None:
         self.client = None
         self.max_wrong_time = 2
-        self.port = port
-        self.model_name = 'gpt-3.5' if 'gpt-3.5' in model_name else model_name
+        self.model_name = model_name
+        self.api_base = os.environ['OPENAI_API_BASE'] if 'OPENAI_API_BASE' in os.environ else None
+        self.api_version = os.environ['OPENAI_API_VERSION'] if 'OPENAI_API_VERSION' in os.environ else None
+        self.api_type = os.environ['OPENAI_API_TYPE'] if 'OPENAI_API_TYPE' in os.environ else None
+        self.api_key = os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else None
         self.init_client()
         print(f'use model of {self.model_name}')
 
     def init_client(self):
-        self.client = OpenAI(
-            api_key='xxx' if self.model_name == 'gpt-3.5' else 'EMPTY',
-            max_retries=self.max_wrong_time,
-            base_url='https://xxx.xxx/v1' if self.model_name == 'gpt-3.5' else f'http://127.0.0.1:{self.port}/v1'
-        )
+        if self.api_type == "azure":
+            self.client = AzureOpenAI(
+                api_key=self.api_key,
+                api_version=self.api_version,
+                azure_endpoint=self.api_base,
+                max_retries=self.max_wrong_time,
+            )
+        else:
+            self.client = OpenAI(
+                api_key=self.api_key,
+                max_retries=self.max_wrong_time,
+            )
 
     def call(self, content, t=0.0):
         chat_completion = self.client.chat.completions.create(
