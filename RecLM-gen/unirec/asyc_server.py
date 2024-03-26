@@ -163,30 +163,30 @@ class ModelRunner:
         self.queue_lock = asyncio.Lock(loop=app.loop)
         self.needs_processing = asyncio.Event(loop=app.loop)
         logger.info("started model runner for {}".format(self.model_name))
-        # while True 无限循环，程序会处于监听状态
+        # while True: Infinite loop, the program will be in a listening state
         while True:
-            # 等待有任务来
+            # Waiting for a task to come
             await self.needs_processing.wait()
             self.needs_processing.clear()
-            # 清空计时器
+            # Clear timer
             if self.needs_processing_timer is not None:
                 self.needs_processing_timer.cancel()
                 self.needs_processing_timer = None
-            # 处理队列都开启锁
+            # All processing queues are locked
             async with self.queue_lock:
-                # 如果队列不为空则设置最长等待时间
+                # If the queue is not empty, set the maximum waiting time
                 if self.queue:
                     longest_wait = app.loop.time() - self.queue[0]["time"]
                 else:  # oops
                     longest_wait = None
-                # 日志记录启动处理，队列大小，等待时间
+                # Logger start processing
                 logger.debug("launching processing. queue size: {}. longest wait: {}".format(len(self.queue), longest_wait))
-                # 获取一个批次的数据
+                # Get a batch of data
                 to_process = self.queue[:MAX_BATCH_SIZE]
-                # 然后把这些数据从任务队列中删除
+                # delete these data from the task queue
                 del self.queue[:len(to_process)]
                 self.schedule_processing_if_needed()
-            # 生成批数据
+            # Generate batch data
             # print(to_process)
             if len(to_process) == 0:
                 continue
@@ -196,11 +196,11 @@ class ModelRunner:
                 'item_seq': torch.stack([t["item_id_list"] for t in to_process], dim=0),
             }
             # print(batch_data)
-            # 在一个单独的线程中运行模型，然后返回结果
+            # Run the model in a separate thread and return the results
             scores = await app.loop.run_in_executor(
                 None, functools.partial(self.run_model, batch_data)
             )
-            # 记录结果并设置一个完成事件
+            # Log the results and set a completion event
             for t, s in zip(to_process, scores):
                 t["score"] = s
                 t["done_event"].set()
