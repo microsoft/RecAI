@@ -12,7 +12,7 @@ from typing import *
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--demo_dir_or_file", type=str, default="/home/v-huangxu/work/gen_demos")
+parser.add_argument("--demo_dir_or_file", type=str, default="./work/gen_demos")
 parser.add_argument("--save", type=str, default="./tagged/")
 args, _ = parser.parse_known_args()
 
@@ -62,10 +62,10 @@ def extract_tags(file_path):
         tags = re.findall(pattern, content)  
     return tags  
   
-# 示例用法  
-file_path = '/home/v-huangxu/work/LLM4CRS/tagged/tag_cache.txt'  
+# Example usage  
+file_path = './work/LLM4CRS/tagged/tag_cache.txt'  
 tags = extract_tags(file_path)  
-# print(tags)  # 输出：['y', 'n', 'Y', ...]  
+# print(tags)  # Output：['y', 'n', 'Y', ...]  
 
 
 examples = load_examples(args.demo_dir_or_file)

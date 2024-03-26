@@ -212,7 +212,7 @@ def get_interaction(datas):
             user_seq[user].append((item, time))
 
     for user, item_time in user_seq.items():
-        item_time.sort(key=lambda x: x[1])  # 对各个数据集得单独排序
+        item_time.sort(key=lambda x: x[1])
         items = []
         for t in item_time:
             items.append(t[0])
@@ -234,15 +234,15 @@ def check_Kcore(user_items, user_core, item_core):
     for item, num in item_count.items():
         if num < item_core:
             return user_count, item_count, False
-    return user_count, item_count, True # 已经保证Kcore
+    return user_count, item_count, True # Already guaranteed Kcore
 
 def filter_Kcore(user_items, user_core, item_core):
-    # 循环过滤 K-core，过滤掉不满足K-core的user和item
+    # Loop filter K-core, filter out users and items that do not meet K-core
     user_count, item_count, isKcore = check_Kcore(user_items, user_core, item_core)
     while not isKcore:
         cur_user_items = copy.deepcopy(user_items)
         for user, num in user_count.items():
-            if user_count[user] < user_core: # 直接把user 删除
+            if user_count[user] < user_core: # Delete the user
                 cur_user_items.pop(user)
             else:
                 for item in user_items[user]:
@@ -265,7 +265,7 @@ def id_map(user_items): # user_items dict
     item_id = 1
     final_data = {}
     random_user_list = list(user_items.keys())
-    random.shuffle(random_user_list)  # user 随机打乱后重新编码
+    random.shuffle(random_user_list)  # user is shuffled and re-encoded
     for user in random_user_list:
         items = user_items[user]
         if user not in user2id:

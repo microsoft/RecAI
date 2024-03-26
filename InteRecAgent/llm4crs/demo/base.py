@@ -94,7 +94,7 @@ class DemoSelector:
 
 
 if __name__ == "__main__":
-    selector = DemoSelector("/home/v-huangxu/work/LLM4CRS/demonstration/gen_demos/2023-06-28-08_53_56.jsonl", k=3)
+    selector = DemoSelector("./LLM4CRS/demonstration/gen_demos/2023-06-28-08_53_56.jsonl", k=3)
     request = "I want some farming games."
 
     demo_prompt = selector(request)

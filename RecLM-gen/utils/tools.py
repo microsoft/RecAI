@@ -223,15 +223,15 @@ class GPT:
         self.client = None
         self.max_wrong_time = 2
         self.port = port
-        self.model_name = 'gpt-3.5-turbo-1106' if 'gpt-3.5-turbo-1106' in model_name else model_name
+        self.model_name = 'gpt-3.5' if 'gpt-3.5' in model_name else model_name
         self.init_client()
         print(f'use model of {self.model_name}')
 
     def init_client(self):
         self.client = OpenAI(
-            api_key='sk-E9oyiDL777ZaNZdRrzRSPzsbvbqvhebRl2xiTheKjh6bE4Jx' if self.model_name == 'gpt-3.5-turbo-1106' else 'EMPTY',
+            api_key='xxx' if self.model_name == 'gpt-3.5' else 'EMPTY',
             max_retries=self.max_wrong_time,
-            base_url='https://openkey.cloud/v1' if self.model_name == 'gpt-3.5-turbo-1106' else f'http://127.0.0.1:{self.port}/v1'
+            base_url='https://xxx.xxx/v1' if self.model_name == 'gpt-3.5' else f'http://127.0.0.1:{self.port}/v1'
         )
 
     def call(self, content, t=0.0):
