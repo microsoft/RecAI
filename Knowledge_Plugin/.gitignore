@@ -1,0 +1,7 @@
+**/__pycache__/
+KPRN
+data
+preprocess/step2-KG_Building
+Knowledge_Extraction/extract_path.py
+DOKE/out/
+DOKE/run.bash

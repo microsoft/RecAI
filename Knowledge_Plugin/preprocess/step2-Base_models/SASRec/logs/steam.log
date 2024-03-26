@@ -1,0 +1,10 @@
+average sequence length: 10.39
+failed loading state_dicts, pls check file path: ./steam_default/SASRec.epoch=200.lr=0.001.layer=2.head=1.hidden=50.maxlen=200.pth
+pdb enabled for your quick check, pls type exit() if you do not need it
+> /home/jingyao/projects/pretrain_recommendation/Baselines/SASRec/main.py(220)<module>()
+-> if args.inference_only:
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) 

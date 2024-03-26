@@ -22,14 +22,14 @@ We believe that by adopting a holistic perspective, we can incorporate the major
   <tr>  
     <td> <img src="./assets/recagent.png" alt="Recommender AI agent" /> </td>  
     <td> 
-     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/InteRecAgent/README.md" style="color: #0000FF; text-decoration: underline;">Recommender AI Agent</a> </strong> <br> LLMs provide natural interactions and respond smartly to human instructions but lack domain-specific expertise. In contrast, traditional recommender systems excel with in-domain data training yet are constrained to structured data and lack interactivity. InteRecAgent introduces an AI agent that combines the strengths of both: it employs an LLM as the brain and traditional recommender models as tools. Consequently, traditional models like matrix factorization can be transformed into conversational, interactive, and explainable recommender systems..
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/InteRecAgent/README.md" style="color: #0000FF; text-decoration: underline;"> Recommender AI Agent </a> </strong> <br> LLMs provide natural interactions and respond smartly to human instructions but lack domain-specific expertise. In contrast, traditional recommender systems excel with in-domain data training yet are constrained to structured data and lack interactivity. InteRecAgent introduces an AI agent that combines the strengths of both: it employs an LLM as the brain and traditional recommender models as tools. Consequently, traditional models like matrix factorization can be transformed into conversational, interactive, and explainable recommender systems..
      </td>  
   </tr> 
 
   <tr>  
     <td> <img src="./assets/knowledge-plugin.png" alt="Selective Knowledge Plugin" /> </td>  
     <td> 
-     <strong style="font-size:3vw"> Selective Knowledge Plugin </strong> </br>
+     <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/Knowledge_Plugin/README.md" style="color: #0000FF; text-decoration: underline;"> Selective Knowledge Plugin </a></strong> </br>
      How can we enhance an LLM's domain-specific ability without finetuning the model? Then the prompt is the key. In this work, we introduce a method that augments LLMs with selective knowledge, so that large-scale, continuously evolving, and domain-specific data patterns can be injected by prompt. 
      </td>  
   </tr>   

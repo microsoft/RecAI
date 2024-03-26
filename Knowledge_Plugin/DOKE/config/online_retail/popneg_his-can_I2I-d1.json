@@ -1,0 +1,22 @@
+{
+    "sequential_data_path": "../data/online_retail/sequential_data.txt",
+    "candidate_data_path": "../data/online_retail/negative_samples_pop.txt",
+    "meta_data_path": "../data/online_retail/metadata.json",
+    "cf_data_path": "data/online_retail/MF_CF_candidate_pop.json",
+    "topk": 200,
+    "max_his_len": 50,
+    "template": [
+        "You are a online retail product recommender system now.\n",
+        "Here is the purchasing history of a user in the past in order:\n",
+        "{sequential_title}",
+        "Now there are 20 candidate products that this user can purchase next:\n",
+        "{candidate_title}",
+        
+        "To help you generate better recommendation, I will provide you with some collaborative filtering information related to this user's historical purchased products on this platform. For each historical purchased product, I will give you its most frequently co-purchased products in the candidate list by all users.\n",
+        "{CF_text}",
+
+        "Please rank the 20 candidate products by measuring the possibilities that this user would like to purchase next most, according to the provided purchasing history and the CF information. Please think step by step.\n",
+        "Your output is only allowed to be a rerank of the candidate list. Do not add products out of the candidate list.\n",
+        "Please give the results as JSON array (from highest to lowest priority, product names only): "
+    ]
+}

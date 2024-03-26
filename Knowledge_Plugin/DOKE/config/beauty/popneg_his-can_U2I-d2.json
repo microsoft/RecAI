@@ -1,0 +1,21 @@
+{
+    "sequential_data_path": "../data/beauty/sequential_data.txt",
+    "candidate_data_path": "../data/beauty/negative_samples_pop.txt",
+    "meta_data_path": "../data/beauty/metadata.json",
+    "u2i_data_path": "data/beauty/SASRec_U2I_candidate_pop.json",
+    "topk": 200,
+    "max_his_len": 50,
+    "template": [
+        "Assume you are a user has purchased the following beauty products in the past in order:\n",
+        "{sequential_title}",
+        "Now there are 20 candidate products that you can purchase next:\n",
+        "{candidate_title}",
+        
+        "In order for you to make better recommendations, I will give you some products that you may be interested in in the candidate list according to the history, and ranked in descending order. They are:",
+        "{U2I_text}",
+
+        "Please rank the 20 candidate products by measuring the possibilities that you would like to purchase next most, according to the provided purchasing history and the interested products. Please think step by step.\n",
+        "Your output is only allowed to be a rerank of the candidate list. Do not add products out of the candidate list.\n",
+        "Please give the results as JSON array (from highest to lowest priority, product names only): "
+    ]
+}
