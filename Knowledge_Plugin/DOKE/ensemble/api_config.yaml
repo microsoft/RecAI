@@ -1,0 +1,9 @@
+API_BASE:
+    "https://api.openai.com/v1"
+API_VERSION:
+    "None"
+API_TYPE:
+    "apenai"
+API_KEYS:
+    - "key1"
+    - "key2"

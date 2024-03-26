@@ -1,0 +1,1 @@
+We choose Wikidata as the incorporated knowledge graph (https://www.wikidata.org/).

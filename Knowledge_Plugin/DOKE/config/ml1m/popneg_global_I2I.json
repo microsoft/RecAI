@@ -1,0 +1,23 @@
+{
+    "sequential_data_path": "../../data/ml1m/sequential_data.txt",
+    "candidate_data_path": "../../data/ml1m/negative_samples_pop.txt",
+    "meta_data_path": "../../data/ml1m/metadata.json",
+    "global_cf_data_path": "data/ml1m/global_CF.json",
+    "topk": 200,
+    "max_his_len": 50,
+    "template": [
+        "You are a movie recommender system now.\n",
+        "Here is the watching history of a user in the past in order:\n",
+        "{sequential_title}",
+        
+        "To help you generate better recommendation, I will provide you with some collaborative filtering information. I will give you the most freqently co-watched movie pairs on this platform.\n",
+        "{global_CF_text}",
+
+        "Now there are 20 candidate movies that this user can watch next:\n",
+        "{candidate_title}",
+
+        "Please rank the 20 candidate movies by measuring the possibilities that this user would like to watch next most, according to the provided watching history and the CF information. Please think step by step.\n",
+        "Your output is only allowed to be a rerank of the candidate list. Do not add movies out of the candidate list.\n",
+        "Please give the results as JSON array (from highest to lowest priority, movie names only): "
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "sequential_data_path": "../data/ml1m/sequential_data.txt",
+    "candidate_data_path": "../data/ml1m/negative_samples_pop.txt",
+    "meta_data_path": "../data/ml1m/metadata.json",
+    "u2i_data_path": "data/ml1m/SASRec_U2I_candidate_pop.json",
+    "topk": 200,
+    "max_his_len": 50,
+    "template": [
+        "You are a movie recommender system now.\n",
+        "Here is the watching history of a user in the past in order:\n",
+        "{sequential_title}",
+        "Now there are 20 candidate movies that this user can watch next:\n",
+        "{candidate_title}",
+        
+        "In order for you to make better recommendations, I will give you some movies that this user may be interested in in the candidate list according to the history, and ranked in descending order. They are:",
+        "{U2I_text}",
+
+        "Please rank the 20 candidate movies by measuring the possibilities that this user would like to watch next most, according to the provided watching history and the interested movies. Please think step by step.\n",
+        "Your output is only allowed to be a rerank of the candidate list. Do not add movies out of the candidate list.\n",
+        "Please give the results as JSON array (from highest to lowest priority, movie names only): "
+    ]
+}
