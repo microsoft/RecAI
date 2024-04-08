@@ -181,7 +181,7 @@ To use a static dataset instead, specify the `--train_data_file` and `--val_data
 
 ### 2.4. SFT model merge
 
-Merge the trained models using the script found at [scripts/sft_merge.sh](https://github.com/Luuuk12321/RecLM-gen/blob/main/scripts/sft_merge.sh). The merged model will be saved to `snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch37/`.  
+Merge the trained models using the script found at [scripts/sft_merge.sh](https://github.com/Luuuk12321/RecLM-gen/blob/main/scripts/sft_merge.sh). The merged model will be saved to `snap/ICR_SubMovie/SFT_Epoch27/`.  
    
 **Note: Use `CUDA_VISIBLE_DEVICES=x` to select a GPU. Do not set the `--gpu` command parameter.**  
 
@@ -245,7 +245,7 @@ Single-GPU training is supported for the RL stage as well. See [scripts/single_g
 
 
 ### 3.4. RL model merge
-Merge the RL-trained models using the script provided at [scripts/rl_merge.sh](https://github.com/Luuuk12321/RecLM-gen/blob/main/scripts/rl_merge.sh). The merged model will be saved in an appropriately named directory within the `snap/` folder, such as `snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/RL_ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch37/Total_train_LM-True_VM-False_NR-20.1_SN-2_Q-False_T6_FG-True_LR-5e-06_LDO-0.0_WD-0.0_KLC-0.3_EW-0.01_RS-False_RW-True_VFC-0.1_KLT-0.05_LRP-2.0_GAMMA-0.99_GAS-4_LB-1_RA_0.5_/RLHF_Step7000/`
+Merge the RL-trained models using the script provided at [scripts/rl_merge.sh](https://github.com/Luuuk12321/RecLM-gen/blob/main/scripts/rl_merge.sh). The merged model will be saved in an appropriately named directory within the `snap/` folder, such as `snap/ICR_SubMovie/SFT_Epoch27/RL/RLHF_Step3000/`
 
 
 ## 4. Test stage
@@ -264,8 +264,8 @@ CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579
 Run the test scripts by specifying the path to the model directory and the server port: 
 
 ```shell
-./scripts/tasks_test.sh snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch37/ 13579
-./scripts/tasks_test.sh snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/RL_ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch37/Total_train_LM-True_VM-False_NR-20.1_SN-2_Q-False_T6_FG-True_LR-5e-06_LDO-0.0_WD-0.0_KLC-0.3_EW-0.01_RS-False_RW-True_VFC-0.1_KLT-0.05_LRP-2.0_GAMMA-0.99_GAS-4_LB-1_RA_0.5_/RL_Step7000/ 13579
+./scripts/tasks_test.sh snap/ICR_SubMovie/SFT_Epoch27/ 13579
+./scripts/tasks_test.sh snap/ICR_SubMovie/SFT_Epoch27/RL/RLHF_Step3000/ 13579
 ```
 
 

@@ -236,10 +236,10 @@ class RLTrainer(BaseTrainer):
 
     def RL_val_path(self):
         val_steps = {}
-        for params_file in os.listdir(self.args.output):
+        for params_file in os.listdir(self.args.output_path):
             step = re.findall(r'^(\d+)step_RL\.pth', params_file)   # matching the train step from file name
             if len(step) > 0:
-                val_steps[step[0]] = os.path.join(self.args.output, params_file[:-4])
+                val_steps[step[0]] = os.path.join(self.args.output_path, params_file[:-4])
         if self.args.dry:
             val_steps[0] = None
         val_steps = {_: val_steps[_] for _ in sorted(val_steps, key=lambda k: k) if _ >= 0}

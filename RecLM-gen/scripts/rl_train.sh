@@ -1,10 +1,14 @@
 #!/bin/bash
 
-CUDA_VISIBLE_DEVICES=4,5 accelerate launch --num_processes 2 --gpu_ids all main.py \
+
+BACKBONE="snap/ICR_SubMovie/SFT_Epoch27/"
+OUTPUT_PATH_SUFFIX="RL/"
+
+CUDA_VISIBLE_DEVICES=0,1 accelerate launch --num_processes 2 --gpu_ids all main.py \
   --seed 0 \
   --data_path data/dataset/sub_movie/ \
-  --output snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/ \
-  --backbone snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch27/ \
+  --output_path ${BACKBONE}${OUTPUT_PATH_SUFFIX} \
+  --backbone ${BACKBONE} \
   --item_index title64_t \
   --batch_size 8 \
   --gradient_accumulation_steps 2 \

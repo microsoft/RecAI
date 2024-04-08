@@ -160,11 +160,11 @@ if __name__ == "__main__":
     TestTaskTemplate = {args.SFT_test_task: Test_task_group_mapping[args.SFT_test_task.split('_')[0]]}
     TestTaskNum = {args.SFT_test_task: 1}
     if args.SFT_test_task in ['SFT+TestPersonalControlRec', 'SFT-TestPersonalControlRec'] or args.SFT_test_task.startswith('SFTTestPersonalCategoryRate'):
-        TestSeqRec_Result_file = f'{args.output_path}SFTTestSeqRec_Top{args.topk}_Result.pickle'
+        TestSeqRec_Result_file = os.path.join(args.output_path, f'SFTTestSeqRec_Top{args.topk}_Result.pickle')
         data['SFTTestSeqRec_Result'] = load_pickle(TestSeqRec_Result_file)
     test_data = SFTDataset(args, TestTaskTemplate, TestTaskNum, data, None, 'test')
     metrics_dict = Metrics([args.SFT_test_task], args.topk, test_data.category2item, test_data.title2item)
-    result_file = f'{args.output_path}{args.SFT_test_task}_Top{args.topk}_Result{"_Sample" if args.sample else ""}.pickle'
+    result_file = os.path.join(args.output_path, f'{args.SFT_test_task}_Top{args.topk}_Result{"_Sample" if args.sample else ""}.pickle')
 
     test_data_list = load_pickle(result_file)
     _test_data_list = [_ for _ in test_data]
