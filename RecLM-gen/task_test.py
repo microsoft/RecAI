@@ -48,7 +48,7 @@ def quary_api(d, args):
     try:
         if f'{args.model_name}_output' not in d:
             input_text = d['input_text']
-            if args.model_name in ['snap/Llama-2-7b-hf-chat/', 'gpt-3.5-turbo-1106']:
+            if args.general_llm:
                 input_text = d['input_text'].split('\n')
                 sub_text1 = input_text[1].strip()
                 sub_text2 = input_text[4].split('[/INST]')[0].strip()
@@ -60,10 +60,10 @@ def quary_api(d, args):
                 input_text = f'{sub_text1} {sub_text2} {sub_text3} \n{sub_text4}'
                 d['raw_input_text'] = input_text
 
-            if args.model_name in ['gpt-3.5-turbo-1106']:
-                d[f'{args.model_name}_output'] = quary_openai(input_text, args)
-            else:
+            if args.vllm_port > 0:
                 d[f'{args.model_name}_output'] = quary_vllm_openai(input_text, args)
+            else:
+                d[f'{args.model_name}_output'] = quary_openai(input_text, args)
 
         assert f'{args.model_name}_output' in d, f'no {args.model_name}_output'
         wrongtime = 0
@@ -124,16 +124,14 @@ if __name__ == "__main__":
     parser.add_argument("--reprocess", action='store_true')
     parser.add_argument("--teacher_port", type=int, default=12621)
     parser.add_argument("--vllm_port", type=int, default=13579)
+    parser.add_argument("--general_llm", action='store_true')
     args = parser.parse_args()
     args.is_main_process = True
-    kwargs = vars(args)
-    args = Config(**kwargs)
-    if not args.output_path:
-        args.output_path = args.model_name
+    print(Config(**vars(args)))
+    assert args.output_path is not None
     if not os.path.exists(args.output_path):
-        os.mkdir(args.output_path)
-    print(args)
-    gpt = GPT(model_name=args.model_name)
+        os.makedirs(args.output_path)
+    gpt = GPT()
 
     category2item = load_pickle(args.data_path + 'category.pickle')
     metas = load_pickle(args.data_path + 'meta.pickle')
@@ -186,9 +184,9 @@ if __name__ == "__main__":
 
     if len(remain_test_data_list) > 0:
         save_pickle(test_data_list, result_file)
-    if args.model_name not in ['snap/Llama-2-7b-hf-chat/', 'gpt-3.5-turbo-1106']:
+    if not args.general_llm:
         for step_i, example in tqdm(enumerate(test_data_list)):
-            if f'{args.model_name}_output' not in example or (f'{args.SFT_test_task}_output_title_list' in example and args.reprocess):
+            if f'{args.model_name}_output' not in example or (f'{args.SFT_test_task}_output_title_list' in example and not args.reprocess):
                 continue
             output_title = example[f'{args.model_name}_output']
             output_title_list = [_.strip() for _ in output_title.strip().split('\n')]

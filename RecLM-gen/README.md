@@ -250,22 +250,35 @@ Merge the RL-trained models using the script provided at [scripts/rl_merge.sh](h
 
 ## 4. Test stage
 
-### 4.1. VLLM deploy
-
-Deploy the VLLM using the following command, making sure to specify the correct model directory:  
-
+### 4.1. Llama2 deploy and test
 ```shell
-CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579 --model snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch37/
-CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579 --model snap/ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/RL_ICR_SubMovie_Title64T_0_Llama7bChat_LCT_E40_CCR2_SCG2-0.5_IDX/SFT_Epoch37/Total_train_LM-True_VM-False_NR-20.1_SN-2_Q-False_T6_FG-True_LR-5e-06_LDO-0.0_WD-0.0_KLC-0.3_EW-0.01_RS-False_RW-True_VFC-0.1_KLT-0.05_LRP-2.0_GAMMA-0.99_GAS-4_LB-1_RA_0.5_/RLHF_Step7000/
+CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579 --model snap/Llama-2-7b-hf-chat/
+./scripts/tasks_test.sh snap/Llama-2-7b-hf-chat/ 13579 sub_movie
 ```
 
-### 4.2. VLLM test
+### 4.2. SFT model deploy and test
+```shell
+CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579 --model snap/ICR_SubMovie/SFT_Epoch27/
+./scripts/tasks_test.sh snap/ICR_SubMovie/SFT_Epoch27/ 13579 sub_movie
+```
 
-Run the test scripts by specifying the path to the model directory and the server port: 
+### 4.3. RL model deploy and test
+```shell
+CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579 --model snap/ICR_SubMovie/SFT_Epoch27/RL/RLHF_Step3000/
+./scripts/tasks_test.sh snap/ICR_SubMovie/SFT_Epoch27/RL/RLHF_Step3000/ 13579 sub_movie
+```
+
+### 4.4. ChatGPT test
+If you want to test the capacity of ChatGPT, you need to firstly set these environment variables.  If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and ENGINE.
 
 ```shell
-./scripts/tasks_test.sh snap/ICR_SubMovie/SFT_Epoch27/ 13579
-./scripts/tasks_test.sh snap/ICR_SubMovie/SFT_Epoch27/RL/RLHF_Step3000/ 13579
+export OPENAI_API_KEY=xxx
+export OPENAI_API_BASE=https://xxx.openai.azure.com/
+export OPENAI_API_VERSION=2023-03-15-preview
+export OPENAI_API_TYPE=azure
+export ENGINE=gpt-3.5-turbo-1106
+
+./scripts/tasks_test.sh gpt-3.5-turbo-1106 0 sub_movie
 ```
 
 

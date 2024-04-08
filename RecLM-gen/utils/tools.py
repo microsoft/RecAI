@@ -220,16 +220,16 @@ def get_complete_text(input_text: str, output_titles: str):
 
 
 class GPT:
-    def __init__(self, model_name='') -> None:
+    def __init__(self) -> None:
         self.client = None
         self.max_wrong_time = 2
-        self.model_name = model_name
         self.api_base = os.environ['OPENAI_API_BASE'] if 'OPENAI_API_BASE' in os.environ else None
         self.api_version = os.environ['OPENAI_API_VERSION'] if 'OPENAI_API_VERSION' in os.environ else None
         self.api_type = os.environ['OPENAI_API_TYPE'] if 'OPENAI_API_TYPE' in os.environ else None
-        self.api_key = os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else None
+        self.api_key = os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else 'Empty'
+        self.engine = os.environ['ENGINE'] if 'ENGINE' in os.environ else None
         self.init_client()
-        print(f'use model of {self.model_name}')
+        print(f'use model of {self.engine}')
 
     def init_client(self):
         if self.api_type == "azure":
@@ -242,6 +242,7 @@ class GPT:
         else:
             self.client = OpenAI(
                 api_key=self.api_key,
+                base_url=self.api_base,
                 max_retries=self.max_wrong_time,
             )
 
@@ -256,7 +257,7 @@ class GPT:
             temperature=t,
             # top_p=0.2,
             max_tokens=2048,
-            model=self.model_name,
+            model=self.engine,
         )
         response = chat_completion.choices[0].message.content
         return response

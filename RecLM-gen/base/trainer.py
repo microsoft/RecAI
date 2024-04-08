@@ -20,6 +20,7 @@ from base.dataset import BaseDataset
 from rl.reward import RewardModel
 from utils.tools import masked_mean, whiten, eval_decorator, shift, log_prob, Memory, sync_dict
 from base.model import BaseModel
+from param import Config
 
 
 # trainer
@@ -34,7 +35,7 @@ class BaseTrainer(nn.Module):
         # Use CUDA_VISIBLE_DEVICES=x to select gpu, do not set the --gpu command param
         self.args.gpu = self.accelerator.device.__str__()
         if self.accelerator.is_main_process:
-            print(args)
+            print(Config(**vars(args)))
             if not os.path.exists(args.output_path):
                 os.makedirs(args.output_path)
             if args.train_stage in ['SFT', 'RL']:

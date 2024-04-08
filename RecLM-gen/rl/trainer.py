@@ -23,7 +23,7 @@ class RLTrainer(BaseTrainer):
 
         self.writer = None
         if self.accelerator.is_main_process:
-            self.writer = SummaryWriter(log_dir=f'logs/RL_train/{self.args.model_name}', flush_secs=30)
+            self.writer = SummaryWriter(log_dir=os.path.join('logs', self.args.output_path), flush_secs=30)
 
         self.actor_critic.load_parameters(self.args.RL_load)
         self.dataset_prepare()

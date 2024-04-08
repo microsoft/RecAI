@@ -17,8 +17,6 @@ from param import Config, get_args
 
 if __name__ == '__main__':
     args = get_args()
-    kwargs = vars(args)
-    args = Config(**kwargs)
     assert args.train_stage in ['SFT', 'RL', 'SFT_Merge', 'RL_Merge']
     assert args.output_path is not None
 
