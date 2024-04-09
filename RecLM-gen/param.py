@@ -43,8 +43,6 @@ def add_args_RL(parser):
     parser.add_argument("--lr_power", type=float, default=2.0)
     parser.add_argument("--learn_batch", type=int, default=2)
     parser.add_argument("--reward_alpha", type=float, default=0.5)
-    parser.add_argument("--model_name", type=str, default=None, help='auto generated while RL, or custom setting')
-    parser.add_argument("--model_name_suffix", type=str, default="")
     parser.add_argument("--val_save_step", type=int, default=100)
     return parser
 
@@ -70,7 +68,7 @@ def add_args(parse=True, **optional_kwargs):
     parser.add_argument("--val_num_per_task", type=int, default=320, help='the number of valuation samples')
 
     # Checkpoint
-    parser.add_argument('--output', type=str, default='snap/', help='path to save model params file, or to save the merged model.')
+    parser.add_argument('--output_path', type=str, default='snap/', help='path to save model params file, or to save the merged model.')
 
     # Model Config
     parser.add_argument('--backbone', type=str, default='google/flan-t5-xl')

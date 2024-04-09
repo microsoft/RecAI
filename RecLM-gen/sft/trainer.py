@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+import os.path
 
 import torch
 from torch.utils.data import DataLoader
@@ -23,8 +24,7 @@ class SFTTrainer(BaseTrainer):
 
         self.writer = None
         if self.accelerator.is_main_process:
-            name = self.args.output.split('snap/')[-1]
-            self.writer = SummaryWriter(log_dir=f'logs/SFT_train/{self.args.SFT_train_tasks}/{name}', flush_secs=30)
+            self.writer = SummaryWriter(log_dir=os.path.join('logs', self.args.output_path), flush_secs=30)
 
         self.start_epoch = self.actor_critic.load_parameters(self.args.SFT_load)
         self.dataset_prepare()
