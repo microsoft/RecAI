@@ -325,7 +325,7 @@ def main_process(data_name, args, data_type='Amazon'):
 
     print('Begin extracting meta infos...')
     
-    meta_infos = Amazon_meta(datamaps)
+    meta_infos = Amazon_meta(datamaps, args)
 
     print(f'{data_name} & {add_comma(user_num)} & {add_comma(item_num)} & {user_avg:.1f}'
           f'& {item_avg:.1f} & {add_comma(interact_num)} & {sparsity:.2f}\% \\')
