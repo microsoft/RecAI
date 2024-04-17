@@ -57,6 +57,13 @@ This file contains a dictionary where the keys are user IDs, and the values are 
 }
 ```
 
+### dataset preprocess
+We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the dataset files with above format from the downloaded data files. 
+
+Firstly, download `Movies_and_TV_5.json.gz` and `meta_Movies_and_TV.json.gz`, then place them in `data/dataset/sub_movie/` and run the next command.
+```shell
+./scripts/data_preprocess_amazon.sh data/dataset/sub_movie/
+```
 
 ## 1. SASRec Server
 We utilize the [UniRec](https://github.com/microsoft/UniRec) library to implement the SASRec teacher model and deploy as a server.  
@@ -269,7 +276,7 @@ CUDA_VISIBLE_DEVICES=1 python -m vllm.entrypoints.openai.api_server --port 13579
 ```
 
 ### 4.4. ChatGPT test
-If you want to test the capacity of ChatGPT, you need to firstly set these environment variables.  If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and ENGINE.
+If you want to test the capability of ChatGPT, you need to firstly set these environment variables.  If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and ENGINE.
 
 ```shell
 export OPENAI_API_KEY=xxx
