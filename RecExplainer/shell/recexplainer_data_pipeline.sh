@@ -15,7 +15,7 @@ cd $EXE_DIR
 
 
 ### generate user history summary query
-python amazon_generate_v3.py --gpt_query_file $PROCESS_DATA_DIR/gpt4_data/test_query --gpt_response_file $gpt_response_file \
+python amazon_generate_v3.py --gpt_query_file $PROCESS_DATA_DIR/gpt4_data/test_query \
     --seqdata_file $PROCESS_DATA_DIR/sequential_data.txt --metadata_file $PROCESS_DATA_DIR/metadata.json \
     --max_seq_len $max_seq_len --model_name $model_name --model_max_length $model_max_length
 
