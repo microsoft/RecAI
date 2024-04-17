@@ -42,6 +42,7 @@ model_path = {
 }
 print(' '.join(sys.argv))
 config = argument_parser.parse_arguments()
+config['port'] = [_.split('=')[1] for _ in sys.argv if _.startswith('--port=')][0]
 config['device'] = torch.device('cuda:0')
 dataset = config['dataset']
 config['dataset_path'] = f'data/{dataset}'
@@ -127,12 +128,12 @@ class ModelRunner:
         self.model.load_state_dict(checkpoint["state_dict"])
         self.model.eval()
         self.model.requires_grad_(False)
-        _, scores, _, _ = self.model.forward(item_seq=torch.tensor([[0, 0, 0, 1, 2, 3, 4]], device=config['device']))
 
         self.needs_processing = None
         self.needs_processing_timer = None
 
         self.all_item_id = torch.arange(len(map_dict['id2item']), device=config['device'], dtype=torch.int64)
+        _, scores, _, _ = self.model.forward(item_seq=torch.tensor([[0, 0, 0, 1, 2, 3, 4]], device=config['device']), item_id=self.all_item_id)
 
     def schedule_processing_if_needed(self):
         if len(self.queue) >= MAX_BATCH_SIZE:

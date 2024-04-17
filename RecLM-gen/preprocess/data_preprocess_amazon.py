@@ -29,13 +29,10 @@ torch.manual_seed(seed)
 def parse_args():
     parser = argparse.ArgumentParser(description="data process")
     parser.add_argument("--full_data_name", type=str, help="")
-    parser.add_argument("--data_path", type=str, help="")
     parser.add_argument("--meta_file", type=str, help="")
     parser.add_argument("--review_file", type=str, help="")
-    parser.add_argument("--save_sequential_file", type=str, default='', help="")
-    parser.add_argument("--save_meta_file", type=str, default='', help="")
-    parser.add_argument("--save_map_file", type=str, help="")
-    parser.add_argument("--save_category_file", type=str, help="")
+    parser.add_argument("--data_path", type=str, help="")
+    parser.add_argument("--unirec_data_path", type=str, help="")
     return parser.parse_args()
 
 
@@ -177,6 +174,7 @@ def check_Kcore(user_items, user_core, item_core):
     user_count = defaultdict(int)
     item_count = defaultdict(int)
     for user, items in user_items.items():
+        user_count[user] += 0
         for item in items:
             user_count[user] += 1
             item_count[item] += 1
@@ -283,10 +281,39 @@ def main_process(data_name, args, data_type='Amazon'):
     category_infos = Amazon_category(meta_infos)
 
     # -------------- Save Data ---------------
-    save_pickle(user_items, args.save_sequential_file)
-    save_pickle(meta_infos, args.save_meta_file)
-    save_pickle(category_infos, args.save_category_file)
-    save_pickle(datamaps, args.save_map_file)
+    if not os.path.exists(args.data_path):
+        os.makedirs(args.data_path)
+    save_pickle(user_items, os.path.join(args.data_path, 'sequential.pickle'))
+    save_pickle(meta_infos, os.path.join(args.data_path, 'meta.pickle'))
+    save_pickle(category_infos, os.path.join(args.data_path, 'category.pickle'))
+
+    train_data = {'user_id': [], 'item_id': []}
+    valid_data = {'user_id': [], 'item_id': []}
+    test_data = {'user_id': [], 'item_id': []}
+    user_history = {'user_id': [], 'item_seq': []}
+    for u in user_items:
+        user_history['user_id'].append(datamaps['user2id'][u])
+        user_history['item_seq'].append(np.array([datamaps['item2id'][_] for _ in user_items[u][:-1]], dtype=np.int32))
+        for i in user_items[u][:-2]:
+            train_data['user_id'].append(datamaps['user2id'][u])
+            train_data['item_id'].append(datamaps['item2id'][i])
+
+        valid_item, test_item = user_items[u][-2], user_items[u][-1]
+        valid_data['user_id'].append(datamaps['user2id'][u])
+        valid_data['item_id'].append(datamaps['item2id'][valid_item])
+        test_data['user_id'].append(datamaps['user2id'][u])
+        test_data['item_id'].append(datamaps['item2id'][test_item])
+
+    if not os.path.exists(args.unirec_data_path):
+        os.makedirs(args.unirec_data_path)
+    save_pickle(pd.DataFrame(train_data), os.path.join(args.unirec_data_path, 'train.pkl'))
+    save_pickle(pd.DataFrame(valid_data), os.path.join(args.unirec_data_path, 'valid.pkl'))
+    save_pickle(pd.DataFrame(test_data), os.path.join(args.unirec_data_path, 'test.pkl'))
+    save_pickle(pd.DataFrame(user_history), os.path.join(args.unirec_data_path, 'user_history.pkl'))
+    save_pickle(datamaps, os.path.join(args.unirec_data_path, 'map.pkl'))
+    save_pickle(category_infos, os.path.join(args.unirec_data_path, 'category.pickle'))
+
+    print('Done!!!')
 
 
 if __name__ == '__main__':
