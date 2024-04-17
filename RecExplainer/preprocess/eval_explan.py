@@ -45,9 +45,9 @@ def eval_data_gen(args):
     output_df = pd.DataFrame(columns=['model', 'label', 'history', 'target item', 'question'])
 
     for i in range(len(all_dfs[model_names[0]])):
-        label = all_dfs[model_names].loc[i, 'label']
-        history = eval(all_dfs[model_names].loc[i, 'history'])
-        target_item = all_dfs[model_names].loc[i, 'target item']
+        label = all_dfs[model_names[0]].loc[i, 'label']
+        history = eval(all_dfs[model_names[0]].loc[i, 'history'])
+        target_item = all_dfs[model_names[0]].loc[i, 'target item']
 
         for model in model_names:
             output_df = output_df._append({'model': model, 'label': label, 'history': history, 'target item': target_item, 'question': template.format(', '.join(history), target_item, label, all_dfs[model].loc[i, 'answer'])}, ignore_index=True)

@@ -6,8 +6,8 @@ PROCESS_DATA_DIR="$HOME/RecExplainer/data/amazon_video_games_v3/process_data"
 UNIREC_DATA_DIR="$HOME/UniRec/output/amazon_video_games_v3/SASRec/RecExplainer/xxx/"
 
 gpt_response_file="$PROCESS_DATA_DIR/gpt4_data/test_response"
-max_seq_len = 9
-model_name = 'lmsys/vicuna-7b-v1.3'
+max_seq_len=9
+model_name='lmsys/vicuna-7b-v1.3'
 model_max_length=1024
 
 EXE_DIR="$HOME/RecExplainer/preprocess"
@@ -15,7 +15,9 @@ cd $EXE_DIR
 
 
 ### generate user history summary query
-python amazon_generate_v3.py --gpt_query_file $PROCESS_DATA_DIR/gpt4_data/test_query
+python amazon_generate_v3.py --gpt_query_file $PROCESS_DATA_DIR/gpt4_data/test_query \
+    --seqdata_file $PROCESS_DATA_DIR/sequential_data.txt --metadata_file $PROCESS_DATA_DIR/metadata.json \
+    --max_seq_len $max_seq_len --model_name $model_name --model_max_length $model_max_length
 
 ### gpt4 data generation for user history summary
 if [[ -e $gpt_response_file'_1.csv' && -e $gpt_response_file'_2.csv' ]]; then  
