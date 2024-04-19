@@ -275,12 +275,12 @@ def evaluate_all(model, predicted_items, groudtruths, topk=10, sim_threshold=0.6
     msg += "\n{:.4f}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.4f}".format(avg_ndcg, avg_recall, avg_hit, avg_prec, map_, mrr)
     print(msg)
     res = {
-        'ndcg': avg_ndcg,
-        'map': map_,
-        'recall': avg_recall,
-        'precision': avg_prec,
-        'mrr': mrr,
-        'hit': avg_hit,
+        f'ndcg@{topk}': avg_ndcg,
+        f'map@{topk}': map_,
+        f'recall@{topk}': avg_recall,
+        f'precision@{topk}': avg_prec,
+        f'mrr@{topk}': mrr,
+        f'hit@{topk}': avg_hit,
     }
     return msg, res
 
@@ -330,11 +330,11 @@ def evaluate_all_id(predicted_items, groudtruths, topk=10):
     msg += "\n{:.4f}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.4f}".format(avg_ndcg, avg_recall, avg_hit, avg_prec, map_, mrr)
     print(msg)
     res = {
-        'ndcg': avg_ndcg,
-        'map': map_,
-        'recall': avg_recall,
-        'precision': avg_prec,
-        'mrr': mrr,
-        'hit': avg_hit,
+        f'ndcg@{topk}': avg_ndcg,
+        f'map@{topk}': map_,
+        f'recall@{topk}': avg_recall,
+        f'precision@{topk}': avg_prec,
+        f'mrr@{topk}': mrr,
+        f'hit@{topk}': avg_hit,
     }
     return msg, res
