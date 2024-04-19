@@ -14,8 +14,6 @@ from param import get_args, Config
 
 if __name__ == '__main__':
     args = get_args()
-    kwargs = vars(args)
-    args = Config(**kwargs)
     # Set seeds
     torch.manual_seed(args.seed)
     random.seed(args.seed)
