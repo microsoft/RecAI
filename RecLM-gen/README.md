@@ -8,9 +8,9 @@ Welcome to the repository for  [Aligning Large Language Models for Controllable 
 Our implementation leverages the [`transformers`](https://github.com/huggingface/transformers) library by Hugging Face.  
    
 
-## Raw dataset format
+## Intermediate dataset format
 
-To use this repo, you'll need a raw dataset comprising at least three files located in `data_path`: `category.pickle`, `meta.pickle`, and `sequential.pickle`. Additionally, `ranking_candidate.pickle` is required for reranking task tests.  
+To use this repo, you'll need an intermediate dataset comprising at least three files located in `data_path`: `category.pickle`, `meta.pickle`, and `sequential.pickle`. Additionally, `ranking_candidate.pickle` is required for reranking task tests.  
 
 **A volunteer has prepared a copy of data for reproducing the experiments. You can download it from [Google Drive link](https://drive.google.com/file/d/1cfw-KSqEwGF0eB_hm1PUWhUTdloT04Le/view?usp=drive_link). Thanks [Luuuk12321](https://github.com/Luuuk12321)!**
 
@@ -57,10 +57,10 @@ This file contains a dictionary where the keys are user IDs, and the values are 
 }
 ```
 
-### dataset preprocess
-We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the dataset files with above format from the downloaded data files. 
+### Raw dataset preprocess
+We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the intermediate dataset with above format from the downloaded raw dataset. 
 
-Firstly, download `Movies_and_TV_5.json.gz` and `meta_Movies_and_TV.json.gz`, then place them in `data/dataset/sub_movie/` and run the next command.
+Firstly, download `Movies_and_TV_5.json.gz` and `meta_Movies_and_TV.json.gz` from [Amazon](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/), then place them in `data/dataset/sub_movie/` and run the next command.
 ```shell
 ./scripts/data_preprocess_amazon.sh data/dataset/sub_movie/
 ```
@@ -98,7 +98,7 @@ pip install dist/unirec-*.whl
 ### 1.2. SASRec dataset and model
 Model parameters and weights are saved in `unirec/output/`.
 
-The dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.pickle` (as described in the raw dataset format) should be placed in `unirec/data/sub_movie/`. 
+The dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.pickle` (as described in the intermediate dataset format) should be placed in `unirec/data/sub_movie/`. 
 
 Use these files to train the SASRec model with the UniRec library.
 
