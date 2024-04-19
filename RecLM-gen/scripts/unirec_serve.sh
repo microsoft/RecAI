@@ -23,7 +23,7 @@ DATA_TYPE='SeqRecDataset'  # BaseDataset SeqRecDataset
 export PYTHONPATH=$PWD
 
 CUDA_VISIBLE_DEVICES=0 python unirec/asyc_server.py \
-    --config_dir="unirec/unirec/config" \
+    --config_dir="unirec/config" \
     --model=$MODEL_NAME \
     --dataloader=$DATA_TYPE \
     --dataset=$DATASET_NAME \

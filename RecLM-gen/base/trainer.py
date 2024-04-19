@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-
+import json
+import os
 from collections import deque
 import torch.nn.functional as F
 import numpy as np
@@ -19,6 +20,7 @@ from base.dataset import BaseDataset
 from rl.reward import RewardModel
 from utils.tools import masked_mean, whiten, eval_decorator, shift, log_prob, Memory, sync_dict
 from base.model import BaseModel
+from param import Config
 
 
 # trainer
@@ -30,12 +32,18 @@ class BaseTrainer(nn.Module):
             gradient_accumulation_steps=self.args.gradient_accumulation_steps,
             kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=(self.args.train_stage == 'RL'))]     # need for RL
         )
-        set_seed(self.args.seed)
         # Use CUDA_VISIBLE_DEVICES=x to select gpu, do not set the --gpu command param
-        self.args.gpu = self.accelerator.device
+        self.args.gpu = self.accelerator.device.__str__()
+        if self.accelerator.is_main_process:
+            print(Config(**vars(args)))
+            if not os.path.exists(args.output_path):
+                os.makedirs(args.output_path)
+            if args.train_stage in ['SFT', 'RL']:
+                with open(os.path.join(args.output_path, 'config.json'), 'w') as f:
+                    json.dump(vars(args), f, indent=4)
+
         self.actor_critic = BaseModel(args=self.args, device=self.args.gpu)
         if self.accelerator.is_main_process:
-            print(args)
             self.actor_critic.print_trainable_parameters()
 
         self.warped_actor_critic = None
@@ -370,14 +378,16 @@ class BaseTrainer(nn.Module):
         if self.args.train_stage == 'SFT_Merge':
             train_epoch = self.actor_critic.load_parameters(self.args.SFT_load)
             model = self.actor_critic.lora_model.merge_and_unload(progressbar=True)
-            model.save_pretrained(f'{self.args.output}SFT_Epoch{train_epoch:02d}', safe_serialization=True)
-            self.tokenizer.save_pretrained(f'{self.args.output}SFT_Epoch{train_epoch:02d}')
+            save_path = os.path.join(self.args.output_path, f'SFT_Epoch{train_epoch:02d}')
+            model.save_pretrained(save_path, safe_serialization=True)
+            self.tokenizer.save_pretrained(save_path)
         elif self.args.train_stage == 'RL_Merge':
             train_step = self.actor_critic.load_parameters(self.args.RL_load)
             self.actor_critic.lora_model.delete_adapter(self.actor_critic.critic_lora_scope)
             model = self.actor_critic.lora_model.merge_and_unload(progressbar=True)
-            model.save_pretrained(f'{self.args.output}RL_Step{train_step}', safe_serialization=True)
-            self.tokenizer.save_pretrained(f'{self.args.output}RL_Step{train_step}')
+            save_path = os.path.join(self.args.output_path, f'RL_Step{train_step}')
+            model.save_pretrained(save_path, safe_serialization=True)
+            self.tokenizer.save_pretrained(save_path)
         else:
             raise NotImplementedError
 

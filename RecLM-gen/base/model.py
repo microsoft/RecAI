@@ -98,8 +98,6 @@ class BaseModel(nn.Module):       # name
                 self.model.lm_head.requires_grad_(True)
 
     def save_parameters(self, name='Epoch00'):
-        if not os.path.isdir(self.args.output):
-            os.makedirs(self.args.output, exist_ok=True)
         params = {}
         if self.args.train_stage in ['SFT', 'RL']:
             params.update(self.actor_named_parameters)
@@ -108,7 +106,7 @@ class BaseModel(nn.Module):       # name
         state_dict = {
             'params': params,
         }
-        torch.save(state_dict, os.path.join(self.args.output, f"{name}_{self.args.train_stage}.pth"))
+        torch.save(state_dict, os.path.join(self.args.output_path, f"{name}_{self.args.train_stage}.pth"))
 
     def load_parameters(self, load_file):
         # self.args.load: 'xxx/Epoch{xx}_SFT' or 'xxx/{xx}step_RL'

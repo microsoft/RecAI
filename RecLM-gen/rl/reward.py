@@ -31,11 +31,9 @@ class RewardModel(BaseRewardModel):
             'list': RunningMoments()
         }
 
-    def ranking_score_func(self, idx):
-        if 'NR-9' in self.args.model_name:
-            return 1.0-idx/len(self.metas)      # NR-9
-        else:
-            return 1.0/math.log2(idx+2)         # NR-8
+    @staticmethod
+    def ranking_score_func(idx):
+        return 1.0/math.log2(idx+2)         # NR-8
 
     def reward_calculate(self, task, input_field_data, title_list):
         ranking_score_frac, task_score_frac = self.args.reward_alpha, 1.0-self.args.reward_alpha            # NR-13
