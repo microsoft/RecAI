@@ -59,47 +59,42 @@ InteRecAgent consists of 4 necessary components:
     First, install other packages listed in `requirements.txt`
 
        ```bash
-       cd LLM4CRS
-       conda create -n llm4crs python==3.9
-       conda activate llm4crs
+       cd InteRecAgent
+       conda create -n interecagent python==3.9
+       conda activate interecagent
        pip install -r requirements.txt
        ```
 
-2. Copy resource
+2. Prepare data resource
 
-   Copy all files in "InteRecAgent/{domain}" in [OneDrive](https://1drv.ms/f/s!Asn0lWVfky4FpF3saprFClmobx8g?e=lgeT0M) / [RecDrive](https://rec.ustc.edu.cn/share/baa4d930-48e1-11ee-b20c-3fee0ba82bbd) to  your local "./LLM4CRS/resources/{domain}".
-   If you cannot access those links, please contact <a href="mailto:jialia@microsoft.com">jialia@microsoft.com</a> or <a href="mailto:xuhuangcs@mail.ustc.edu.cn">xuhuangcs@mail.ustc.edu.cn</a>.
+   For your convenience, a volunteer (thanks <a href="mailto:xuhuangcs@mail.ustc.edu.cn">Xu Huang</a> for the contribution!) has prepared a copy of ready-to-run data resources based on public dataset. Please download the resources from [GoogleDrive](https://drive.google.com/file/d/1nSw2cuoi_WEOnHRg_eIyLWGBAjHdelsg/view?usp=drive_link) / [RecDrive](https://rec.ustc.edu.cn/share/baa4d930-48e1-11ee-b20c-3fee0ba82bbd). After you unzip the all_resources.zip file, you will see three folders, corresponding to three domains. Create a folder named "resources" under "InteRecAgent" and copy the data resource to it. For example, the folder structure is like "./InteRecAgent/resources/game".
 
-3. Run
+3. How to run
 
-    - Personal OpenAI API key:
-
-        ```bash
-        cd LLM4CRS
-        DOMAIN="game" OPENAI_API_KEY="xxxx" python app.py
-        ```
-
-    - Azure OpenAI API key:
+    - If you are using personal OpenAI API, please setup those environments:
 
         ```bash
-        cd LLM4CRS
-        DOMAIN="game" OPENAI_API_KEY="xxx" OPENAI_API_BASE="xxx" OPENAI_API_VERSION="xxx" OPENAI_API_TYPE="xxx" python app.py
+        export OPENAI_API_KEY="xxxx"  
+        export API_TYPE="open_ai"
         ```
-    
-    Note `DOMAIN` represents the item domain, supported `game`, `movie` and `beauty_product` now.
 
-    We support two types of OpenAI API: [Chat](https://platform.openai.com/docs/api-reference/chat) and [Completions](https://platform.openai.com/docs/api-reference/completions). Here are commands for running RecBot with GPT-3.5-turbo and text-davinci-003.
+    - If you are using Azure OpenAI API, please setup those environments:
 
-    ```bash
-    cd LLMCRS
 
-    # Note that the engine should be your deployment id
-    # completion type: text-davinci-003
-    OPENAI_API_KEY="xxx" [OPENAI_API_BASE="xxx" OPENAI_API_VERSION="xxx" OPENAI_API_TYPE="xxx"] python app.py --engine text-davinci-003 --bot_type completion
+        ```bash
+        export OPENAI_API_KEY="xxx" 
+        export OPENAI_API_BASE="xxx" 
+        export OPENAI_API_VERSION="xxx" 
+        export OPENAI_API_TYPE="azure"
+        ```
 
-    # chat type: gpt-3.5-turbo, gpt-4 (Recommended)
-    OPENAI_API_KEY="xxx" [OPENAI_API_BASE="xxx" OPENAI_API_VERSION="xxx" OPENAI_API_TYPE="xxx"] python app.py --engine gpt-3.5-turbo/gpt-4 --bot_type chat
+    Then, you can launch the app with: 
+
+    ```bash 
+    DOMAIN=game python app.py --engine gpt-4
     ```
+
+    Note that `DOMAIN` represents the item domain, e.g., `game`, `movie` and `beauty_product` in the provided data sources. Replace `gpt-4` with your own deploy name when using Azure OpenAI API. 
 
     We also provide a shell script `run.sh`, where commonly used arguments are given. You could directly set the API related information in `run.sh`, or create a new shell script `oai.sh` that would be loaded in `run.sh`. GPT-4 API is highly recommended for the InteRecAgent since it has remarkable instruction-following capability.
 
