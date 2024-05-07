@@ -513,6 +513,7 @@ class CRSAgentPlanFirstOpenAI:
     def _parse_llm_output(self, llm_output: str) -> Tuple[bool, str]:
         llm_output = llm_output.strip()
 
+        llm_output = llm_output.replace("###", "")  # in case of special token
         regex = r"Action\s*\d*\s*:(.*?)\nAction\s*\d*\s*Input\s*\d*\s*:[\s]*(.*)"
         match = re.search(regex, llm_output, re.DOTALL)
         if not match:
