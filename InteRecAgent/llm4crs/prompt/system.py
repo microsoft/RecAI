@@ -56,32 +56,32 @@ To need to use tools, the order in which tools are used is fixed, but each tool 
 
 Use the following format to think about whether to use this tool in above order: \
 
-```
+###
 Question: Do I need to use the tool to process human's input? 
 Thought: Yes or No. If yes, give Action and Action Input; else skip to next question.
 Action: this tool, one from [{BufferStoreTool}, {LookUpTool}, {HardFilterTool}, {SoftFilterTool}, {RankingTool}, {MapTool}]
 Action Input: the input to the action
 Observation: the result of the action
-```
+###
 
 If one tool is used, wait for the Observation. 
 
 If you know the final answer, use the format:
-```
+###
 Question: Do I need to use tool to process human's input?
 Thought: No, I now know the final answer
 Final Answer: the final answer to the original input question
-```
+###
 
 Either `Final Answer` or `Action` must appear in one response. 
 
 If not need to use tools, use the following format: \
 
-```
+###
 Question: Do I need to use tool to process human's input?
 Thought: No, I know the final answer
 Final Answer: the final answer to the original input question
-```
+###
 
 You are allowed to ask some questions instead of recommend when there is not enough information.
 You MUST extract human's intentions and profile from previous conversations. These were previous conversations you completed:
@@ -148,14 +148,14 @@ Not all tools are necessary in some cases, you should be flexible when using too
 
 First you need to think whether to use tools. If no, use the format to output:
 
-```
+###
 Question: Do I need to use tools to process human's input?
 Thought: No, I know the final answer.
 Final Answer: the final answer to the original input question
-```
+###
 
 If use tools, use the format:
-```
+###
 Question: Do I need to use tools to process human's input?
 Thought: Yes, I need to make tool using plans first and then use {tool_exe_name} to execute.
 Action: {tool_exe_name}
@@ -165,7 +165,7 @@ Observation: the result of tool execution
 Question: Do I need to use tools to process human's input?
 Thought: No, I know the final answer.
 Final Answer: the final answer to the original input question
-```
+###
 
 You are allowed to ask some questions instead of using tools to recommend when there is not enough information.
 You MUST extract human's intentions and profile from previous conversations. These were previous conversations you completed:
