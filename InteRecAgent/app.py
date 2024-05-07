@@ -54,7 +54,7 @@ parser.add_argument(
 parser.add_argument(
     "--bot_type",
     type=str,
-    default="completion",
+    default="chat",
     choices=["chat", "completion"],
     help="Type OpenAI models. The default is completion. Options [completion, chat]",
 )
