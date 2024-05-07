@@ -109,6 +109,8 @@ InteRecAgent consists of 4 necessary components:
     bot_type="chat" # model type, ["chat", "completetion"]. For gpt-3.5-turbo and gpt-4, it should be "chat". For text-davinci-003, it should be "completetion" 
     ```
 
+    Also, we support to use our finetuned model RecLlama as the backbone language model, the tutorial could be found in [RecLlama](./RecLlama.md).
+
 
 4. Features    
 
