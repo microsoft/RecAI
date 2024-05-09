@@ -23,7 +23,7 @@ The input of the tool should be a string of {item} names split by two ';', such 
 
 
 LOOK_UP_TOOL_DESC = """
-The tool is used to look up some {item} information in a {item} information table (including statistical information), like number of {item}s, description of {item}s and so on. \
+The tool is used to look up {item}'s detailed information in a {item} information table (including statistical information), like number of {item}s, description of {item}s, price and so on. \
 
 The input of the tools should be a SQL command (in one line) converted from the search query, which would be used to search information in {item} information table. \
 You should try to select as less columns as you can to get the necessary information. \
@@ -36,7 +36,7 @@ The tool can NOT give recommendations. DO NOT SELECT id information!
 
 
 HARD_FILTER_TOOL_DESC = """
-The tool is a hard condition tool. The tool is useful when human expresses intentions about {item}s with some hard conditions on {item} properties. \
+The tool is a hard-condition {item} filtering tool. The tool is useful when human want {item}s with some hard conditions on {item} properties. \
 The input of the tool should be a one-line SQL SELECT command converted from hard conditions. Here are some rules: \
 1. {item} titles can not be used as conditions in SQL;
 2. the tool can not find similar {item}s;
@@ -49,7 +49,7 @@ The input of the tool should be a one-line SQL SELECT command converted from har
 
 
 SOFT_FILTER_TOOL_DESC = """
-The tool is a soft condition filtering tool. \
+The tool is a soft condition {item} filtering tool. \
 The tool can find similar {item}s for specific seed {item}s. \
 Never use this tool if human doesn't express to find some {item}s similar with seed {item}s. \
 There is a similarity score threshold in the tool, only {item}s with similarity above the threshold would be kept. \

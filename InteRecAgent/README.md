@@ -109,6 +109,37 @@ InteRecAgent consists of 4 necessary components:
     bot_type="chat" # model type, ["chat", "completetion"]. For gpt-3.5-turbo and gpt-4, it should be "chat". For text-davinci-003, it should be "completetion" 
     ```
 
+    Meanwhile, we support to serve local models such as Vicuna as the backbone language model instead of OpenAI APIs:
+    
+    1. Download the weights of [Vicuna](https://huggingface.co/lmsys/vicuna-7b-v1.5) from huggingface.
+
+    2. Install `fschat` package according to [FastChat](https://github.com/lm-sys/FastChat?tab=readme-ov-file#install)
+
+    3. Deploy the Vicuna model with OpenAI-Compatible RESTful APIs by running the following command:
+
+        ```bash
+        # First, launch the controller
+        python3 -m fastchat.serve.controller
+        # Then, launch the model worker(s)
+        python3 -m fastchat.serve.model_worker --model-path path-to-vicuna
+        # Finally, launch the RESTful API server
+        python3 -m fastchat.serve.openai_api_server --host localhost --port 8000
+        ```
+
+    4. Set the configuration for RecLlama API in `run.sh`
+
+        ```bash
+        API_KEY="EMPTY"
+        API_BASE="http://localhost:8000/v1"
+        API_VERSION="2023-03-15-preview"
+        API_TYPE="open_ai"
+        engine="vicuna-7b-v1.5"   # model name
+        bot_type="completetion" # model type
+        ```
+
+    5. Run the `run.sh` script to start the chatbot.
+
+
     Also, we support to use our finetuned model RecLlama as the backbone language model, the tutorial could be found in [RecLlama](./RecLlama.md).
 
 

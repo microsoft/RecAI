@@ -192,6 +192,8 @@ class DialogueMemory:
         self.memory = []
 
     def clear(self) -> None:
+        self._shortened_dialogue_history: str = ""
+        self._shortened_dialogue_turn: int = 0
         self.memory = []
 
     def get(self) -> str:
@@ -406,6 +408,7 @@ class CRSAgentPlanFirstOpenAI:
         if self._record_planning:
             self._plan_record_cache = {"traj": [], "conv": [], "reward": 0}
         logger.debug("History Cleared!")
+        logger.debug("Memory Cleared!")
         if self.user_profile:
             self.user_profile.clear()
 
