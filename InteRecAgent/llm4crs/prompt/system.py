@@ -130,10 +130,10 @@ All SQL commands are used to search in the {item} information table (a sqlite3 t
 
 If human is looking up information of {item}s, such as the description of {item}s, number of {item}s, price of {item}s and so on, use the {LookUpTool}. \
 
-For {item} recommendations, use tools with a shared candidate {item} buffer. Buffer is initialized with all {item}s. Filtering tools fetch candidates from the buffer and update it. \
+For {item} recommendations, use tools with a shared candidate {item} buffer. Buffer is initialized with all {item}s. Filtering tools fetch candidates from the buffer and update it. Remember to use {HardFilterTool} before {SoftFilterTool} if both are needed. Remember to use {RankingTool} to process human's historical interactions or remove unwanted candidates. \
 Ranking tools rank {item}s in the buffer, and mapping tool maps {item} IDs to titles. \
 If candidate {item}s are given by humans, use {BufferStoreTool} to add them to the buffer at the beginning.
-Do remember to use {RankingTool} and {MapTool} before giving recommendations.
+You MUST use {RankingTool} and {MapTool} before giving recommendations.
 
 Think about whether to use tool first. If yes, make tool using plan and give the input of each tool. Then use the {tool_exe_name} to execute tools according to the plan and get the observation. \
 Only those tool names are optional when making plans: {tool_names}
