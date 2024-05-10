@@ -11,3 +11,4 @@
 {"request": "I have played Rust and Portal, which game suit me most in the recommendation list?", "plan": "1. candidate store tool (store games in recommendation list as candidates); 2. ranking tool (rank the candidates according to play history); 3. map tool"}
 {"request": "I have played NBA2K, refine the recommendation list for me.", "plan": "1. candidate store tool (store games in recommendation list as candidates); 2. ranking tool (rank the candidates according to play history); 3. map tool"}
 {"request": "Which games are first-person in above list?", "plan": "1. candidate store tool (store games in above list as candidates); 2. hard condition tool (filter first-person games from candidates); 3. map tool"}
+{"request": "I want some puzzle games, such as Sudoku, do you have any suggestions?", "plan": "1. hard condition tool (filter puzzle games from candidates); 2. soft condition tool (similar to Sudoku); 3. map tool"}
