@@ -5,6 +5,7 @@ We need to process the following data sets separately:
 + Online Retail (https://www.kaggle.com/carrie1/ecommerce-data)
 
 # Download
+Create the directory at Knowledge_Plugin/
 ```bash
 mkdir data/raw_data
 cd data/raw_data
@@ -22,6 +23,9 @@ unzip ml-1m.zip
 
 Run each notebook according to the dataset.
 
++ data_preprocess_amazon.ipynb
++ data_preprocess_ml1m.ipynb
++ data_preprocess_onlineretail.ipynb
 
 # Result
 

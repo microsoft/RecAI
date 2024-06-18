@@ -2,7 +2,7 @@
     "sequential_data_path": "../data/ml1m/sequential_data.txt",
     "candidate_data_path": "../data/ml1m/negative_samples_pop.txt",
     "meta_data_path": "../data/ml1m/metadata.json",
-    "u2i_data_path": "data/ml1m/SASRec_U2I_candidate_pop.json",
+    "u2i_data_path": "../data/ml1m/SASRec_U2I_candidate_pop.json",
     "topk": 200,
     "max_his_len": 50,
     "template": [
