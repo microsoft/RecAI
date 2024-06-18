@@ -2,8 +2,8 @@
     "sequential_data_path": "../data/ml1m/sequential_data.txt",
     "candidate_data_path": "../data/ml1m/negative_samples_pop.txt",
     "meta_data_path": "../data/ml1m/metadata.json",
-    "cf_data_path": "data/ml1m/normalized_CF.json",
-    "reasoning_path_data_path": "data/ml1m/path_text_dict-I.json",
+    "cf_data_path": "../data/ml1m/normalized_CF.json",
+    "reasoning_path_data_path": "../data/ml1m/path_text_dict-I.json",
     "topk": 200,
     "max_his_len": 50,
     "template": [

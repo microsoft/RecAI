@@ -3,6 +3,7 @@ import time
 import pickle
 import torch
 import argparse
+import numpy as np
 from tqdm import tqdm
 from model import SASRec
 from utils import *
@@ -85,12 +86,12 @@ def evaluate_all(model, mode, dataset, epoch, args):
             current_batch_size = 0
             all_user_embeds.append(user_embeds.cpu().detach())
 
-    with open(f"data/{args.dataset}/ranked_list_{args.sample_type}.txt", "w") as fw:
+    with open(f"../../../data/{args.dataset}/ranked_list_{args.sample_type}.txt", "w") as fw:
         for user, ranked_items in zip(users, ranked_list):
             fw.write(f"{user} {' '.join([str(item) for item in ranked_items])}\n")
 
     all_user_embeds = torch.concat(all_user_embeds, dim=0).cpu().detach().numpy() # [user_num, embed_dim]
-    with open(f"data/{args.dataset}/user_embeds_{args.sample_type}.pkl", "wb") as fw:
+    with open(f"../../../data/{args.dataset}/user_embeds_{args.sample_type}.pkl", "wb") as fw:
         pickle.dump(all_user_embeds, fw)
     
     eval_result, eval_str = evaluation(ranked_list, answers)
@@ -285,3 +286,6 @@ if __name__ == '__main__':
                 if item_id == 0: continue
                 filtered_items.append(item_id)
             fw.write(f"{user_id+1} " + " ".join([str(item_id) for item_id in filtered_items]) + "\n")
+    embeds = [all_user_embeds, all_item_embeds]
+    with open(f"../../../data/{args.dataset}/SASRec_embeddings_{args.sample_type}.pkl", "wb") as fw:
+        pickle.dump(embeds, fw)
