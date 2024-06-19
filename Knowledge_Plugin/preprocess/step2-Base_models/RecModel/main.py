@@ -352,7 +352,7 @@ def main():
     torch.save(item_vectors, os.path.join(MODEL_DIR, f"{args.model_name}/{log_file_name}.item_embedding.pt"))
     
     embed = [item_vectors.detach().cpu().numpy(), user_vectors[1:].detach().cpu().numpy()]
-    pickle.dump(embed, open(os.path.join(MODEL_DIR, f"{args.model_name}/{args.dataset}/{log_file_name}.embeddings.pkl"), "wb"))
+    pickle.dump(embed, open(f"../../../data/{args.dataset}/MF_embeddings_{args.sample_type}.pkl", "wb"))
 
 
     logging.info('# of params: %d' % model.total_parameters)

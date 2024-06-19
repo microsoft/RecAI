@@ -25,10 +25,10 @@ For example:
 ```bash
 cd Knowledge_Extraction
 python extract_I2I.py \
-    --dataset beauty \
+    --dataset ml1m \
     --negative_type pop
 python extract_U2I.py \
-    --dataset beauty \
+    --dataset ml1m \
     --negative_type pop
 ```
 
@@ -46,8 +46,8 @@ python generate_prompt.py \
     --config config/ml1m/popneg_his_I2I.json \
     --dataset ml1m
 python call_openai.py \
-    --prompt out/prompts/ml1m/popneg_his_I2I_path.json \
+    --prompt out/prompts/ml1m/popneg_his_I2I.json \
     --model ChatGPT \
     --dataset ml1m
-bash metric.bash out/result/ml1m/ChatGPT_popneg_his_I2I_path ml1m
+bash metric.bash out/result/ml1m/ChatGPT_popneg_his_I2I ml1m
 ```

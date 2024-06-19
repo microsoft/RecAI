@@ -106,7 +106,7 @@ class DataProcessor(Dataset):
                 tmp_df = df.rename(columns={self.data_loader.label: Y})
                 tmp_df = tmp_df.drop(tmp_df[tmp_df[Y] <= 0].index)
                 neg_df = self.generate_neg_df(
-                    inter_df=tmp_df, feature_df=df, sample_n=self.test_sample_n, train=False, test_neg_data=self.data_loader.test_neg_data)
+                    inter_df=tmp_df, feature_df=df, sample_n=self.test_sample_n, train=False) #, test_neg_data=self.data_loader.test_neg_data)
                 df = pd.concat([df, neg_df], ignore_index=True)
             self.test_data = self.format_data_dict(df, model)
             self.test_data[SAMPLE_ID] = np.arange(0, len(self.test_data[Y]))
