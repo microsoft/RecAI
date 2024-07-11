@@ -53,7 +53,7 @@ else
 
     echo "generate gpt_response_file"
 
-    python preprocess/gpt_api/query_api.py --query_file $gpt_query_file'.csv' --response_file $gpt_response_file'.csv' 
+    python preprocess/gpt_api/query_api.py --input_file $gpt_query_file'.csv' --output_file $gpt_response_file'.csv' 
 fi
 
 echo "generate gpt_data_file"

@@ -45,10 +45,10 @@ def parse_args():
 
 
 def merge_and_sample(itemid2text, itemid2title, itemid2features, args):
-    query_profile = pd.read_csv(args.gpt_path+'.csv', header=None, sep=',', names=['q', 'x', 's', 'target'])
+    query_profile = pd.read_csv(args.gpt_path+'.csv', header=None, sep=',', names=['question', 'target'])
     query_profile = query_profile.iloc[1:]
     query_profile = query_profile.reset_index(drop=True)
-    # query_profile2 = pd.read_csv(args.gpt_path+'_2.csv', header=None, sep=',', names=['q', 'x', 's', 'target'])
+    # query_profile2 = pd.read_csv(args.gpt_path+'_2.csv', header=None, sep=',', names=['question', 'target'])
     # query_profile2 = query_profile2.iloc[1:]
     # query_profile = pd.concat([query_profile1, query_profile2], axis=0).reset_index(drop=True)
     # n_rows = len(query_profile)
