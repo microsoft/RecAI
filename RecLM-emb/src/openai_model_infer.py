@@ -20,19 +20,36 @@ MAX_THREADS = 1
 MAX_RETRIES = 5
 INTERVAL = 5
 
-credential = AzureCliCredential()    
+api_key = os.environ.get('OPENAI_API_KEY') if os.environ.get('OPENAI_API_KEY') else None
+api_base =  os.environ.get('OPENAI_API_BASE') if os.environ.get('OPENAI_API_BASE') else None
+api_type = os.environ.get('OPENAI_API_TYPE') if os.environ.get('OPENAI_API_TYPE') else None
+api_version =  os.environ.get('OPENAI_API_VERSION') if os.environ.get('OPENAI_API_VERSION') else None
 
-token_provider = get_bearer_token_provider(
-    credential,
-    "https://cognitiveservices.azure.com/.default"
-)
+if api_key:
+    if api_type == "azure":
+        client = AzureOpenAI(
+            api_key=api_key,
+            api_version=api_version,
+            azure_endpoint=api_base
+        )
+    else:
+        client = OpenAI(  
+            api_key=api_key
+        )
+else:
+    credential = AzureCliCredential()    
 
-client = AzureOpenAI(
-    azure_endpoint=os.environ.get('OPENAI_API_BASE'),
-    azure_ad_token_provider=token_provider,
-    api_version=os.environ.get('OPENAI_API_VERSION'),
-    max_retries=MAX_RETRIES,
-)
+    token_provider = get_bearer_token_provider(
+        credential,
+        "https://cognitiveservices.azure.com/.default"
+    )
+
+    client = AzureOpenAI(
+        azure_endpoint=api_base,
+        azure_ad_token_provider=token_provider,
+        api_version=api_version,
+        max_retries=MAX_RETRIES,
+    )
 
 def call_openai_embedding(model, text):
     for i in range(MAX_RETRIES):
