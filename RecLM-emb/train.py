@@ -73,13 +73,14 @@ def main():
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-    config._flash_attn_2_enabled = model_args.flash_attn_2_enabled
+    config._attn_implementation = model_args.attn_implementation
     logger.info('Config: %s', config)
 
     model = BiEncoderModel(model_name=model_args.model_name_or_path,
                            normlized=model_args.normlized,
                            sentence_pooling_method=model_args.sentence_pooling_method,
                            negatives_cross_device=training_args.negatives_cross_device,
+                           in_batch_negatives=training_args.in_batch_negatives,
                            temperature=training_args.temperature,
                            peft_model_name=model_args.peft_model_name,
                            config=config,
@@ -110,7 +111,7 @@ def main():
             passage_max_len=data_args.passage_max_len,
             truncation_strategy=truncation_strategy,
             padding_strategy=padding_strategy,
-            has_template=data_args.has_template,
+            add_eos="Llama" in model_args.model_name_or_path,
         ),
         tokenizer=tokenizer
     )
@@ -118,7 +119,7 @@ def main():
     Path(training_args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # Training
-    trainer.train()
+    trainer.train(resume_from_checkpoint=training_args.resume_from_checkpoint)
     trainer.save_model()
     # For convenience, we also re-save the tokenizer to the same directory,
     # so that you can share your model easily on huggingface.co/models =)

@@ -9,3 +9,5 @@ data/
 data_*/
 output/
 output_*/
+
+gradio_cached_examples/

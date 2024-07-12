@@ -96,7 +96,7 @@ class EmbedCollator(DataCollatorWithPadding):
     passage_max_len: int = 128
     truncation_strategy: Union[bool, str] = True
     padding_strategy: Union[bool, str] = 'max_length'
-    has_template: bool = False
+    add_eos: bool = False
 
     def padding_score(self, teacher_score):
         group_size = None
@@ -125,7 +125,7 @@ class EmbedCollator(DataCollatorWithPadding):
         if isinstance(passage[0], list):
             passage = sum(passage, [])
 
-        if not self.has_template:
+        if not self.add_eos:
             q_collated = self.tokenizer(
                 query,
                 padding=self.padding_strategy,

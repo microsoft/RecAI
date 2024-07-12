@@ -32,9 +32,9 @@ class EmbDataset(Dataset):
 @dataclass
 class InferCollator(DataCollatorWithPadding):
     truncation: bool = True
-    has_template: bool = False
+    add_eos: bool = False
     def __call__(self, features):
-        if not self.has_template:
+        if not self.add_eos:
             t_input = self.tokenizer(features, padding=True, truncation=self.truncation, max_length=self.max_length, return_tensors="pt")
         else:
             t_input = self.tokenizer(features, padding=True, truncation=self.truncation, max_length=self.max_length-1, return_tensors="pt")
@@ -83,7 +83,7 @@ def run_model_embedding(model_path_or_name, max_seq_len, batch_size, prompt_path
     test_data = test_data['text'].tolist()
 
     test_dataset = EmbDataset(test_data, tokenizer, max_seq_len, args.has_template, qorp)
-    dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=0, collate_fn=InferCollator(tokenizer, max_length=max_seq_len, truncation=True, has_template=args.has_template))
+    dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=0, collate_fn=InferCollator(tokenizer, max_length=max_seq_len, truncation=True, add_eos="Llama" in model_path_or_name))
     model, dataloader = accelerator.prepare(model, dataloader)
     model.eval()
 
