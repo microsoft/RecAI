@@ -38,8 +38,17 @@ pip install -r requirements.txt
 ```
 
 ### Set OpenAI API Environment
-If you want to use OpenAI API, you need to firstly run the following scripts in your console. Currently we only support the Azure OpenAI API.
+If you want to use OpenAI API, you need to firstly run the following scripts in your console. If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and MODEL.
 
+```bash
+export OPENAI_API_KEY=xxx;
+export OPENAI_API_BASE=https://xxx.openai.azure.com/;
+export OPENAI_API_VERSION=2023-03-15-preview;
+export OPENAI_API_TYPE=azure;
+export MODEL=xxx;
+```
+
+We also support AzureCliCredential login:
 ```bash
 az login
 export OPENAI_API_BASE=https://xxx.openai.azure.com/;

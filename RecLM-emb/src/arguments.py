@@ -34,7 +34,11 @@ class ModelArguments:
         default=None, metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     attn_implementation: Optional[str] = field(
-        default="eager", metadata={"help": "The attention implementation to use: 'eager', 'sdpa', 'flash_attention_2'"}, choices=["eager", "sdpa", "flash_attention_2"]
+        default="eager", 
+        metadata={
+            "help": "The attention implementation to use: 'eager', 'sdpa', 'flash_attention_2'",
+            "choices": ["eager", "sdpa", "flash_attention_2"],
+        }, 
     )
     torch_dtype: Optional[str] = field(
         default=None,

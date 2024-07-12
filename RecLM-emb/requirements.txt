@@ -20,3 +20,4 @@ multiprocess==0.70.16
 flash-attn==2.5.9.post1
 gradio==4.29.0
 azure-identity==1.17.1
+tiktoken==0.7.0

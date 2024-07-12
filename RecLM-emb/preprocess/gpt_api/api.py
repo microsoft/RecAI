@@ -13,27 +13,43 @@ from concurrent.futures import ThreadPoolExecutor
 from openai import OpenAI, AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider, AzureCliCredential
 
-credential = AzureCliCredential()    
+api_key = os.environ.get('OPENAI_API_KEY') if os.environ.get('OPENAI_API_KEY') else None
+api_base =  os.environ.get('OPENAI_API_BASE') if os.environ.get('OPENAI_API_BASE') else None
+api_type = os.environ.get('OPENAI_API_TYPE') if os.environ.get('OPENAI_API_TYPE') else None
+api_version =  os.environ.get('OPENAI_API_VERSION') if os.environ.get('OPENAI_API_VERSION') else None
 
-token_provider = get_bearer_token_provider(
-    credential,
-    "https://cognitiveservices.azure.com/.default"
-)
+if api_key:
+    if api_type == "azure":
+        client = AzureOpenAI(
+            api_key=api_key,
+            api_version=api_version,
+            azure_endpoint=api_base
+        )
+    else:
+        client = OpenAI(  
+            api_key=api_key
+        )
+else:
+    credential = AzureCliCredential()    
 
-client = AzureOpenAI(
-    azure_endpoint=os.environ.get('OPENAI_API_BASE'),
-    azure_ad_token_provider=token_provider,
-    api_version=os.environ.get('OPENAI_API_VERSION'),
-    max_retries=5,
-)
+    token_provider = get_bearer_token_provider(
+        credential,
+        "https://cognitiveservices.azure.com/.default"
+    )
+
+    client = AzureOpenAI(
+        azure_endpoint=api_base,
+        azure_ad_token_provider=token_provider,
+        api_version=api_version,
+        max_retries=5,
+    )
+
 MODEL = os.environ.get('MODEL')
 
 if MODEL.startswith("gpt-3"):
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")  # gpt-3.5-turbo gpt-4 gpt-4-0314 
 else:
     encoding = tiktoken.encoding_for_model("gpt-4")
-
-
 
 def call_chatgpt(prompt):
     max_retry_cnt = 5

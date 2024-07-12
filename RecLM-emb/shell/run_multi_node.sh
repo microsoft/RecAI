@@ -37,7 +37,7 @@ if [ "$MODEl_NAME_OR_PATH" = "meta-llama/Llama-2-7b-hf" ]; then
         --data_cache_dir $HOME/.cache/hf_data \
         --output_dir $OUTPUT_DIR \
         --model_name_or_path $MODEl_NAME_OR_PATH \
-        --train_data $DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
+        --train_data $DATA_DIR/gpt4_data_v2.jsonl,$DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
         --learning_rate 3e-5 \
         --num_train_epochs 3 \
         --per_device_train_batch_size 2 \
@@ -64,7 +64,7 @@ else
         --data_cache_dir $HOME/.cache/hf_data \
         --output_dir $OUTPUT_DIR \
         --model_name_or_path $MODEl_NAME_OR_PATH \
-        --train_data $DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
+        --train_data $DATA_DIR/gpt4_data_v2.jsonl,$DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
         --learning_rate 3e-5 \
         --num_train_epochs 3 \
         --per_device_train_batch_size 2 \

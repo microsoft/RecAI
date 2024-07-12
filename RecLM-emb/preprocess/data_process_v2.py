@@ -49,7 +49,7 @@ def parse_args():
 
 
 def gen_conv(args, itemid2title, itemid2features):
-    max_sample_num = 18000
+    max_sample_num = 10000
     with open(args.in_seq_data, 'r') as rd:
         all_samples = rd.readlines()
     if len(all_samples) > max_sample_num:
@@ -111,7 +111,7 @@ def gen_conv(args, itemid2title, itemid2features):
 
 
 def gen_summary(args, itemid2title):
-    max_sample_num = 30000
+    max_sample_num = 10000
     with open(args.in_seq_data, 'r') as rd:
         all_samples = rd.readlines()
     if len(all_samples) > max_sample_num:
@@ -167,7 +167,7 @@ def gen_query(args, itemid2title, itemid2features):
     for id, title in tqdm(enumerate(itemid2title), desc='gen_query', total=len(itemid2title)):
         if id==0:
             continue
-        for _ in range(5):
+        for _ in range(1):
             target_info = {'title': title[1]}
             features = itemid2features[id] if 'description: ' not in itemid2features[id][-1][0] else itemid2features[id][:-1]
 
@@ -208,7 +208,7 @@ def gen_neg_query(args, itemid2title, itemid2features):
     for id, title in tqdm(enumerate(itemid2title), desc='gen_neg_query', total=len(itemid2title)):
         if id==0:
             continue
-        for _ in range(5):
+        for _ in range(1):
             target_info = {'title': title[1]}
             features = []
             for feature in itemid2features[id]:
