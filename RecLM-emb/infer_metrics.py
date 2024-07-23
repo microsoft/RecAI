@@ -22,7 +22,6 @@ from accelerate.utils import set_seed
 # sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__) )))
 from preprocess.utils import get_item_text
 from src.huggingface_model_infer import run_model_embedding
-from src.openai_model_infer import run_api_embedding
 
 def coverage_at_k(r, k):
     r = np.asarray(r)[:k]
@@ -410,9 +409,11 @@ def write_metrics_to_file(metrics_dict, task_name, file_name):
         f.write(json.dumps(output, ensure_ascii=False) + '\n') 
 
 if __name__ == '__main__':
-    openai_model_names = ['ada_embeddings', 'text-embedding-ada-002']
+    openai_model_names = ['ada_embeddings', 'text-embedding-ada-002', 'text-embedding-3-large']
     args = parse_args()
     set_seed(args.seed)
+    if args.model_path_or_name in openai_model_names:
+        from src.openai_model_infer import run_api_embedding
 
     accelerator = Accelerator()
 
