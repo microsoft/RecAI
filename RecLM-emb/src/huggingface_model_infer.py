@@ -76,7 +76,7 @@ def run_model_embedding(model_path_or_name, max_seq_len, batch_size, prompt_path
     model = AutoModel.from_pretrained(model_path_or_name, config=model_config, torch_dtype=torch_dtype)
     if args.peft_model_name:
         model = PeftModel.from_pretrained(model, args.peft_model_name)
-        model = model.merge_and_unload()
+        # model = model.merge_and_unload()
 
     accelerator.print(f'loading file {prompt_path}')
     test_data = pd.read_json(prompt_path, lines=True)
