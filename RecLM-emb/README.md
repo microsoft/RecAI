@@ -102,6 +102,7 @@ bash shell/test_data_pipeline.sh
 ```bash
 bash shell/run_single_node.sh
 ```
+- `--nproc_per_node`: the number of GPUs on your machine
 #### multi node
 If you have two nodes: node0 and node1 (here we use node0 as the master node), you should first run `deepspeed utils/all_reduce_bench_v2.py` to get IP and port number of the master node. Then run the following script on both nodes using the same IP and port number but different node ranks.
 
@@ -121,6 +122,7 @@ Note that for the [repllama](https://huggingface.co/castorini/repllama-v1-7b-lor
 ```bash
 bash shell/infer_llm_metrics.sh
 ```
+- `--config_file`: Indicate the code running environment. `./shell/infer_case.yaml` and `./shell/infer.yaml` are provided as references for single-gpu inference and multi-gpu inference respectively.
 
 #### Case study
 You need to first prepare your query file with the suffix .jsonl (use `user_embedding_prompt_path` parameter to specify), an example is as follows:

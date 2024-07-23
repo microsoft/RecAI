@@ -14,7 +14,7 @@ PASSAGE_MAX_LEN=128
 SENTENCE_POOLING_METHOD="mean"
 
 cd $EXE_DIR
-if [ "$MODEL_PATH_OR_NAME" = "ada_embeddings" ] || [ "$MODEL_PATH_OR_NAME" = "text-embedding-ada-002" ]; then
+if [ "$MODEL_PATH_OR_NAME" = "ada_embeddings" ] || [ "$MODEL_PATH_OR_NAME" = "text-embedding-ada-002" ] || [ "$MODEL_PATH_OR_NAME" = "text-embedding-3-large" ]; then
     echo "using openai model"
     CONFIG_FILE=./shell/infer_case.yaml
 else
