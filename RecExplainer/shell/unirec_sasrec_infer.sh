@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-
 #!/bin/bash
 # root
 LOCAL_ROOT="$HOME/UniRec"

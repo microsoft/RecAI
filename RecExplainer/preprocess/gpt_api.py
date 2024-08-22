@@ -1,206 +1,163 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import pandas as pd
-import openai
-from openai import OpenAI, AzureOpenAI
-import argparse
-from tqdm import tqdm
-from collections import defaultdict
-import time
+import csv
 import os
+import time
+import argparse
+import pandas as pd
+import tiktoken
+import os.path as osp
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
+from openai import OpenAI, AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider, AzureCliCredential
 
-QUERY_COL = 'question'
-LABEL_COL = 'target'
-RESPONSE_COL = 'response'
-DATAFRAME_SEP = ','
-
-
-engine = os.environ.get('ENGINE')
-api_key = os.environ.get('OPENAI_API_KEY')
+api_key = os.environ.get('OPENAI_API_KEY') if os.environ.get('OPENAI_API_KEY') else None
 api_base =  os.environ.get('OPENAI_API_BASE') if os.environ.get('OPENAI_API_BASE') else None
-api_type = os.environ.get('OPENAI_API_TYPE') if os.environ.get('OPENAI_API_TYPE') else 'openai'
+api_type = os.environ.get('OPENAI_API_TYPE') if os.environ.get('OPENAI_API_TYPE') else None
 api_version =  os.environ.get('OPENAI_API_VERSION') if os.environ.get('OPENAI_API_VERSION') else None
-if api_type == "azure":
-    client = AzureOpenAI(
-        api_key=api_key,
-        api_version=api_version,
-        azure_endpoint=api_base
-    )
-else:
-    client = OpenAI(  
-        api_key=api_key
-    )
 
-def query_gpt_gpt4(batch_queries, system_message='', sleep=60, engine=None):    
-    responses = []
- 
-    success = True
-    exception_content_filter = False
-    try:
-        batch_response = client.chat.completions.create(
-            model=engine, # The deployment name you chose when you deployed the ChatGPT or GPT-4 model.
-            temperature=0.8,
-            messages=[ 
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": batch_queries[0]} 
-            ]
+if api_key:
+    if api_type == "azure":
+        client = AzureOpenAI(
+            api_key=api_key,
+            api_version=api_version,
+            azure_endpoint=api_base
         )
-        # print('batch_response = {0}'.format(batch_response))
-    except Exception as e:
-        success = False
-        print(str(e))
-        if 'The response was filtered due to the prompt triggering Azure OpenAI\'s content management policy.' in str(e):
-            exception_content_filter = True
-            print('The query is :\n{0}'.format(batch_queries[0]))
-    # print( batch_response['choices'][0]['message']['content'])
-    # return
- 
-    if success: 
-        for i, _ in enumerate(batch_queries): 
-            try:
-                text = batch_response.choices[i].message.content
-                if text:
-                    text = text.replace('\t', ' ').replace('\n', ' ')
-            except Exception as e:
-                print('Error in extract content from response:')
-                print(f'batch_response = {batch_response}')
-                print(str(e))
-                text = "Fail"
-            responses.append(text)
     else:
-        for _ in batch_queries:
-            responses.append('Fail')
-    time.sleep(sleep) 
-    return success, responses, exception_content_filter
+        client = OpenAI(  
+            api_key=api_key
+        )
+else:
+    credential = AzureCliCredential()    
+
+    token_provider = get_bearer_token_provider(
+        credential,
+        "https://cognitiveservices.azure.com/.default"
+    )
+
+    client = AzureOpenAI(
+        azure_endpoint=api_base,
+        azure_ad_token_provider=token_provider,
+        api_version=api_version,
+        max_retries=5,
+    )
+
+MODEL = os.environ.get('MODEL')
+
+if MODEL.startswith("gpt-3"):
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")  # gpt-3.5-turbo gpt-4 gpt-4-0314 
+else:
+    encoding = tiktoken.encoding_for_model("gpt-4")
+
+def call_chatgpt(prompt):
+    max_retry_cnt = 5
+    result = "NULL"
+    for i in range(max_retry_cnt):
+        try:
+            response = client.chat.completions.create(
+                model=MODEL,  
+                messages=[
+                    {"role": "system",
+                    "content": "You are a helpful assistant. \n"},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=500,
+                temperature=1.0,
+                top_p=1.0,
+            )
+            result = response.choices[0].message.content
+            break
+        except Exception as e:
+            error_msg = str(e)
+            print(f"OpenAI API Error: {error_msg}")            
+            if "content filtering" in error_msg:
+                break            
+            if "time" in error_msg or "exceeded token rate limit" in error_msg:
+                print("Rate limit reached. Waiting for 20 seconds...")
+                time.sleep(20) 
+    if not result:
+        result = "NULL"
+    return result
 
 
- 
-def retry_gpt_api_func(batch_names, gpt_api_func, system_message, engine):
-    print('Retrying GPT API Func..')
-    retry_cnt = 5
-    sleep_seconds = 2
-    responses = []
-    for name in batch_names:
-        T = retry_cnt
-        status = True
-        while True:
-            T -= 1
-            status, cur_response, _ = gpt_api_func([name], sleep=sleep_seconds*(retry_cnt-T), system_message=system_message, engine=engine)
-            if status == True or T <= 0:
-                break
-        if status:
-            responses.append(cur_response[0])
-        else:
-            responses.append('Fail')
-    return responses
- 
+def process_row(writer, sample):
+    question = sample['question'] 
+    input_token_num = len(encoding.encode(question))
+    output = call_chatgpt(question)
+    writer.writerow([question, output])
+    # writer.writerow([output, sample['model'], sample['label'], sample['history'], sample['target item'], question])
+    # writer.writerow([sample['uid'], sample['iid'], sample['target'], sample['type'], sample['ground_truth'], question, output])
+    output_token_num = len(encoding.encode(output))
+    return input_token_num, output_token_num
 
-r'''
-    arguments:
-        query_file: a csv file which will be loaded as a pandas dataframe.
-                    Its QUERY_COL column contains the query content and the result will be filled in the RESPONSE_COL column (may be created automatically).
+
+def process_hf_data(dataset, output_file, args):
+    filename = os.path.basename(output_file)
+    with open(output_file, 'w') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(['question', 'answer'])
+        # writer.writerow(['score', 'model', 'label', 'history', 'target item', 'question'])
+        # writer.writerow(['uid', 'iid', 'target', 'type', 'ground_truth', 'question', 'response'])
+        total_input_token_num, total_output_token_num = 0, 0
+
+        try:
+            with ThreadPoolExecutor(max_workers=args.num_process) as executor:
+                futures = []
+                for i, sample in enumerate(dataset):
+                    futures.append(executor.submit(process_row, writer, sample))
+
+                for future in tqdm(futures, desc=filename):
+                    input_token_num, output_token_num = future.result()
+                    total_input_token_num += input_token_num
+                    total_output_token_num += output_token_num
+        except KeyboardInterrupt:
+            print("Caught KeyboardInterrupt, exiting...")
+            for future in futures:  
+                future.cancel()  
         
-        system_message: a string which will be used as the system message before the prompt. It is optional. You can put everything in the prompt, without using system_message.
+            executor.shutdown(wait=False)  
         
-        prompt: a string which will be used to wrap the user input. 
-                Should be something like 'text-before-user-input {0} text-after-user-input.', which contains one '{0}' in the prompt.
-                The default is '{0}' which make the query content exactly the same as user input.
+            print("Results of completed tasks:")  
+            for future in futures:
+                if future.done() and not future.cancelled():
+                    try:  
+                        input_token_num, output_token_num = future.result()
+                        total_input_token_num += input_token_num
+                        total_output_token_num += output_token_num
+                    except Exception as e:  
+                        print(f"Task generated an exception: {e}")  
+            
+        
+    return total_input_token_num, total_output_token_num
 
-'''
-def batch_queries_gpt(query_file, outfile, engine=None, system_message=None, prompt='{0}'):    
-    gpt_api_func = query_gpt_gpt4
-    sleep_seconds = 3 #2
-    batch_size = 1 ## currently gpt-4 only support batch_size = 1    
+## return a list of dictionaries
+def load_jsonl_from_disk(file_path):
+    ## read a csv file with pd, the first line is header 
+    df = pd.read_csv(file_path)    
+    return df.to_dict(orient='records')
 
-    ## load pandas dataframe from query_file as query_profile
-    query_profile = pd.read_csv(query_file, header=0, sep=DATAFRAME_SEP)
-    n_rows = len(query_profile)
 
-    ## create a new column name 'response' to query_profile, leave it empty for now
-    if RESPONSE_COL not in query_profile:
-        query_profile[RESPONSE_COL] = ['TODO'] * n_rows
+def main(args):
+    total_token_num, total_cost = 0, 0
+
+    infile = args.input_file
+    outfile = args.output_file
+    data_as_list = load_jsonl_from_disk(infile)
+
+    total_input_token_num, total_output_token_num = process_hf_data(data_as_list, outfile, args)
+    # cost = 0.015 * total_input_token_num / 1000 + 0.0020 * total_output_token_num / 1000
+    # cost = 0.01 * total_input_token_num / 1000 + 0.03 * total_output_token_num / 1000
+    cost = 10 * total_input_token_num / 1000000 + 30 * total_output_token_num / 1000000
+    total_token_num = total_input_token_num + total_output_token_num
+    print(">> Task done. Use {:d} tokens in total, and cost $ {:.4f}.".format(total_token_num, cost)) 
     
-    out_dir = os.path.dirname(outfile)
-    os.makedirs(out_dir, exist_ok=True)
-    
-    def do_gpt_query(batch_queries, batch_idx):
-        cur_status, cur_responses, excep_content_filter = gpt_api_func(batch_queries, sleep=sleep_seconds, system_message=system_message, engine=engine)
-        if not cur_status and not excep_content_filter:
-            cur_responses = retry_gpt_api_func(batch_queries, gpt_api_func, system_message, engine=engine)
-            time.sleep(sleep_seconds) 
-        for _i, _r in zip(batch_idx, cur_responses):
-            query_profile.at[_i, RESPONSE_COL] = _r
-        return excep_content_filter
 
-        
-    batch_queries = []
-    batch_idx = []
-    content_filter_cnt = 0
-    
-    for idx, row in tqdm(query_profile.iterrows(), desc=f'Querying {engine}', total=n_rows): 
-        batch_queries.append(prompt.format(row[QUERY_COL]))
-        batch_idx.append(idx)
-        if len(batch_queries) >= batch_size:            
-            excep_content_filter = do_gpt_query(batch_queries, batch_idx)
-            if excep_content_filter:
-                content_filter_cnt += 1
-            batch_queries = []
-            batch_idx = []
-        
-        if idx % 10 == 0:
-            print(f'Saving checkpoint.. Content filter trigger cnt: {content_filter_cnt}')
-            query_profile.to_csv(outfile, sep=DATAFRAME_SEP, index=False)
-
-
-    if len(batch_queries) > 0:
-        excep_content_filter = do_gpt_query(batch_queries, batch_idx)
-        if excep_content_filter:
-            content_filter_cnt += 1
-        batch_queries = []
-        batch_idx = []
-     
-    query_profile.to_csv(outfile, sep=DATAFRAME_SEP, index=False)
-
- 
-
-
-
-def recsys_job(): 
-    global QUERY_COL, DATAFRAME_SEP, RESPONSE_COL, engine 
-    QUERY_COL = 'question'
-    RESPONSE_COL = f'response-{engine}'
-    DATAFRAME_SEP = ',' 
-    args = parse_args()
-    if args.response_col is not None:
-        RESPONSE_COL = args.response_col
-    batch_queries_gpt(
-        args.query_file,
-        args.response_file,
-        engine,
-        system_message='',
-        prompt='{0}'
-    )
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="data process")
-    parser.add_argument(
-        "--query_file", type=str, help=""
-    )
-    parser.add_argument(
-        "--response_file", type=str, help=""
-    )
-    parser.add_argument(
-        "--response_col", type=str, help="", default=None
-    )
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_process", type=int, default=1)
+    parser.add_argument("--input_file", type=str)
+    parser.add_argument("--output_file", type=str)
     args = parser.parse_args()
-    return args  
- 
-def main():
-    
-    recsys_job()
-
-
-
-if __name__ == '__main__':
-    main()
+    main(args)

@@ -12,10 +12,8 @@ from dataset.conversation import template_dict
 
 logger = logging.getLogger(__name__)
 
-
 class InferDataset4Exp(Dataset):
-    def __init__(self, args, tokenizer, split='train'):
-        self.split = split
+    def __init__(self, args, tokenizer):
         self.function_map = {
             'sharegpt': self.process_sharegpt,
             'iid2title': self.process_iid2title,
@@ -33,21 +31,14 @@ class InferDataset4Exp(Dataset):
             'uidiid2rank': self.process_uidiid2review,
             'uidiid2binary': self.process_uidiid2review,
             'uidiid2explan': self.process_uidiid2review,
+            "demo": self.process_demo,
         }
         self.tokenizer = tokenizer
         self.args = args
         self.user_history = self.load_user_history(args.sequential_file)
         self.max_hist_len = args.max_hist_len
-
-        data_names = args.data_names.split(',')
-        self.dataset = []
-        for data_name in data_names:
-            if os.path.exists(args.data_dir+data_name+f'_{split}.json') == False:
-                continue
-            temp_dataset = json.load(open(args.data_dir+data_name+f'_{split}.json', "r"))
-            # if len(temp_dataset) > args.max_example_num_per_dataset:
-            #     temp_dataset = random.sample(temp_dataset, args.max_example_num_per_dataset)
-            self.dataset.extend(temp_dataset)
+        
+        self.dataset = json.load(open(args.validation_file, "r"))
 
         if args.inference_mode!='case study':
             filter_dataset = []
@@ -57,24 +48,20 @@ class InferDataset4Exp(Dataset):
             self.dataset = filter_dataset
             logger.info(f"Remain {len(filter_dataset)} examples with inference_mode: {args.inference_mode}")
         
-        if len(self.dataset) > args.max_example_num_per_dataset:
-            self.dataset = self.dataset[:args.max_example_num_per_dataset]
-            logger.info(f"Remain {len(self.dataset)} examples with max_example_num_per_dataset: {args.max_example_num_per_dataset}")
+        if len(self.dataset) > args.max_example_num:
+            self.dataset = self.dataset[:args.max_example_num]
+            logger.info(f"Remain {len(self.dataset)} examples with max_example_num: {args.max_example_num}")
 
         self.meta_infos = {}
-        # title_set = set()
         with open(args.metadata_file, 'r') as f:
             for i, line in enumerate(f):
                 line = json.loads(line)
                 self.meta_infos[i+1] = line
-                # if line['title'].strip().lower() in title_set:
-                #     print(f"Duplicate title: {line['title']}")
-                # title_set.add(line['title'].strip().lower())
             
         self.uidiid2topk = {}
         with open(args.test_top_file, 'r') as f:
             for line in f:
-                uid, iid, top1, topk, pos, neg = line.strip().split('\t') 
+                uid, iid, top1, topk, pos, neg, _, _ = line.strip().split('\t') 
                 uid, iid, top1, topk, pos, neg = int(uid), int(iid), int(top1), [int(x) for x in topk.split(',')], int(pos), int(neg)
                 self.uidiid2topk[(uid, iid)] = topk
 
@@ -93,11 +80,20 @@ class InferDataset4Exp(Dataset):
             'input_ids': data['input_ids'][0],
             'attention_mask': data['attention_mask'][0],
             'user_pos': data['user_pos'][0],
+            'user_ids': data['user_ids'][0],
             'item_seq': data['item_seq'][0],
             'item_pos': data['item_pos'][0],
             'item_ids': data['item_ids'][0],
             'answers': data['answers'][0] if 'answers' in data else None,
         }
+
+    def get_title(self, meta_infos, iid):
+        if 'title' in meta_infos[iid]:
+            return meta_infos[iid]['title']
+        elif 'TitleName' in meta_infos[iid]:
+            return meta_infos[iid]['TitleName']
+        else:
+            raise ValueError(f"Cannot find title for iid: {iid}")
 
     def load_user_history(self, sequential_file):
         user_history = {}
@@ -122,7 +118,7 @@ class InferDataset4Exp(Dataset):
     def process_sharegpt(self, dataset):
         sources = [example["conversations"] for example in dataset]
         
-        conv = template_dict['sharegpt']
+        conv = template_dict[self.args.template_name]
         roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
         # Apply prompt templates
@@ -149,7 +145,7 @@ class InferDataset4Exp(Dataset):
                     break
             # if flag == 1:
             #     continue
-            conversations.append(conv.get_prompt())
+            conversations.append(conv.get_prompt(name='sharegpt'))
 
         # Tokenize conversations
         inputs = self.tokenizer(
@@ -164,13 +160,14 @@ class InferDataset4Exp(Dataset):
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
             user_pos=[[0] for _ in range(len(inputs.input_ids))],
+            user_ids=[[0] for _ in range(len(inputs.input_ids))],
             item_seq=[[self.pad_seq([])] for _ in range(len(inputs.input_ids))],
             item_pos=[[0] for _ in range(len(inputs.input_ids))],
             item_ids=[[0] for _ in range(len(inputs.input_ids))],
         )
 
     def process_iid2title(self, dataset):
-        conv = template_dict['iid2title']
+        conv = template_dict[self.args.template_name]
         conversations = []
         item_ids = []
         answers = []
@@ -178,7 +175,7 @@ class InferDataset4Exp(Dataset):
             conv.messages = []
             conv.append_message(conv.roles[0], example['question'])
             conv.append_message(conv.roles[1], None)
-            conversations.append(conv.get_prompt(example['template']))
+            conversations.append(conv.get_prompt(name=example['type'], template=example['template']))
 
             if self.args.task_type=="intention" or self.args.task_type=="both":
                 item_ids.append([example['iid']])
@@ -205,6 +202,7 @@ class InferDataset4Exp(Dataset):
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
             user_pos=[[0] for _ in range(len(inputs.input_ids))],
+            user_ids=[[0] for _ in range(len(inputs.input_ids))],
             item_seq=[[self.pad_seq([])] for _ in range(len(inputs.input_ids))],
             item_pos=item_pos,
             item_ids=item_ids,
@@ -212,15 +210,16 @@ class InferDataset4Exp(Dataset):
         )
 
     def process_uid2hist(self, dataset):
-        conv = template_dict['uid2hist']
+        conv = template_dict[self.args.template_name]
         conversations = []
         item_seq = []
+        user_ids = []
         answers = []
         for example in dataset:
             conv.messages = []
             conv.append_message(conv.roles[0], example['question'])
             conv.append_message(conv.roles[1], None)
-            conversations.append(conv.get_prompt(example['template']))
+            conversations.append(conv.get_prompt(name=example['type'], template=example['template']))
 
             hist = self.user_history[example['uid']]
             hist = hist[:hist.index(example['iid'])] if example['iid']!=-1 else hist
@@ -228,9 +227,10 @@ class InferDataset4Exp(Dataset):
 
             if self.args.task_type=="intention" or self.args.task_type=="both":
                 item_seq.append([hist])
+                user_ids.append([example['uid']])
 
             if example['type'] == 'uid2hist':
-                answers.append([self.meta_infos[iid]['title'].strip().lower() for iid in hist if iid!=0])
+                answers.append([self.get_title(self.meta_infos, iid).strip().lower() for iid in hist if iid!=0])
             else:
                 answers.append(example['answer'].strip().lower())
         
@@ -250,11 +250,13 @@ class InferDataset4Exp(Dataset):
         else:
             user_pos = [[0] for _ in range(len(inputs.input_ids))]
             item_seq = [[self.pad_seq([])] for _ in range(len(inputs.input_ids))]
+            user_ids = [[0] for _ in range(len(inputs.input_ids))]
 
         return dict(
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
             user_pos=user_pos,
+            user_ids=user_ids,
             item_seq=item_seq,
             item_pos=[[0] for _ in range(len(inputs.input_ids))],
             item_ids=[[0] for _ in range(len(inputs.input_ids))],
@@ -262,18 +264,20 @@ class InferDataset4Exp(Dataset):
         )
 
     def process_uidiid2review(self, dataset):
-        conv = template_dict['uidiid2review']
+        conv = template_dict[self.args.template_name]
         conversations = []
         item_seq = []
         item_ids = []
+        user_ids = []
         answers = []
         for example in dataset:
             conv.messages = []
             conv.append_message(conv.roles[0], example['question'])
             conv.append_message(conv.roles[1], None)
-            conversations.append(conv.get_prompt(example['template']))
+            conversations.append(conv.get_prompt(name=example['type'], template=example['template']))
 
             if self.args.task_type=="intention" or self.args.task_type=="both":
+                user_ids.append([])
                 item_seq.append([])
                 item_ids.append([])
                 if 'template_uidiidtargets' in example and example['type'] == 'uidiid2explan':
@@ -283,11 +287,13 @@ class InferDataset4Exp(Dataset):
                         hist = self.pad_seq(hist)
                         item_seq[-1].append(hist)
                         item_ids[-1].append(target)
+                        user_ids[-1].append(uid)
 
                 hist = self.user_history[example['uid']]
                 hist = hist[:hist.index(example['iid'])] if example['iid']!=-1 else hist
                 hist = self.pad_seq(hist)
                 item_seq[-1].append(hist)
+                user_ids[-1].append(example['uid'])
 
                 if example['type'] == 'uidiid2review':
                     item_ids[-1].append(example['iid'])
@@ -297,7 +303,7 @@ class InferDataset4Exp(Dataset):
                     item_ids[-1].append(example['target'])
             
             if example['type'] == 'uidiid2rank':
-                answers.append([self.meta_infos[iid]['title'].strip().lower() for iid in self.uidiid2topk[(example['uid'], example['iid'])]])
+                answers.append([self.get_title(self.meta_infos, iid).strip().lower() for iid in self.uidiid2topk[(example['uid'], example['iid'])]])
             elif example['type'] == 'uidiid2explan':
                 answers.append(example['answer'])
             else:
@@ -326,42 +332,72 @@ class InferDataset4Exp(Dataset):
             item_seq = [[self.pad_seq([])] for _ in range(len(inputs.input_ids))]
             item_pos = [[0] for _ in range(len(inputs.input_ids))]
             item_ids = [[0] for _ in range(len(inputs.input_ids))]
+            user_ids = [[0] for _ in range(len(inputs.input_ids))]
 
 
         return dict(
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
             user_pos=user_pos,
+            user_ids=user_ids,
             item_seq=item_seq,
             item_pos=item_pos,
             item_ids=item_ids,
             answers=answers,
         )
 
+    def process_demo(self, dataset):
+        conv = template_dict[self.args.template_name]
+        conversations = []
+        item_seq = []
+        item_ids = []
+        answers = []
+        for example in dataset:
+            conv.messages = []
+            conv.append_message(conv.roles[0], example['question'])
+            conv.append_message(conv.roles[1], None)
+            conversations.append(conv.get_prompt(name=example['type'], template=example['template']))
 
-    # def process_rawtext(self, dataset):
-    #     conv = template_dict['sharegpt']
-    #     conversations = []
-    #     for example in dataset:
-    #         print(f"uid: {example['uid']}, iid: {example['iid']}, top1: {example['top1']}")
-    #         conv.messages = []
-    #         conv.append_message(conv.roles[0], example['template']['USER'])
-    #         conv.append_message(conv.roles[1], None)
-    #         conversations.append(conv.get_prompt())
-    #     # Tokenize conversations
-    #     inputs = self.tokenizer(
-    #         conversations,
-    #         return_tensors="pt",
-    #         padding='max_length',
-    #         max_length=self.tokenizer.model_max_length,
-    #         truncation=True,
-    #     )
+            if self.args.task_type=="intention" or self.args.task_type=="both":
+                item_seq.append([])
+                item_ids.append([])
 
-    #     return dict(
-    #         input_ids=inputs.input_ids,
-    #         attention_mask=inputs.attention_mask,
-    #         user_pos=[[0] for _ in range(len(inputs.input_ids))],
-    #         item_seq=[[self.pad_seq([])] for _ in range(len(inputs.input_ids))],
-    #         item_pos=[[0] for _ in range(len(inputs.input_ids))],
-    #         item_ids=[[0] for _ in range(len(inputs.input_ids))],
-    #     )
+                hist = example['hist_ids']
+                hist = self.pad_seq(hist)
+                item_seq[-1].append(hist)
+                item_ids[-1].append(example['target'])
+        
+        inputs = self.tokenizer(
+            conversations,
+            return_tensors="pt",
+            padding='max_length',
+            max_length=self.tokenizer.model_max_length,
+            truncation=True,
+        )
+
+        if self.args.task_type=="intention" or self.args.task_type=="both":
+            pre_user_pos = (inputs.input_ids==self.tokenizer.additional_special_tokens_ids[0]).nonzero()
+            user_pos = [[] for _ in range(len(inputs.input_ids))]
+            for i, pos in enumerate(pre_user_pos):
+                user_pos[pos[0].item()].append(pos[1].item())
+
+            pre_item_pos = (inputs.input_ids==self.tokenizer.additional_special_tokens_ids[1]).nonzero()
+            item_pos = [[] for _ in range(len(inputs.input_ids))]
+            for i, pos in enumerate(pre_item_pos):
+                item_pos[pos[0].item()].append(pos[1].item())
+        else:
+            user_pos = [[0] for _ in range(len(inputs.input_ids))]
+            item_seq = [[self.pad_seq([])] for _ in range(len(inputs.input_ids))]
+            item_pos = [[0] for _ in range(len(inputs.input_ids))]
+            item_ids = [[0] for _ in range(len(inputs.input_ids))]
+
+
+        return dict(
+            input_ids=inputs.input_ids,
+            attention_mask=inputs.attention_mask,
+            user_pos=user_pos,
+            user_ids=[[0] for _ in range(len(inputs.input_ids))], # currently not supported MF model
+            item_seq=item_seq,
+            item_pos=item_pos,
+            item_ids=item_ids,
+        )

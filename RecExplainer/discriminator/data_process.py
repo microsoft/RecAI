@@ -57,8 +57,8 @@ with open(args.seqdata_file, 'r') as f:
         user_items[user] = items
 
 gpt_df = pd.read_csv(args.in_gpt_file)
-gpt_df = gpt_df.drop(['question','response','target'], axis=1)
-gpt_df = gpt_df.rename(columns={'response-chatGPT':'explan'})
+gpt_df = gpt_df.drop(['question'], axis=1)
+gpt_df = gpt_df.rename(columns={'answer':'explan'})
 gpt_df['label'] = 0.0
 gpt_df['user_id'] = 0
 gpt_df['item_id'] = 0

@@ -64,7 +64,7 @@ def eval_metric(args):
     
     for i in range(len(df)):
         model = df.loc[i, 'model']
-        answer = df.loc[i, 'response-gpt-4'].strip().lower()
+        answer = df.loc[i, 'score'].strip().lower()
         if answer == '<score>a</score>':
             results[model]['A'] += 1
         elif answer == '<score>b</score>':
