@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-DISCRIMINATOR_DATA_DIR="$HOME/RecExplainer/data/amazon_video_games_v3/process_data/discriminator"
+DISCRIMINATOR_DATA_DIR="$HOME/RecExplainer/data/amazon_video_games_v3/discriminator"
 EX_DIR=$HOME/RecExplainer/discriminator
 cd $EX_DIR
 

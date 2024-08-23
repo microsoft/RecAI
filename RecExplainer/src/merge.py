@@ -150,9 +150,5 @@ def main():
     peft_model.save_pretrained(args.output_dir, safe_serialization=True)
     tokenizer.save_pretrained(args.output_dir)
 
-
-    # a_tokenizer = AutoTokenizer.from_pretrained(args.output_dir)
-    # a_model = MistralForExp.from_pretrained(args.output_dir)
-
 if __name__ == '__main__':
     main()
