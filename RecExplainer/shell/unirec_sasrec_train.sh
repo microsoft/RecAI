@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 #!/bin/bash
 # pre-train on one locale dataset with feature embedding and text embedding
 

@@ -157,7 +157,7 @@ class AbstractRecommender(nn.Module):
         config = self.config
         self.n_users = config['n_users']
         self.n_items = config['n_items']
-        self.device = config['device']
+        # self.device = config['device']
         self.loss_type = config.get('loss_type', 'bce')
         self.embedding_size = config.get('embedding_size', 0)
         self.hidden_size = self.embedding_size
@@ -279,7 +279,7 @@ class AbstractRecommender(nn.Module):
         
         if self.loss_type == LossFuncType.BCE.value: 
             logits = torch.clamp(nn.Sigmoid()(scores), min=-1*EPS, max=1-EPS)
-            labels = labels.float()#.to(self.device)
+            labels = labels.float()
             loss = nn.BCELoss(reduction='mean' if reduction else 'none')(logits, labels).mean(dim=-1)
         elif self.loss_type == LossFuncType.BPR.value: 
             neg_score = scores[:, 1:]  ##-- currently only support one positive in item list.  
@@ -333,11 +333,11 @@ class BaseRecommender(AbstractRecommender):
         # predict_layer
         scorer_type = self.config['distance_type']
         if scorer_type == 'mlp':
-            self.scorer_layers = modules.MLPScorer(self.embedding_size, self.dnn_inner_size, self.dropout_prob, act_f='tanh').to(self.device)
+            self.scorer_layers = modules.MLPScorer(self.embedding_size, self.dnn_inner_size, self.dropout_prob, act_f='tanh')
         elif scorer_type == 'dot':
-            self.scorer_layers = modules.InnerProductScorer().to(self.device)
+            self.scorer_layers = modules.InnerProductScorer()
         elif scorer_type == 'cosine':
-            self.scorer_layers = modules.CosineScorer(eps=1e-6).to(self.device)
+            self.scorer_layers = modules.CosineScorer(eps=1e-6)
         else:
             raise ValueError('not supported distance_type: {0}'.format(scorer_type))
         
@@ -353,9 +353,9 @@ class BaseRecommender(AbstractRecommender):
         user_e = self.user_embedding(user_id)
         return user_e
     
-    def forward(self, item_seq=None, item_ids=None):
+    def forward(self, user_ids=None, item_seq=None, item_ids=None):
         # if min(user_pos.shape) > 0:
-        user_emb = self.forward_user_emb(item_seq=item_seq)
+        user_emb = self.forward_user_emb(user_id=user_ids, item_seq=item_seq)
         # else:
         #     user_emb = None
         # if min(item_pos.shape) > 0:
@@ -412,7 +412,7 @@ class BaseRecommender(AbstractRecommender):
         if numpy:
             res = np.zeros((self.n_items, self.embedding_size), dtype=np.float32)
         else:
-            res = torch.zeros((self.n_items, self.embedding_size), dtype=torch.float32, device=self.device)
+            res = torch.zeros((self.n_items, self.embedding_size), dtype=torch.float32, device=self.item_embedding.weight.device)
         if batch_size is None:
             batch_size = self.n_items
         
@@ -420,8 +420,8 @@ class BaseRecommender(AbstractRecommender):
         for batch in range(n_batch):
             start = batch * batch_size
             end = min(self.n_items, start + batch_size)
-            cur_items = torch.arange(start, end, dtype=torch.int32, device=self.device)
-            item_features = torch.tensor(self.item2features[start:end], dtype=torch.int32).to(self.device) if self.use_features else None
+            cur_items = torch.arange(start, end, dtype=torch.int32, device=self.item_embedding.weight.device)
+            item_features = torch.tensor(self.item2features[start:end], dtype=torch.int32).to(self.item_embedding.weight.device) if self.use_features else None
             cur_items_emb = self.forward_item_emb(cur_items, item_features).detach()
             if numpy:
                 cur_items_emb = cur_items_emb.cpu().numpy()
