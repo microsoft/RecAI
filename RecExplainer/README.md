@@ -1,5 +1,5 @@
 # RecExplainer: Aligning Large Language Models for Explaining Recommendation Models
-This is the Repo for [RecExplainer: Aligning Large Language Models for Recommendation Model Interpretability](https://arxiv.org/abs/2311.10947), which leverages LLMs as surrogate models for explaining black-box recommender models.
+This is the Repo for our KDD2024 paper: [RecExplainer: Aligning Large Language Models for Explaining Recommendation Models](https://arxiv.org/abs/2311.10947), which leverages LLMs as surrogate models for explaining black-box recommender models.
 ![Figure Caption](framework.png)
 
 ## Introduction
@@ -18,35 +18,35 @@ Our evaluation of the RecExplainer framework is two-fold:
     * Overall ratings: We use both GPT4 and human experts to annotate the quality of generated explanations.
     * Distinction and Coherence: We also train a classifier and a score predictor to further verify whether RecExplainer are indeed explaining its own predictions.
 
-
 ## Environment Setting
 
 ### Environment
 ```bash
-conda create -n recexplainer python=3.9
+conda create -n recexplainer python==3.10.14
 conda activate recexplainer
-pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
+conda install pytorch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 pytorch-cuda=11.8 -c pytorch -c nvidia
 pip install -r requirements.txt
 ```
 
 ### Set OpenAI API Environment
-If you want to use OpenAI API, you need to firstly run the following scripts in your console. If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and ENGINE.
+If you want to use OpenAI API, you need to firstly run the following scripts in your console. If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and MODEL.
 
 ```bash
-export OPENAI_API_KEY_01=xxx;
-export OPENAI_API_BASE_01=https://xxx.openai.azure.com/;
-export OPENAI_API_VERSION_01=2023-03-15-preview;
-export OPENAI_API_TYPE_01=azure;
-export ENGINE_01=xxx;
-
-
-###If you want to use multiple keys at the same time to speed up data generation.
-export OPENAI_API_KEY_02=xxx;
-export OPENAI_API_BASE_02=https://xxx.openai.azure.com/;
-export OPENAI_API_VERSION_02=2023-03-15-preview;
-export OPENAI_API_TYPE_02=azure;
-export ENGINE_02=xxx;
+export OPENAI_API_KEY=xxx;
+export OPENAI_API_BASE=https://xxx.openai.azure.com/;
+export OPENAI_API_VERSION=2023-03-15-preview;
+export OPENAI_API_TYPE=azure;
+export MODEL=xxx;
 ```
+
+We also support AzureCliCredential login:
+```bash
+az login
+export OPENAI_API_BASE=https://xxx.openai.azure.com/;
+export OPENAI_API_VERSION=2023-03-15-preview;
+export MODEL=xxx;
+```
+
 
 ## Dataset Preparation for Target Recommender Model
 For data preparation, you need to download three raw files: Amazon review, Amazon metadata, ShareGPT
@@ -66,8 +66,10 @@ bash shell/unirec_prepare_data.sh
 
 ## Training and Inference with the Target Recommender Model
 ### Training
+Currently we support both SASRec model and MF model, you can train them respectively.
 ```bash
-bash shell/unirec_train.sh
+bash shell/unirec_sasrec_train.sh
+bash shell/unirec_mf_train.sh
 ```
 
 ### Inference
@@ -77,16 +79,20 @@ cp preprocess/unirec_utils/data4Exp.py $HOME/UniRec/unirec/main
 cp $HOME/RecExplainer/data/unirec_raw_data/amazon_video_games_v3/train_ids.csv $HOME/UniRec/data/amazon_video_games_v3
 cp $HOME/RecExplainer/data/unirec_raw_data/amazon_video_games_v3/test_ids.csv $HOME/UniRec/data/amazon_video_games_v3
 ```
-
+For SASRec model:
 ```bash
-bash shell/unirec_infer.sh
+bash shell/unirec_sasrec_infer.sh
+```
+For MF model:
+```bash
+bash shell/unirec_mf_infer.sh
 ```
 
 ## Dataset Preparation for RecExplainer Model
 ```bash
 bash shell/recexplainer_data_pipeline.sh
 ```
-After running the above script, you will get the following training and testing files:
+After running the above script, you will get the following training and testing files for both SASRec and MF model:
 
 For alignmen tasks
 * `behaviour_train.json` & `behaviour_valid.json`: data for training and testing RecExplainer-B (behavior alignmet), also used to test the alignment performance of open source LLMs.
@@ -97,8 +103,9 @@ For explanation tasks
 * `explan_behaviour_valid.json`: prompts for RecExplainer-B to generate explanations.
 * `explan_intention_valid.json`: prompts for RecExplainer-I to generate explanations.
 * `explan_both_valid.json`: prompts for RecExplainer-H to generate explanations.
-* `explan_chatgpt.csv`: prompts for ChatGPT to generate explanations.
+* `explan_chatgpt_valid.csv`: prompts for ChatGPT to generate explanations.
 
+Note: Files such as `explain_behaviour_train.json` are also used to generate explanations. After generation, we'll use them to train our score predictors as well as classifiers. See Section [Distinction and Coherence](#custom-anchor) for more information.
 
 ## Train RecExplainer
 ```bash
@@ -106,9 +113,14 @@ bash shell/train.sh
 ```
 
 Important Parameters:
-- `--data_names`: the json file name with suffix ('_train.json' or '_valid.json') removed.
-- `--task_type`: alignment method of the training stage. "behaviour" means behavior aligment, "intention" means intention aligment, "both" means hybrid aligment.
+- `--rec_model_type`: The type of the target recommender model. We currently support "SASRec" and "MF".
+- `--task_type`: Alignment method of the training stage. "behaviour" means behavior aligment, "intention" means intention aligment, "both" means hybrid aligment.
+- `--template_name`: The chat template of the LLM. We currently support "mistral"/"vicuna"/"llama-2"/"llama-3"/"phi3".
 
+After training, you need to merge lora adapters into the base model.
+```bash
+bash shell/merge.sh
+```
 
 ## Evaluation
 ### Alignment Effect
@@ -117,9 +129,8 @@ bash shell/infer_alignment.sh
 ```
 
 Parameters:
-- `--data_names`: the json file name with suffix ('_train.json' or '_valid.json') removed.
 - `--task_type`: alignment method used by the model. "behaviour" means behavior aligment, "intention" means intention aligment, "both" means hybrid aligment, "none" means using LLM without alignment training.
-- `--inference_mode`: the name of the inference task. "uid2hist" means history reconstruction task, "uid2next" means next item retrieval task, "uidiid2rank" means item ranking task, "uidiid2binary" means interest classification task.
+- `--inference_mode`: the name of the inference task. "iid2title" means item recovery task, "uid2hist" means history reconstruction task, "uid2next" means next item retrieval task, "uidiid2rank" means item ranking task, "uidiid2binary" means interest classification task.
 
 ### Explanation Generation Ability
 
@@ -129,7 +140,6 @@ bash shell/infer_explan.sh
 ```
 
 Parameters:
-- `--data_names`: the json file name with suffix ('_train.json' or '_valid.json') removed.
 - `--task_type`: alignment method used by the model. "behaviour" means behavior aligment, "intention" means intention aligment, "both" means hybrid aligment, "none" means using LLM without alignment training.
 - `--inference_mode`: the name of the inference task. "case study" means generating explanation texts.
 
@@ -150,7 +160,7 @@ Parameters:
 - `--judge_response_file`: Output file of gpt4
 
 
-#### Distinction and Coherence
+#### Distinction and Coherence <a id="custom-anchor"></a>
 We train a classifier and a score predictor to further verify whether RecExplainer are indeed explaining its own predictions.
 
 **Data generation**
@@ -184,3 +194,6 @@ If you find this project useful in your research, please consider citing:
   year={2023}
 }
 ```
+
+## Acknowledge
+Thanks to the open source codes of [UniRec](https://github.com/microsoft/UniRec).
