@@ -10,7 +10,8 @@ python eval_explan.py --model_names "recexplainer-B,recexplainer-I,recexplainer-
     --judge_query_file="$DATA_DIR/judge_query.csv"
 
 
-python gpt_api.py --input_file $DATA_DIR/judge_query.csv --output_file $DATA_DIR/judge_response.csv
+python gpt_api.py --input_file $DATA_DIR/judge_query.csv --output_file $DATA_DIR/judge_response.csv \
+    --input_columns "model,label,history,target item,question"
 
 
 python eval_explan.py --model_names "recexplainer-B,recexplainer-I,recexplainer-H,llama3,chatgpt" \

@@ -82,11 +82,14 @@ def call_chatgpt(prompt):
     return result
 
 
-def process_row(writer, sample):
+def process_row(writer, sample, columns):
     question = sample['question'] 
     input_token_num = len(encoding.encode(question))
     output = call_chatgpt(question)
-    writer.writerow([question, output])
+    all_writes = [sample[col] for col in columns]
+    all_writes.append(output)
+    writer.writerow(all_writes)
+    # writer.writerow([question, output])
     # writer.writerow([output, sample['model'], sample['label'], sample['history'], sample['target item'], question])
     # writer.writerow([sample['uid'], sample['iid'], sample['target'], sample['type'], sample['ground_truth'], question, output])
     output_token_num = len(encoding.encode(output))
@@ -97,7 +100,8 @@ def process_hf_data(dataset, output_file, args):
     filename = os.path.basename(output_file)
     with open(output_file, 'w') as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(['question', 'answer'])
+        writer.writerow(args.input_columns.split(',')+['answer'])
+        # writer.writerow(['question', 'answer'])
         # writer.writerow(['score', 'model', 'label', 'history', 'target item', 'question'])
         # writer.writerow(['uid', 'iid', 'target', 'type', 'ground_truth', 'question', 'response'])
         total_input_token_num, total_output_token_num = 0, 0
@@ -106,7 +110,7 @@ def process_hf_data(dataset, output_file, args):
             with ThreadPoolExecutor(max_workers=args.num_process) as executor:
                 futures = []
                 for i, sample in enumerate(dataset):
-                    futures.append(executor.submit(process_row, writer, sample))
+                    futures.append(executor.submit(process_row, writer, sample, args.input_columns.split(',')))
 
                 for future in tqdm(futures, desc=filename):
                     input_token_num, output_token_num = future.result()
@@ -159,5 +163,6 @@ if __name__ == "__main__":
     parser.add_argument("--num_process", type=int, default=1)
     parser.add_argument("--input_file", type=str)
     parser.add_argument("--output_file", type=str)
+    parser.add_argument("--input_columns", type=str, default="question")
     args = parser.parse_args()
     main(args)
