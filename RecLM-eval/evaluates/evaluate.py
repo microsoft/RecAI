@@ -204,41 +204,7 @@ def parse_recommendations(ranking_str):
     if ranking == []:
         ranking = [lines[-1]]
 
-    # print("ranking str: ", ranking_str)
-    # print("ranking: ", ranking, "\n\n")
-
     return ranking
-
-def compute_task_metrics(result_file_path, metadata_file_path=None, sim_threshold=0.6):
-    with open(result_file_path, "r") as file:
-        data = [json.loads(line) for line in file]
-
-    tasks = defaultdict(list)
-    for item in data:
-        task = item.get("task") or item.get("task_type")
-        tasks[task].append(item)
-    
-    all_metrics = {}
-
-    for task, items in tasks.items():
-        print(f"Evaluating task: {task}")
-        result_file_task = f"{task}_results.jsonl"
-        with open(result_file_task, "w", encoding="utf-8") as f:
-            for item in items:
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
-        
-        if task in ["Recall", "Co-play_Items"]:
-            metrics = compute_metrics_on_title_recommend(result_file_task, metadata_file_path, sim_threshold)
-        elif task in ["QA_AttributePairs", "QA_Attributes", "Rank"]:
-            metrics = {"accuracy": compute_metrics_on_multi_choices(result_file_task)}
-        else:
-            continue
-        
-        all_metrics[task] = metrics
-    
-    return all_metrics
-
-
 
 def get_args():
     parser = argparse.ArgumentParser()
