@@ -82,7 +82,6 @@ def cost_save():
             for model, tokens in item.items():
                 cost_dict[model.lower()] = tokens
 
-        # 遍历 cost，计算输入和输出成本
         for model, tokens in cost.items():
             input_tokens = tokens[0]
             output_tokens = tokens[1]

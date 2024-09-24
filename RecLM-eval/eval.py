@@ -1,9 +1,6 @@
-# Copyright (c) Microsoft Corporation./home/v-yitiahuang/.triton
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-
 import os
-
-# from call_models.huggingface_models import gen_model_chat_answer
 from call_models.huggingface_models import gen_model_embedding_answer
 from call_models.vllm_models import gen_model_chat_answer
 from call_models.openai_models import gen_api_chat_answer, gen_api_embedding_answer
