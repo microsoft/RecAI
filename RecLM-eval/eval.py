@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation./home/v-yitiahuang/.triton
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
 import os
