@@ -18,8 +18,8 @@ client = AzureOpenAI(
 
 response = client.chat.completions.create(
             model="gpt-35-turbo",
-            max_tokens=1,  # 默认最大 token 数
-            messages=[{"role":"user", "content":"no"}]  # 使用历史记录
+            max_tokens=1, 
+            messages=[{"role":"user", "content":"no"}]  
         )
 
 result = response.choices[0].message.content
