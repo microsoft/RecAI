@@ -242,7 +242,7 @@ def parse_args():
     parser.add_argument('--tasks', type=str, default='ranking,retrieval,explanation,conversation', help='tasks for data generation.')
     parser.add_argument('--sample_num', type=int, default=1000, help='sample number for each task.')  
     parser.add_argument('--dataset', type=str, default='steam', help='the dataset to be evaluated, steam/beauty/sports')
-    parser.add_argument("--split", type=str, default="train", help="Dataset split (train/val/test)")  # 添加 split 参数
+    parser.add_argument("--split", type=str, default="train", help="Dataset split (train/val/test)") 
 
     return parser.parse_args()
 
