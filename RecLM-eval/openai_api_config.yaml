@@ -1,11 +1,15 @@
 API_BASE:
-    "https://xxx.openai.azure.com/"
+    ""
+TOKEN_URL:
+    ""
 API_VERSION:
-    "2023-03-15-preview"
+    "2024-02-15-preview"
 API_TYPE:
-    "azure"
+    "gpt"
 API_KEY:
     "xxx"
+API_COST_FILE:
+    "cost.json"
 MAX_THREADS:
     4
 MAX_RETRIES:

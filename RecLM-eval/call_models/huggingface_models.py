@@ -38,18 +38,13 @@ class ChatDataset(Dataset):
             data = self.test_dataset[-1]
         
         if isinstance(data["prompt"], str):
-            inputs = f"USER: {data['prompt'].strip()} "
+            conv = {"role": "user", "content": data["prompt"]}
+            inputs = self.tokenizer.apply_chat_template(conv, tokenize=True, add_generation_prompt=True)
         else:
-            inputs = ""
-            for text in data["prompt"]:
-                if text["role"] == "assistant":
-                    inputs += "ASSISTANT: " + text["content"] + ' '
-                else:
-                    inputs += "USER: " + text["content"] + ' '
-        tokens = self.tokenizer.tokenize(f"{self.system_prompt} {inputs}")
-
-        tokens = tokens[:self.max_seq_len-len(self.tokenizer.tokenize("ASSISTANT:"))]
-        truncated_prompt = self.tokenizer.convert_tokens_to_string(tokens) + "ASSISTANT:"
+            data["prompt"].insert(0, {"role": "system", "content": self.system_prompt})
+            inputs = self.tokenizer.apply_chat_template(data["prompt"], tokenize=True, add_generation_prompt=True)
+        inputs = inputs[-self.max_seq_len:]
+        truncated_prompt = self.tokenizer.convert_tokens_to_string(tokens)
 
         return truncated_prompt.strip()
     
@@ -75,7 +70,7 @@ class EmbDataset(Dataset):
         tokens = self.tokenizer.tokenize(data['prompt'].strip())[:self.max_seq_len]
         truncated_prompt = self.tokenizer.convert_tokens_to_string(tokens)
 
-        return truncated_prompt.strip()
+        return truncated_prompt
     
 def run_chat(local_gpu_rank, model_path_or_name, question_file, answer_file, args, system_prompt):
     args.rank = args.nr * args.gpus + local_gpu_rank
@@ -109,14 +104,31 @@ def run_chat(local_gpu_rank, model_path_or_name, question_file, answer_file, arg
     test_data = []
     for line in open(question_file):
         test_data.append(json.loads(line))
-    test_dataset = ChatDataset(test_data, tokenizer, model_config.max_position_embeddings - args.max_new_tokens - 100, args.world_size, args.rank, system_prompt) # 1700 < 2048 - max new tokens
-    
+    # 检查模型配置中是否有 max_position_embeddings 属性
+    if hasattr(model_config, 'max_position_embeddings'):
+        max_position_embeddings = model_config.max_position_embeddings
+    else:
+        max_position_embeddings = 2048  # 或者你可以设置一个你认为合适的默认值
+
+    # 创建 ChatDataset 对象
+    test_dataset = ChatDataset(
+        test_data, 
+        tokenizer, 
+        max_position_embeddings - args.max_new_tokens - 100, 
+        args.world_size, 
+        args.rank, 
+        system_prompt
+    )
+
     if args.rank == 0:
         pbar = tqdm(total=len(test_dataset), desc="inferencing")
         result_lists = []
     
     with torch.no_grad():
         for raw_result in generator(test_dataset, generation_config=greedy_config, batch_size=args.batch_size):
+            # 0920 note: here we need to edit to chat_template
+            
+            print(raw_result[0]['generated_text'])
             result = raw_result[0]['generated_text'].split("ASSISTANT:")[-1].strip()
             if "<|endoftext|>" in result:
                 result = result.split('<|endoftext|>')[0].strip()
@@ -144,31 +156,39 @@ def run_embedding(local_gpu_rank, model_path_or_name, question_file, answer_file
     torch.cuda.set_device(args.device)
     dist.init_process_group(backend='nccl', init_method="env://", world_size=args.world_size, rank=args.rank)
 
-    model_config = AutoConfig.from_pretrained(args.model_path_or_name)
+    model_config = AutoConfig.from_pretrained(args.model_path_or_name, trust_remote_code=True)
     if "CausalLM" in model_config.architectures[0]:
         # load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_path_or_name, use_fast=False, padding_side='left')
+        tokenizer = AutoTokenizer.from_pretrained(model_path_or_name, use_fast=False, padding_side='left', trust_remote_code=True)
         tokenizer.pad_token = tokenizer.eos_token
         # load model
         model = AutoModelForCausalLM.from_pretrained(
             args.model_path_or_name,
             from_tf=bool(".ckpt" in args.model_path_or_name),
             config=model_config,
-            low_cpu_mem_usage=True
+            low_cpu_mem_usage=True, 
+            trust_remote_code=True
         ).to(args.device)
         model.config.end_token_id = tokenizer.eos_token_id
         model.config.pad_token_id = model.config.eos_token_id
         model_type = "CausalLM"
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_path_or_name)
-        model = AutoModel.from_pretrained(model_path_or_name).to(args.device)
+        tokenizer = AutoTokenizer.from_pretrained(model_path_or_name, trust_remote_code=True)
+        model = AutoModel.from_pretrained(model_path_or_name, trust_remote_code=True).to(args.device)
         model_type = "Other"
 
     # load test dataset
     test_data = []
     for line in open(question_file):
         test_data.append(json.loads(line))
-    test_dataset = EmbDataset(test_data, tokenizer, model_config.max_position_embeddings - 100, args.world_size, args.rank) # 1700 < 2048 - max new tokens
+    try:
+        max_seq_length = model_config.max_position_embeddings
+    except:
+        try:
+            max_seq_length = model_config.seq_length
+        except:
+            max_seq_length = 4096
+    test_dataset = EmbDataset(test_data, tokenizer, max_seq_length - 100, args.world_size, args.rank) # 1700 < 2048 - max new tokens
     dataloader = DataLoader(test_dataset, batch_size=args.batch_size)
 
     if args.rank == 0:

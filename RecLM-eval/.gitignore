@@ -3,14 +3,7 @@
 **/__pycache__/
 output/
 data/
-!data/chatbot/question.jsonl
-# !data/steam/conversation.jsonl
-# !data/steam/explanation.jsonl
-# !data/steam/metadata.json
-# !data/steam/negative_samples.txt
-# !data/steam/ranking.jsonl
-# !data/steam/retrieval.jsonl
-# !data/steam/sequential_data.txt
+
 eval_models/*
 !eval_models
 *.log
