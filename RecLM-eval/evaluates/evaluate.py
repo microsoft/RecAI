@@ -210,11 +210,9 @@ def parse_recommendations(ranking_str):
     return ranking
 
 def compute_task_metrics(result_file_path, metadata_file_path=None, sim_threshold=0.6):
-    # 读取结果文件
     with open(result_file_path, "r") as file:
         data = [json.loads(line) for line in file]
 
-    # 根据 task 或 task_type 进行分组
     tasks = defaultdict(list)
     for item in data:
         task = item.get("task") or item.get("task_type")
@@ -222,7 +220,6 @@ def compute_task_metrics(result_file_path, metadata_file_path=None, sim_threshol
     
     all_metrics = {}
 
-    # 对每个任务进行评估
     for task, items in tasks.items():
         print(f"Evaluating task: {task}")
         result_file_task = f"{task}_results.jsonl"
