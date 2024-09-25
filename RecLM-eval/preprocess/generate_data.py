@@ -242,6 +242,7 @@ def parse_args():
     parser.add_argument('--tasks', type=str, default='ranking,retrieval,explanation,conversation', help='tasks for data generation.')
     parser.add_argument('--sample_num', type=int, default=1000, help='sample number for each task.')  
     parser.add_argument('--dataset', type=str, default='steam', help='the dataset to be evaluated, steam/beauty/sports')
+    parser.add_argument("--split", type=str, default="train", help="Dataset split (train/val/test)") 
 
     return parser.parse_args()
 
@@ -305,3 +306,27 @@ if __name__ == '__main__':
                 )
             }
             fd.write(json.dumps(line)+'\n')
+    if "chatbot" in args.tasks:  # use previous 3 tasks' data
+        print(f'generating chatbot data, sample number: {args.sample_num} ...')
+
+        data1 = dataset.gen_explanation_data(args.sample_num // 3)
+        data2 = dataset.gen_ranking_data(args.sample_num // 3)
+        data3 = dataset.gen_retrieval_data(args.sample_num // 3)
+
+        combined_data = data1 + data2 + data3
+        if len(combined_data) > args.sample_num:
+            combined_data = combined_data[:args.sample_num]  
+        elif len(combined_data) < args.sample_num:
+            additional_data = dataset.gen_explanation_data(args.sample_num - len(combined_data))
+            combined_data += additional_data
+
+        fd = open(f"data/{args.dataset}/chatbot.jsonl", "w")
+        for line in combined_data:
+            line_to_write = {
+                "prompt": line["source"],
+                "task": "chatbot",
+            }
+            fd.write(json.dumps(line_to_write) + '\n')
+        fd.close()
+
+        print(f"Successfully generated {len(combined_data)} samples for chatbot.")

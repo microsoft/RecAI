@@ -3,6 +3,7 @@
 
 import os
 import json
+import re
 import pickle
 import argparse
 import numpy as np
@@ -18,7 +19,7 @@ def compute_metrics_on_title_recommend(result_file_path, metadata_file_path, sim
     results = []
     rankings = []
     ground_truths = []
-    for line in open(result_file_path, "r"):
+    for line in open(result_file_path, "r", encoding="utf-8"):
         line = json.loads(line)
         if "result" not in line:
             line["result"] = parse_recommendations(line["answer"])
@@ -32,12 +33,17 @@ def compute_metrics_on_title_recommend(result_file_path, metadata_file_path, sim
     fd.close()
 
     item_list = []
+    if not os.path.exists(metadata_file_path):
+        if os.path.exists(metadata_file_path+ "l"):
+            metadata_file_path = metadata_file_path + "l"
     for line in open(metadata_file_path):
         line = json.loads(line)
         if 'TitleName' in line:
             item_list.append(line['TitleName'])
         elif 'app_name' in line:
             item_list.append(line['app_name'])
+        elif 'GameName' in line:
+            item_list.append(line['GameName'])
         elif 'title' in line:
             item_list.append(line['title'])
 
@@ -50,12 +56,33 @@ def compute_metrics_on_title_recommend(result_file_path, metadata_file_path, sim
 
     return all_metrics
 
+def compute_metrics_on_multi_choices(result_file_path):
+    score = 0
+    length = 0
+
+    for line in open(result_file_path, "r", encoding="utf-8"):
+        line = json.loads(line)  
+        length += 1 
+
+        stripped_result = line["result"].strip()
+        match = re.search(r'([a-zA-Z])', stripped_result)
+        
+        if match:
+            answer_letter = match.group(1).lower() 
+            target_letter = line["target"][0].lower() 
+            if answer_letter == target_letter: 
+                score += 1 
+
+    if length != 0:
+        score /= length 
+    return score  
+
 # compute ranking metrics for retrieval/ranking/searching
 def compute_metrics_on_id_recommend(result_file_path):
     results = []
     rankings = []
     ground_truths = []
-    for line in open(result_file_path, "r"):
+    for line in open(result_file_path, "r", encoding="utf-8"):
         line = json.loads(line)
         rankings.append(line["result"])
         ground_truths.append([line["target"]])
@@ -91,6 +118,9 @@ def LCS(list_a, list_b, model, sim_threshold):
 
 def compute_errors_on_title_ranking(result_file_path, metadata_file_path, sim_threshold):
     item_list = ['padding']
+    if not os.path.exists(metadata_file_path):
+        if os.path.exists(metadata_file_path+ "l"):
+            metadata_file_path = metadata_file_path + "l"
     for line in open(metadata_file_path):
         line = json.loads(line)
         if 'TitleName' in line:
@@ -104,7 +134,7 @@ def compute_errors_on_title_ranking(result_file_path, metadata_file_path, sim_th
 
     history_error, duplicate_error, candidate_error = 0, 0, 0
     all_data = []
-    for line in open(result_file_path):
+    for line in open(result_file_path, encoding="utf-8"):
         all_data.append(json.loads(line))
 
     copy_error = 0
@@ -173,9 +203,6 @@ def parse_recommendations(ranking_str):
 
     if ranking == []:
         ranking = [lines[-1]]
-
-    # print("ranking str: ", ranking_str)
-    # print("ranking: ", ranking, "\n\n")
 
     return ranking
 

@@ -27,5 +27,5 @@ Format:
 Next, you can follow the scripts in preprocess/generate_data.py to create the prompts used for all tasks.   
 Usage:
 ```bash
-python ./preprocess/generate_data.py --tasks retrieval,ranking,explanation,conversation --sample_num 10 --dataset steam
+python ./preprocess/generate_data.py --tasks retrieval,ranking,explanation,conversation,chatbot --sample_num 10 --dataset steam
 ```
