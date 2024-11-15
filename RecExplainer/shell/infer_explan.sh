@@ -1,10 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-DATA_DIR="$HOME/blob/RecExplainer/amazon_video_games_v3"
-UNIREC_DATA_DIR="$HOME/blob/RecExplainer/amazon_video_games_v3"
+DATA_DIR="$HOME/RecAI/RecExplainer/data/amazon_video_games_v3"
 
-output_dir=$HOME/RecExplainer/output/amazon_video_games_v3/explan_valid.csv
+output_dir=$HOME/RecAI/RecExplainer/output/amazon_video_games_v3/explan/recexplainer-H_response.csv
 model_name_or_path="path to your merged model"
 validation_file=$DATA_DIR/explan_both_valid.json
 sequential_file=$DATA_DIR/sequential_data.txt
@@ -15,12 +14,12 @@ task_type="both"
 template_name="llama-3"
 
 metadata_file=$DATA_DIR/metadata.json
-test_top_file=$UNIREC_DATA_DIR/test_top.txt
+test_top_file=$DATA_DIR/test_top.txt
 torch_dtype="bfloat16"
 attn_implementation="flash_attention_2"
 rec_model_type="SASRec"
 
-cd $HOME/RecExplainer
+cd $HOME/RecAI/RecExplainer
 
 accelerate launch --config_file ./shell/config/infer.yaml ./src/inference.py \
     --preprocessing_num_workers 4 \

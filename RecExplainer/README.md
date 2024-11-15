@@ -76,17 +76,26 @@ bash shell/unirec_mf_train.sh
 You need to copy some files to the UniRec directory in advance.
 ```bash
 cp preprocess/unirec_utils/data4Exp.py $HOME/UniRec/unirec/main
-cp $HOME/RecExplainer/data/unirec_raw_data/amazon_video_games_v3/train_ids.csv $HOME/UniRec/data/amazon_video_games_v3
-cp $HOME/RecExplainer/data/unirec_raw_data/amazon_video_games_v3/test_ids.csv $HOME/UniRec/data/amazon_video_games_v3
+cp $HOME/RecAI/RecExplainer/data/unirec_raw_data/amazon_video_games_v3/train_ids.csv $HOME/UniRec/data/amazon_video_games_v3
+cp $HOME/RecAI/RecExplainer/data/unirec_raw_data/amazon_video_games_v3/test_ids.csv $HOME/UniRec/data/amazon_video_games_v3
 ```
 For SASRec model:
 ```bash
 bash shell/unirec_sasrec_infer.sh
 ```
+After inference, please copy the contents of `$HOME/UniRec/output/$DATASET_NAME/SASRec/RecExplainer/xxx/` to `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3`
+
+Finally, there should exist these files in `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3`: datamaps.json, metadata.json, SASRec.pth, sequential_data.txt, sim_item.txt, test_top.txt, train_top.txt
+
 For MF model:
 ```bash
 bash shell/unirec_mf_infer.sh
 ```
+After inference, please copy the contents of `$HOME/UniRec/output/$DATASET_NAME/MF/RecExplainer/xxx/` to `$HOME/RecAI/RecExplainer/data/mf_amazon_video_games_v3`
+
+At the same time, copy these files from `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3` to `$HOME/RecAI/RecExplainer/data/mf_amazon_video_games_v3`: datamaps.json, metadata.json, sequential_data.txt
+
+Finally, there should exist these files in `$HOME/RecAI/RecExplainer/data/mf_amazon_video_games_v3`: datamaps.json, metadata.json, MF.pth, sequential_data.txt, sim_item.txt, test_top.txt, train_top.txt
 
 ## Dataset Preparation for RecExplainer Model
 ```bash

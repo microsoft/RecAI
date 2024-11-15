@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 
-RAW_DATA_DIR="$HOME/RecExplainer/data/unirec_raw_data/"
+RAW_DATA_DIR="$HOME/RecAI/RecExplainer/data/unirec_raw_data/"
 
 ROOT_DIR="$HOME/UniRec"
 DATA_ROOT="$ROOT_DIR/data"
