@@ -49,7 +49,7 @@ export MODEL=xxx;
 
 
 ## Dataset Preparation for Target Recommender Model
-For data preparation, you need to download three raw files: Amazon review, Amazon metadata, ShareGPT
+For data preparation, you need to download three raw files: Amazon review, Amazon metadata, ShareGPT, and put them under `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3/raw_data`:
 * Amazon Video Games 5-core reviews: https://jmcauley.ucsd.edu/data/amazon_v2/categoryFilesSmall/Video_Games_5.json.gz
 * Amazon Video Games metadata: https://jmcauley.ucsd.edu/data/amazon_v2/metaFiles2/meta_Video_Games.json.gz
 * ShareGPT: https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/blob/main/ShareGPT_V3_unfiltered_cleaned_split.json
@@ -83,7 +83,7 @@ For SASRec model:
 ```bash
 bash shell/unirec_sasrec_infer.sh
 ```
-After inference, please copy the contents of `$HOME/UniRec/output/$DATASET_NAME/SASRec/RecExplainer/xxx/` to `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3`
+After inference, please copy the contents of `$HOME/UniRec/output/amazon_video_games_v3/SASRec/RecExplainer/xxx/` to `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3`
 
 Finally, there should exist these files in `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3`: datamaps.json, metadata.json, SASRec.pth, sequential_data.txt, sim_item.txt, test_top.txt, train_top.txt
 
@@ -91,7 +91,7 @@ For MF model:
 ```bash
 bash shell/unirec_mf_infer.sh
 ```
-After inference, please copy the contents of `$HOME/UniRec/output/$DATASET_NAME/MF/RecExplainer/xxx/` to `$HOME/RecAI/RecExplainer/data/mf_amazon_video_games_v3`
+After inference, please copy the contents of `$HOME/UniRec/output/amazon_video_games_v3/MF/RecExplainer/xxx/` to `$HOME/RecAI/RecExplainer/data/mf_amazon_video_games_v3`
 
 At the same time, copy these files from `$HOME/RecAI/RecExplainer/data/amazon_video_games_v3` to `$HOME/RecAI/RecExplainer/data/mf_amazon_video_games_v3`: datamaps.json, metadata.json, sequential_data.txt
 
