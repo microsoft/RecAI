@@ -3,6 +3,7 @@
 
 import pandas as pd
 import argparse
+import os
 
 def parse_args():
     parser = argparse.ArgumentParser(description="data process")
@@ -64,5 +65,6 @@ def rank_split(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    os.makedirs(os.path.dirname(args.train_file), exist_ok=True)
     unirec_split(args)
     rank_split(args)

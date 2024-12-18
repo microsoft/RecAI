@@ -3,6 +3,7 @@
 
 import pandas as pd
 import argparse
+import os
 
 def parse_args():
     parser = argparse.ArgumentParser(description="data process")
@@ -81,6 +82,7 @@ def eval_metric(args):
 if __name__ == '__main__':
     args = parse_args()
     if args.judge_query_file is not None:
+        os.makedirs(os.path.dirname(args.judge_query_file), exist_ok=True)
         eval_data_gen(args)
     else:
         eval_metric(args)

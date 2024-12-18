@@ -189,8 +189,10 @@ if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, model_max_length=args.model_max_length, use_fast=True)
 
     if args.gpt_query_file is not None:
+        os.makedirs(os.path.dirname(args.gpt_query_file), exist_ok=True)
         gen_uid2summary(user_items, meta_infos, args)
     else:
+        os.makedirs(os.path.dirname(args.save_intention_file), exist_ok=True)
         train_intention = []
         train_behavior = []
         train_both = []
