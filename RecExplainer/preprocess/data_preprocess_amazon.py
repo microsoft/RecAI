@@ -383,4 +383,5 @@ def main_process(data_name, args, data_type='Amazon'):
 
 if __name__ == '__main__':
     args = parse_args()
+    os.makedirs(os.path.dirname(args.save_data_file), exist_ok=True)
     main_process(args.full_data_name, args=args, data_type='Amazon')

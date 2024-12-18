@@ -165,4 +165,5 @@ if __name__ == "__main__":
     parser.add_argument("--output_file", type=str)
     parser.add_argument("--input_columns", type=str, default="question")
     args = parser.parse_args()
+    os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
     main(args)
