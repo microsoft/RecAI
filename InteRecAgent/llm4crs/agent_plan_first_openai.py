@@ -82,7 +82,9 @@ class ToolBox:
                 success = False
                 return (
                     success,
-                    f"""An exception happens: {e}. The inputs should be a json string for tool using plan. The format should be like: "[{{'tool_name': TOOL-1, 'input': INPUT-1}}, ..., {{'tool_name': TOOL-N, 'input': INPUT-N}} ]".""",
+                    f"An exception happens: the input plan can not be parsed by json.loads() function. It may caused by missing escape characters in some input value." +
+                     "The inputs should be a json string for tool using plan. " +
+                     "The format should be like: \"[{\\\"tool_name\\\": TOOL-1, \\\"input\\\": INPUT-1}, ..., {\\\"tool_name\\\": TOOL-N, \\\"input\\\": INPUT-N} ]\".",
                 )
 
         # check if all tool names existing
@@ -480,6 +482,11 @@ class CRSAgentPlanFirstOpenAI:
         if self._k_turn > 0 and (self.user_profile_update > 0) and (self._k_turn % self.user_profile_update == 0):
             self.user_profile.update(self.memory.get())
             self.memory.clear()
+        
+        if response.startswith("Something went wrong, please retry."):
+            # if wrong, hidden the 
+            response = response.split("\n")[0]
+
         return response
 
     def plan_and_exe(self, prompt: str, prompt_map: Dict) -> str:
@@ -509,7 +516,7 @@ class CRSAgentPlanFirstOpenAI:
                     resp = result
                 # total_token_usage.update(token_usage)
             else:
-                resp = "Something went wrong, please retry."
+                resp = f"Something went wrong, please retry.\n[{result}]"
 
         return resp
 

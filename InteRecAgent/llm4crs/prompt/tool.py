@@ -114,5 +114,6 @@ There are several tools to use:
 TOOLBOX_DESC = """
 The tool is a big tool box consisting of all tools metioned above. The tool box is used to execute tools when plan is maked. 
 The input is a List of Dict, indicating the tool using plan and input to each tool. There are two keys "tool_name" and "input" in Dict. 
-The format should be like: "[{'tool_name': TOOL-1, 'input': INPUT-1}, ..., {'tool_name': TOOL-N, 'input': INPUT-N} ]".
+The format should be a JSON string, like: \"[{\\\"tool_name\\\": TOOL-1, \\\"input\\\": INPUT-1}, ..., {\\\"tool_name\\\": TOOL-N, \\\"input\\\": INPUT-N}]\".
+The input string will be parsed by json.loads() function. 
 """
