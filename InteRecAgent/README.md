@@ -58,12 +58,12 @@ InteRecAgent consists of 4 necessary components:
     
     First, install other packages listed in `requirements.txt`
 
-       ```bash
-       cd InteRecAgent
-       conda create -n interecagent python==3.9
-       conda activate interecagent
-       pip install -r requirements.txt
-       ```
+    ```bash
+    cd InteRecAgent
+    conda create -n interecagent python==3.9
+    conda activate interecagent
+    pip install -r requirements.txt
+    ```
 
 2. Prepare data resource
 
