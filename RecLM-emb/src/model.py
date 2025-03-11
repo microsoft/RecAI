@@ -45,6 +45,7 @@ class BiEncoderModel(nn.Module):
                  normlized: bool = False,
                  sentence_pooling_method: str = 'cls',
                  negatives_cross_device: bool = False,
+                 in_batch_negatives: bool = True,
                  temperature: float = 1.0,
                  peft_model_name: str = None,
                  config=None,
@@ -76,6 +77,7 @@ class BiEncoderModel(nn.Module):
             logger.info("reset temperature = 1.0 due to using inner product to compute similarity")
 
         self.negatives_cross_device = negatives_cross_device
+        self.in_batch_negatives = in_batch_negatives
         if self.negatives_cross_device:
             if not dist.is_initialized():
                 raise ValueError('Distributed training has not been initialized for representation all gather.')
@@ -115,8 +117,8 @@ class BiEncoderModel(nn.Module):
     def forward(self, query: Dict[str, Tensor] = None, passage: Dict[str, Tensor] = None, teacher_score: Tensor = None):
         q_reps = self.encode(query)
         p_reps = self.encode(passage)
-
-        if self.training:
+        
+        if self.in_batch_negatives:
             if self.negatives_cross_device:
                 q_reps = self._dist_gather_tensor(q_reps)
                 p_reps = self._dist_gather_tensor(p_reps)
@@ -128,10 +130,14 @@ class BiEncoderModel(nn.Module):
             target = torch.arange(scores.size(0), device=scores.device, dtype=torch.long)
             target = target * (p_reps.size(0) // q_reps.size(0))
             loss = self.compute_loss(scores, target)
-
         else:
-            scores = self.compute_similarity(q_reps, p_reps)
-            loss = None
+            q_reps = q_reps.unsqueeze(1)
+            p_reps = p_reps.reshape(q_reps.size(0), p_reps.size(0) // q_reps.size(0), p_reps.size(-1))
+            scores = self.compute_similarity(q_reps, p_reps).squeeze(1)
+            scores = scores / self.temperature
+            target = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
+            loss = self.compute_loss(scores, target)
+        
         return EncoderOutput(
             loss=loss,
             scores=scores,

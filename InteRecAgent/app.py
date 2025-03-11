@@ -54,7 +54,7 @@ parser.add_argument(
 parser.add_argument(
     "--bot_type",
     type=str,
-    default="completion",
+    default="chat",
     choices=["chat", "completion"],
     help="Type OpenAI models. The default is completion. Options [completion, chat]",
 )
@@ -73,14 +73,17 @@ parser.add_argument(
     "--demo_mode",
     type=str,
     choices=["zero", "fixed", "dynamic"],
-    default="zero",
+    default="dynamic",
     help="Directory path of demonstrations",
 )
 parser.add_argument(
-    "--demo_dir_or_file", type=str, help="Directory or file path of demonstrations"
+    "--demo_dir_or_file",
+    type=str,
+    default="./demonstration/seed_demos_placeholder.jsonl",
+    help="Directory or file path of demonstrations"
 )
 parser.add_argument(
-    "--num_demos", type=int, default=3, help="number of demos for in-context learning"
+    "--num_demos", type=int, default=5, help="number of demos for in-context learning"
 )
 
 # reflection mechanism

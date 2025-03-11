@@ -82,7 +82,9 @@ class ToolBox:
                 success = False
                 return (
                     success,
-                    f"""An exception happens: {e}. The inputs should be a json string for tool using plan. The format should be like: "[{{'tool_name': TOOL-1, 'input': INPUT-1}}, ..., {{'tool_name': TOOL-N, 'input': INPUT-N}} ]".""",
+                    f"An exception happens: the input plan can not be parsed by json.loads() function. It may caused by missing escape characters in some input value." +
+                     "The inputs should be a json string for tool using plan. " +
+                     "The format should be like: \"[{\\\"tool_name\\\": TOOL-1, \\\"input\\\": INPUT-1}, ..., {\\\"tool_name\\\": TOOL-N, \\\"input\\\": INPUT-N} ]\".",
                 )
 
         # check if all tool names existing
@@ -192,6 +194,8 @@ class DialogueMemory:
         self.memory = []
 
     def clear(self) -> None:
+        self._shortened_dialogue_history: str = ""
+        self._shortened_dialogue_turn: int = 0
         self.memory = []
 
     def get(self) -> str:
@@ -406,6 +410,7 @@ class CRSAgentPlanFirstOpenAI:
         if self._record_planning:
             self._plan_record_cache = {"traj": [], "conv": [], "reward": 0}
         logger.debug("History Cleared!")
+        logger.debug("Memory Cleared!")
         if self.user_profile:
             self.user_profile.clear()
 
@@ -477,6 +482,11 @@ class CRSAgentPlanFirstOpenAI:
         if self._k_turn > 0 and (self.user_profile_update > 0) and (self._k_turn % self.user_profile_update == 0):
             self.user_profile.update(self.memory.get())
             self.memory.clear()
+        
+        if response.startswith("Something went wrong, please retry."):
+            # if wrong, hidden the 
+            response = response.split("\n")[0]
+
         return response
 
     def plan_and_exe(self, prompt: str, prompt_map: Dict) -> str:
@@ -506,13 +516,14 @@ class CRSAgentPlanFirstOpenAI:
                     resp = result
                 # total_token_usage.update(token_usage)
             else:
-                resp = "Something went wrong, please retry."
+                resp = f"Something went wrong, please retry.\n[{result}]"
 
         return resp
 
     def _parse_llm_output(self, llm_output: str) -> Tuple[bool, str]:
         llm_output = llm_output.strip()
 
+        llm_output = llm_output.replace("###", "")  # in case of special token
         regex = r"Action\s*\d*\s*:(.*?)\nAction\s*\d*\s*Input\s*\d*\s*:[\s]*(.*)"
         match = re.search(regex, llm_output, re.DOTALL)
         if not match:

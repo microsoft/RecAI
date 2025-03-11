@@ -31,21 +31,29 @@ For more details, please refer to our paper [Aligning Language Models for Versat
 
 ### Environment
 ```bash
-conda create -n RecLM_emb python=3.9
+conda create -n RecLM_emb python=3.10
 conda activate RecLM_emb
-pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 pip install -r requirements.txt
 ```
 
 ### Set OpenAI API Environment
-If you want to use OpenAI API, you need to firstly run the following scripts in your console. If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and ENGINE.
+If you want to use OpenAI API, you need to firstly run the following scripts in your console. If it is not Azure OpenAI API (OPENAI_API_TYPE is not "azure"), you only need to specify OPENAI_API_KEY and MODEL.
 
 ```bash
 export OPENAI_API_KEY=xxx;
 export OPENAI_API_BASE=https://xxx.openai.azure.com/;
 export OPENAI_API_VERSION=2023-03-15-preview;
 export OPENAI_API_TYPE=azure;
-export ENGINE=xxx;
+export MODEL=xxx;
+```
+
+We also support AzureCliCredential login:
+```bash
+az login
+export OPENAI_API_BASE=https://xxx.openai.azure.com/;
+export OPENAI_API_VERSION=2023-03-15-preview;
+export MODEL=xxx;
 ```
 
 ### Prepare your dataset
@@ -94,6 +102,7 @@ bash shell/test_data_pipeline.sh
 ```bash
 bash shell/run_single_node.sh
 ```
+- `--nproc_per_node`: the number of GPUs on your machine
 #### multi node
 If you have two nodes: node0 and node1 (here we use node0 as the master node), you should first run `deepspeed utils/all_reduce_bench_v2.py` to get IP and port number of the master node. Then run the following script on both nodes using the same IP and port number but different node ranks.
 
@@ -113,6 +122,7 @@ Note that for the [repllama](https://huggingface.co/castorini/repllama-v1-7b-lor
 ```bash
 bash shell/infer_llm_metrics.sh
 ```
+- `--config_file`: Indicate the code running environment. `./shell/infer_case.yaml` and `./shell/infer.yaml` are provided as references for single-gpu inference and multi-gpu inference respectively.
 
 #### Case study
 You need to first prepare your query file with the suffix .jsonl (use `user_embedding_prompt_path` parameter to specify), an example is as follows:
@@ -126,14 +136,23 @@ Then, run the following script:
 bash shell/infer_case.sh
 ```
 
+#### Serving with Web GUI
+We also provide an interface for interactively entering a query to retrieve relevant items.
+
+```bash
+bash shell/demo.sh
+```
+
+
 ## Citation
 If you find this project useful in your research, please cite our research paper:
 
 ```
-@article{lei2024aligning,
+@inproceedings{lei2024aligning,
   title={Aligning Language Models for Versatile Text-based Item Retrieval},
   author={Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Wu, Mingqi and Lian, Defu and Xie, Xing},
-  journal={arXiv preprint arXiv:2402.18899},
+  booktitle={Companion Proceedings of the ACM on Web Conference 2024},
+  pages={935--938},
   year={2024}
 }
 ```

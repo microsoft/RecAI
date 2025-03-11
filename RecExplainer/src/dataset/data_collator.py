@@ -11,12 +11,15 @@ def ExpCollator(features):
     max_len = input_ids.size(1)
     # reshape user_pos to (batch_size*u_n)
     user_pos = []
+    user_ids = []
     item_seq = []
     item_pos = []
     item_ids = []
     for i, f in enumerate(features):
         for x in f['user_pos']:
             user_pos.append(x + i*max_len)
+        for x in f['user_ids']:
+            user_ids.append(x)
         for x in f['item_seq']:
             item_seq.append(x)
         for x in f['item_pos']:
@@ -28,6 +31,7 @@ def ExpCollator(features):
         "input_ids": input_ids,
         "attention_mask": attention_mask,
         "user_pos": torch.tensor(user_pos, dtype=torch.long),
+        "user_ids": torch.tensor(user_ids, dtype=torch.long),
         "item_seq": torch.tensor(item_seq, dtype=torch.long),
         "item_pos": torch.tensor(item_pos, dtype=torch.long),
         "item_ids": torch.tensor(item_ids, dtype=torch.long)

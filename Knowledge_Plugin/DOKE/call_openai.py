@@ -17,6 +17,8 @@ import requests
 import queue
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
+import openai
+from openai import OpenAI
 
 api_keys = [
     "your openai keys"
@@ -44,55 +46,49 @@ def generate_Davinci(api_key, text):
 
 def generate_chatgpt(api_key, prompt, version):
     # 使用你的 API 密钥初始化 OpenAI GPT-3
-    openai.api_key = api_key
-    openai.api_base = "https://api.openai.com/v1"
+    client = OpenAI(api_key=api_key)
     text = [{'role': 'user', 'content': prompt}]
     if version == "0301":
         model = "gpt-3.5-turbo-0301"
     else:
         model = "gpt-3.5-turbo"
+
     for i in range(MAX_RETRIES):
         try:
-            # 进行 GPT-3 聊天模型 API 调用，并设置超时时间
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=model,
                 messages=text,
                 temperature=0.0,
-                request_timeout=30,
+                max_tokens=2048,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
             )
-            content = response['choices'][0]['message']['content']
+            content = response.choices[0].message.content.strip()
             return content
         except Exception as e:
             print(f"{api_key}\nError occurred: {e}. Retrying...")
-            time.sleep(INTERVAL)  # 重试之间的休眠时间
+            time.sleep(INTERVAL)
     print(f"Failed to get response for prompt: {prompt} after {MAX_RETRIES} retries.")
     return "None"
 
-def generate_gpt4(prompt):
-    available_configs = [
-        {"api_key": "your apikey", "url": "deployment url"},
-    ]
-    message = [{"role": "user", "content": prompt}]
-    data = {
-        "messages": message,
-        "max_tokens": 2048,
-        "temperature": 0.,
-        'n': 1,
-    }
-
+def generate_gpt4(api_key, prompt):
+    client = OpenAI(api_key=api_key)
+    text = [{'role': 'user', 'content': prompt}]
     for _ in range(MAX_RETRIES):
         try:
-            config = random.choice(available_configs)
-            headers = {'Content-Type': 'application/json', 'api-key': config["api_key"]}
-            response = requests.post(config["url"], json=data, headers=headers)
-            # print(response)
-            if (response.status_code == 200):
-                answer = response.json()["choices"][0]["message"]['content'].strip()
-                return answer
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=text,
+                temperature=0.0,
+                max_tokens=2048,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
+            )
+            content = response.choices[0].message.content.strip()
+            return content
         except Exception as e:
-            print(f"Error occurred: {e}. Retrying...")
-        time.sleep(30)  # 重试之间的休眠时间
-
+            print(f"{api_key}\nError occurred: {e}. Retrying...")
+            time.sleep(INTERVAL)
     
     print("out of max_retry_times")
     return "Error"
@@ -154,7 +150,7 @@ def worker(i, model, version):
         index, prompt = prompts_queue.get()
         api_key = api_keys[i % len(api_keys)]
         if model == "GPT4":
-            result = generate_gpt4(prompt)
+            result = generate_gpt4(api_key, prompt)
         if model == "ChatGPT":
             result = generate_chatgpt(api_key, prompt, version)
         elif model == "Davinci":

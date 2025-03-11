@@ -325,7 +325,7 @@ def main_process(data_name, args, data_type='Amazon'):
 
     print('Begin extracting meta infos...')
     
-    meta_infos = Amazon_meta(datamaps)
+    meta_infos = Amazon_meta(datamaps, args)
 
     print(f'{data_name} & {add_comma(user_num)} & {add_comma(item_num)} & {user_avg:.1f}'
           f'& {item_avg:.1f} & {add_comma(interact_num)} & {sparsity:.2f}\% \\')
@@ -383,4 +383,5 @@ def main_process(data_name, args, data_type='Amazon'):
 
 if __name__ == '__main__':
     args = parse_args()
+    os.makedirs(os.path.dirname(args.save_data_file), exist_ok=True)
     main_process(args.full_data_name, args=args, data_type='Amazon')

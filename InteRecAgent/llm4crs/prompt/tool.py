@@ -23,7 +23,7 @@ The input of the tool should be a string of {item} names split by two ';', such 
 
 
 LOOK_UP_TOOL_DESC = """
-The tool is used to look up some {item} information in a {item} information table (including statistical information), like number of {item}s, description of {item}s and so on. \
+The tool is used to look up {item}'s detailed information in a {item} information table (including statistical information), like number of {item}s, description of {item}s, price and so on. \
 
 The input of the tools should be a SQL command (in one line) converted from the search query, which would be used to search information in {item} information table. \
 You should try to select as less columns as you can to get the necessary information. \
@@ -36,22 +36,21 @@ The tool can NOT give recommendations. DO NOT SELECT id information!
 
 
 HARD_FILTER_TOOL_DESC = """
-The tool is a hard condition tool. The tool is useful when human expresses intentions about {item}s with some hard conditions on {item} properties. \
+The tool is a hard-condition {item} filtering tool. The tool is useful when human want {item}s with some hard conditions on {item} properties. \
 The input of the tool should be a one-line SQL SELECT command converted from hard conditions. Here are some rules: \
 1. {item} titles can not be used as conditions in SQL;
-2. the tool can not find similar {item}s;
-3. always use pattern match logic for columns with string type;
-4. only one {item} information table is allowed to appear in SQL command;
-5. select all {item}s that meet the conditions, do not use the LIMIT keyword;
-6. try to use OR instead of AND;
-7. use given related values for categorical columns instead of human's description.
+2. always use pattern match logic for columns with string type;
+3. only one {item} information table is allowed to appear in SQL command;
+4. select all {item}s that meet the conditions, do not use the LIMIT keyword;
+5. try to use OR instead of AND;
+6. use given related values for categorical columns instead of human's description.
 """
 
 
 SOFT_FILTER_TOOL_DESC = """
-The tool is a soft condition filtering tool. \
-The tool can find similar {item}s for specific seed {item}s. \
-Never use this tool if human doesn't express to find some {item}s similar with seed {item}s. \
+The tool is a soft condition {item} filtering tool to find similar {item}s for specific seed {item}s. \
+Use this tool ONLY WHEN human explicitly want to find similar {item}s with seed {item}s. \
+The tool can not recommend {item}s based on human's history. \
 There is a similarity score threshold in the tool, only {item}s with similarity above the threshold would be kept. \
 Besides, the tool could be used to calculate the similarity scores with seed {item}s for {item}s in candidate buffer for ranking tool to refine. \
 The input of the tool should be a list of seed {item} titles/names, which should be a Python list of strings. \
@@ -64,7 +63,7 @@ The tool is useful to refine {item}s order (for better experiences) or remove un
 The input of the tool should be a json string, which may consist of three keys: "schema", "prefer" and "unwanted". \
 "schema" represents ranking schema, optional choices: "popularity", "similarity" and "preference", indicating rank by {item} popularity, rank by similarity, rank by human preference ("prefer" {item}s). \
 The "schema" depends on previous tool using and human preference. If "prefer" info here not empty, "preference" schema should be used. If similarity filtering tool is used before, prioritize using "similarity" except human want popular {item}s.
-"prefer" represents {item} names that human has enjoyed or human has interacted with before, which should be an array of {item} titles. Keywords: "used to do", "I like", "prefer".
+"prefer" represents {item} names that human has enjoyed or human has interacted with before (human's history), which should be an array of {item} titles. Keywords: "used to do", "I like", "prefer".
 "unwanted" represents {item} names that human doesn't like or doesn't want to see in next conversations, which should be an array of {item} titles. Keywords: "don't like", "boring", "interested in". 
 "prefer" and "unwanted" {item}s should be extracted from human request and previous conversations. Only {item} names are allowed to appear in the input. \
 The human's feedback for you recommendation in conversation history could be regard as "prefer" or "unwanted", like "I have tried those items you recommend" or "I don't like those".
@@ -115,5 +114,6 @@ There are several tools to use:
 TOOLBOX_DESC = """
 The tool is a big tool box consisting of all tools metioned above. The tool box is used to execute tools when plan is maked. 
 The input is a List of Dict, indicating the tool using plan and input to each tool. There are two keys "tool_name" and "input" in Dict. 
-The format should be like: "[{'tool_name': TOOL-1, 'input': INPUT-1}, ..., {'tool_name': TOOL-N, 'input': INPUT-N} ]".
+The format should be a JSON string, like: \"[{\\\"tool_name\\\": TOOL-1, \\\"input\\\": INPUT-1}, ..., {\\\"tool_name\\\": TOOL-N, \\\"input\\\": INPUT-N}]\".
+The input string will be parsed by json.loads() function. 
 """

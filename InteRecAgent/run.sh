@@ -24,19 +24,19 @@ fi
 
 
 domain="game"   # item domain
-enable_shorten=1    # whether to enable shorten chat history
+enable_shorten=0    # whether to enable shorten chat history
 
 # demonstration mode. 
 # 1. zero: Zero-shot setting. No demonstration would be inserted into prompt.
 # 2. fixed: Fixed demonstrations are used for all cases. It would use the first n demonstrations in the `demo_dir_or_file`, where n is `num_demos`.
 # 3. dynamic: Retrieval the most n relevant demonstrations.
-demo_mode="zero"  # ["zero", "fixed", "dynamic"]
+demo_mode="dynamic"  # ["zero", "fixed", "dynamic"]
 
-num_demos=3 # number of demonstrations to use
+num_demos=5 # number of demonstrations to use, when demo_mode=="fixed" and num_demos<0, all demonstrations would be used.
 
 # folder or file path of demonstrations. If folder, all jsonl files would be used. 
 # If demo_mode=="zero", the argument does not function.
-demo_dir_or_file="path-to-demonstrations"   
+demo_dir_or_file="./demonstration/seed_demos_placeholder.jsonl"   
 
 
 enable_reflection=0 # whether to use reflection. Reflection would increase the token usage and the response delay.
@@ -64,4 +64,4 @@ python ./app.py \
     --enable_reflection=$enable_reflection \
     --plan_first=$plan_first \
     --langchain=$langchain \
-    # --demo_dir_or_file=$demo_dir_or_file \
+    --demo_dir_or_file=$demo_dir_or_file

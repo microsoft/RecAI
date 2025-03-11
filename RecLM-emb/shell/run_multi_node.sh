@@ -22,46 +22,68 @@ RUN_NAME="reclm_emb_steam_e5"
 if [ "$MODEl_NAME_OR_PATH" = "meta-llama/Llama-2-7b-hf" ]; then
     TORCH_TYPE="bfloat16"
     BF16=True
-    FLASH_ATTN_2_ENABLED=True
+    ATTN_IMPLEMENTATION="flash_attention_2"
     TRAIN_GROUP_SIZE=2
     PEFT_MODEL_NAME="castorini/repllama-v1-7b-lora-passage"
     HAS_TEMPLATE=True
+
+    torchrun --nnodes=2 --nproc_per_node 8 --node_rank=$1 --master_addr="$2" --master_port=$3 train.py \
+        --torch_dtype $TORCH_TYPE \
+        --bf16 $BF16 \
+        --attn_implementation $ATTN_IMPLEMENTATION \
+        --train_group_size $TRAIN_GROUP_SIZE \
+        --peft_model_name $PEFT_MODEL_NAME \
+        --has_template $HAS_TEMPLATE \
+        --data_cache_dir $HOME/.cache/hf_data \
+        --output_dir $OUTPUT_DIR \
+        --model_name_or_path $MODEl_NAME_OR_PATH \
+        --train_data $DATA_DIR/gpt4_data_v2.jsonl,$DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
+        --learning_rate 3e-5 \
+        --num_train_epochs 3 \
+        --per_device_train_batch_size 2 \
+        --dataloader_drop_last True \
+        --normlized True \
+        --sentence_pooling_method $SENTENCE_POOLING_METHOD \
+        --temperature 0.01 \
+        --query_max_len $QUERY_MAX_LEN \
+        --passage_max_len $PASSAGE_MAX_LEN \
+        --dataloader_num_workers=2 \
+        --gradient_accumulation_steps $GRADIENT_ACCU_STEPS \
+        --logging_steps 100 \
+        --save_strategy epoch \
+        --warmup_ratio 0.1 \
+        --report_to wandb \
+        --run_name $RUN_NAME > $EXE_DIR/training.log 2>&1
 else
-    TORCH_TYPE=None
-    BF16=False
-    FLASH_ATTN_2_ENABLED=False
     TRAIN_GROUP_SIZE=8
-    PEFT_MODEL_NAME=None
-    HAS_TEMPLATE=False
+    HAS_TEMPLATE=True
+
+    torchrun --nnodes=2 --nproc_per_node 8 --node_rank=$1 --master_addr="$2" --master_port=$3 train.py \
+        --train_group_size $TRAIN_GROUP_SIZE \
+        --has_template $HAS_TEMPLATE \
+        --data_cache_dir $HOME/.cache/hf_data \
+        --output_dir $OUTPUT_DIR \
+        --model_name_or_path $MODEl_NAME_OR_PATH \
+        --train_data $DATA_DIR/gpt4_data_v2.jsonl,$DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
+        --learning_rate 3e-5 \
+        --num_train_epochs 3 \
+        --per_device_train_batch_size 2 \
+        --dataloader_drop_last True \
+        --normlized True \
+        --sentence_pooling_method $SENTENCE_POOLING_METHOD \
+        --temperature 0.01 \
+        --query_max_len $QUERY_MAX_LEN \
+        --passage_max_len $PASSAGE_MAX_LEN \
+        --dataloader_num_workers=2 \
+        --gradient_accumulation_steps $GRADIENT_ACCU_STEPS \
+        --logging_steps 100 \
+        --save_strategy epoch \
+        --warmup_ratio 0.1 \
+        --report_to wandb \
+        --run_name $RUN_NAME > $EXE_DIR/training.log 2>&1
 fi
 
-torchrun --nnodes=2 --nproc_per_node 8 --node_rank=$1 --master_addr="$2" --master_port=$3 train.py \
-    --torch_dtype $TORCH_TYPE \
-    --bf16 $BF16 \
-    --flash_attn_2_enabled $FLASH_ATTN_2_ENABLED \
-    --train_group_size $TRAIN_GROUP_SIZE \
-    --peft_model_name $PEFT_MODEL_NAME \
-    --has_template $HAS_TEMPLATE \
-    --data_cache_dir $HOME/.cache/hf_data \
-    --output_dir $OUTPUT_DIR \
-    --model_name_or_path $MODEl_NAME_OR_PATH \
-    --train_data $DATA_DIR/misspell2item.jsonl,$DATA_DIR/negquery2item.jsonl,$DATA_DIR/relativequery2item.jsonl,$DATA_DIR/title2item.jsonl,$DATA_DIR/vaguequery2item.jsonl,$DATA_DIR/gpt4_data.jsonl,$DATA_DIR/item2item.jsonl,$DATA_DIR/query2item.jsonl,$DATA_DIR/queryuser2item.jsonl,$DATA_DIR/user2item.jsonl \
-    --learning_rate 3e-5 \
-    --num_train_epochs 3 \
-    --per_device_train_batch_size 2 \
-    --dataloader_drop_last True \
-    --normlized True \
-    --sentence_pooling_method $SENTENCE_POOLING_METHOD \
-    --temperature 0.01 \
-    --query_max_len $QUERY_MAX_LEN \
-    --passage_max_len $PASSAGE_MAX_LEN \
-    --dataloader_num_workers=2 \
-    --gradient_accumulation_steps $GRADIENT_ACCU_STEPS \
-    --logging_steps 100 \
-    --save_strategy epoch \
-    --warmup_ratio 0.1 \
-    --report_to wandb \
-    --run_name $RUN_NAME > $EXE_DIR/training.log 2>&1
+
 
 
 

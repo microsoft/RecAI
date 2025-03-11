@@ -27,6 +27,7 @@ class InferDataset(Dataset):
         self.data_ids = data_ids
         self.user_history = user_history
         self.empty_history = np.zeros((1,), dtype=np.int32)
+        self.is_seqrec = is_seqrec
         self.max_seq_len = config.get('max_seq_len', 0)
         self.set_return_column_index()
 
@@ -34,8 +35,9 @@ class InferDataset(Dataset):
         self.return_key_2_index = {}
         self.return_key_2_index['user_id'] = len(self.return_key_2_index)
         self.return_key_2_index['item_id'] = len(self.return_key_2_index)
-        self.return_key_2_index['item_seq'] = len(self.return_key_2_index)
-        self.return_key_2_index['item_seq_len'] = len(self.return_key_2_index)
+        if self.is_seqrec:
+            self.return_key_2_index['item_seq'] = len(self.return_key_2_index)
+            self.return_key_2_index['item_seq_len'] = len(self.return_key_2_index)
 
     def __len__(self):
         return len(self.data_ids)
@@ -45,26 +47,26 @@ class InferDataset(Dataset):
         user_id = sample[0]
         item_id = sample[1]
         return_tup = (user_id, item_id)
+        if self.is_seqrec:
+            res = np.zeros((self.max_seq_len,), dtype=np.int32)
+            hist = self.user_history[user_id]
+            if hist is None:
+                hist = self.empty_history
             
-        res = np.zeros((self.max_seq_len,), dtype=np.int32)
-        hist = self.user_history[user_id]
-        if hist is None:
-            hist = self.empty_history
-        
-        k=len(hist)
-        for i, item in enumerate(hist):
-            if item == item_id:
-                k = i
-                break
-        hist = hist[:k]
+            k=len(hist)
+            for i, item in enumerate(hist):
+                if item == item_id:
+                    k = i
+                    break
+            hist = hist[:k]
 
-        n = len(hist)
-        if n > self.max_seq_len:
-            res[:] = hist[n-self.max_seq_len:]
-        else:
-            res[self.max_seq_len-n:] = hist[:]
-        res_len = min(n, self.max_seq_len)
-        return_tup = return_tup + (res, res_len)
+            n = len(hist)
+            if n > self.max_seq_len:
+                res[:] = hist[n-self.max_seq_len:]
+            else:
+                res[self.max_seq_len-n:] = hist[:]
+            res_len = min(n, self.max_seq_len)
+            return_tup = return_tup + (res, res_len)
         return return_tup
 
 @torch.no_grad()
@@ -131,36 +133,25 @@ def _get_tok_recommendations(test_data_loader, model, user_history, topk, test_c
                 if item in past_hist or item==0:
                     continue
                 filter_items.append(item)
-            top1 = str(filter_items[0])
-            indices = sorted(random.sample(range(len(filter_items)), 5))  
-            sample_inorder = [str(filter_items[i]) for i in indices]  
+            tops = [str(k) for k in filter_items[:test_config['times']]]
+            sample_orders = []
+            for i in range(test_config['times']):
+                indices = sorted(random.sample(range(len(filter_items)), 5))  
+                sample_orders.append([str(filter_items[i]) for i in indices]) 
 
             scores = batch_scores[idx]
-            # find all scores > 1.0
-            pos_indices = np.where(scores>1.0)[0]
-            pos_indice = np.random.choice(pos_indices, 1)[0]
-
-            neg_indices = np.where((scores<0.0) & (scores!=-np.Inf))[0]
-            neg_indice = np.random.choice(neg_indices, 1)[0]
-
-            pos_score = scores[pos_indice]
-            neg_score = scores[neg_indice]
-
-            f.write(str(userid) + '\t' + str(itemid) + '\t' + top1 + '\t' + ','.join(sample_inorder) + '\t' + str(pos_indice) + '\t' + str(neg_indice) + '\t' + str(pos_score) + '\t' + str(neg_score) +'\n')
-
+            pos_thred=scores[reco_items[test_config['n_items']//5]] # top 20%
+            neg_thred=scores[reco_items[-test_config['n_items']//2]] # bottom 50%
             
-            # f.write(str(userid) + '\t' + str(itemid) + '\t' + top1 + '\t' + ','.join(sample_10_inorder) + '\n')
+            pos_indices = np.where(scores>pos_thred)[0] # 1.0
+            pos_indice = np.random.choice(pos_indices, test_config['times'], replace=False)
 
-            # if random.random()<0.6: #listwise
-            #     k=random.randint(3, 10)
-            #     indices = sorted(random.sample(range(len(filter_items)), k))  
-            #     while min([indices[i+1] - indices[i] for i in range(len(indices)-1)])<10:
-            #         indices = sorted(random.sample(range(len(filter_items)), k))
-            # else: #pairwise
-            #     indices = sorted(random.sample(range(len(filter_items)), 2))
-            #     if indices[1]-indices[0]<10:
-            #         indices = sorted(random.sample(range(len(filter_items)), 2))
-            # sample_inorder = [str(filter_items[i]) for i in indices]
+            neg_indices = np.where((scores<neg_thred) & (scores!=-np.Inf))[0] #0.0
+            neg_indice = np.random.choice(neg_indices, test_config['times'], replace=False)
+
+            for i in range(test_config['times']):
+                f.write(str(userid) + '\t' + str(itemid) + '\t' + tops[i] + '\t' + ','.join(sample_orders[i]) + '\t' + str(pos_indice[i]) + '\t' + str(neg_indice[i]) + '\t' + str(scores[pos_indice[i]]) + '\t' + str(scores[neg_indice[i]]) +'\n')
+
     f.close()
 
     ## item similarity
@@ -238,6 +229,7 @@ def parse_cmd_arguments():
     parser.add_argument("--sim_item_file", type=str)
     parser.add_argument("--topk", type=int, default=100, help='topk for recommendation')
     parser.add_argument("--seed", type=int, default=2023, help='random seed')
+    parser.add_argument("--times", type=int, default=1, help='number of data points for one user')
         
     (args, unknown) = parser.parse_known_args()  
     # print(args)

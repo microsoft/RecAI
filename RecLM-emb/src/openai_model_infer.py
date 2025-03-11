@@ -9,31 +9,47 @@ import pandas as pd
 from tqdm import tqdm
 import openai
 from openai import OpenAI, AzureOpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider, AzureCliCredential
 import pickle
 
 import queue
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
 
-api_base = os.environ['OPENAI_API_BASE'] if 'OPENAI_API_BASE' in os.environ else None
-api_version = os.environ['OPENAI_API_VERSION'] if 'OPENAI_API_VERSION' in os.environ else None
-api_type = os.environ['OPENAI_API_TYPE'] if 'OPENAI_API_TYPE' in os.environ else None
-api_key = os.environ['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in os.environ else None
 MAX_THREADS = 1
 MAX_RETRIES = 5
 INTERVAL = 5
 
-if api_type == "azure":
-    client = AzureOpenAI(
-        api_key=api_key,
-        api_version=api_version,
-        azure_endpoint=api_base
-    )
+api_key = os.environ.get('OPENAI_API_KEY') if os.environ.get('OPENAI_API_KEY') else None
+api_base =  os.environ.get('OPENAI_API_BASE') if os.environ.get('OPENAI_API_BASE') else None
+api_type = os.environ.get('OPENAI_API_TYPE') if os.environ.get('OPENAI_API_TYPE') else None
+api_version =  os.environ.get('OPENAI_API_VERSION') if os.environ.get('OPENAI_API_VERSION') else None
+
+if api_key:
+    if api_type == "azure":
+        client = AzureOpenAI(
+            api_key=api_key,
+            api_version=api_version,
+            azure_endpoint=api_base
+        )
+    else:
+        client = OpenAI(  
+            api_key=api_key
+        )
 else:
-    client = OpenAI(  
-        api_key=api_key
+    credential = AzureCliCredential()    
+
+    token_provider = get_bearer_token_provider(
+        credential,
+        "https://cognitiveservices.azure.com/.default"
     )
 
+    client = AzureOpenAI(
+        azure_endpoint=api_base,
+        azure_ad_token_provider=token_provider,
+        api_version=api_version,
+        max_retries=MAX_RETRIES,
+    )
 
 def call_openai_embedding(model, text):
     for i in range(MAX_RETRIES):

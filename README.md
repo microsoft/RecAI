@@ -46,7 +46,7 @@ We believe that by adopting a holistic perspective, we can incorporate the major
     <td> <img src="./assets/reclm-gen.png" alt="Generative RecLM " /> </td>  
     <td> 
      <strong style="font-size:3vw"> <a href="https://github.com/microsoft/RecAI/blob/main/RecLM-gen/README.md" style="color: #0000FF; text-decoration: underline;"> Generative RecLM </a></strong> </br>
-  It's important to note that data patterns vary significantly across domains, meaning a general-purpose LLM may not deliver optimized performance within a specific domain. To adapt to specific domain data patterns, grounding to domain item catelogs, and enhance instruction-following capability, this project discusses the process of fine-tuning a generative Language Model for recommenders, referred to as RecLM-gen. Techniques include supervised finetuning (SFT) and reinforcement learning (RL). Potential applications of this approach include rankers, conversational recommenders, and user simulators.
+  It's important to note that data patterns vary significantly across domains, meaning a general-purpose LLM may not deliver optimized performance within a specific domain. To adapt to specific domain data patterns, grounding to domain item catalogs, and enhance instruction-following capability, this project discusses the process of fine-tuning a generative Language Model for recommenders, referred to as RecLM-gen. Techniques include supervised finetuning (SFT) and reinforcement learning (RL). Potential applications of this approach include rankers, conversational recommenders, and user simulators.
      </td>  
   </tr> 
 

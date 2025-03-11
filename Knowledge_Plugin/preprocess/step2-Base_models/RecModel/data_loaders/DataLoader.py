@@ -48,24 +48,6 @@ class DataLoader(object):
         if not os.path.exists(self.info_file) or self.load_data:
             self._save_info()
 
-        # negative candidates
-        self.test_neg_data = defaultdict(list)
-        if sample_type == "random":
-            with open(self.path + f"/{dataset}.test_candidate.txt", "r") as f:
-                for line in f:
-                    user, items = line.strip().split(' ', 1)
-                    items = items.split(' ')
-                    items = [int(item) for item in items]
-                    self.test_neg_data[int(user)] = items[:]
-        elif sample_type == "pop":
-            with open(self.path + f"/{dataset}.test_candidate_pop.txt", "r") as f:
-                for line in f:
-                    user, items = line.strip().split(' ', 1)
-                    items = items.split(' ')
-                    items = [int(item) for item in items]
-                    self.test_neg_data[int(user)] = items[:]
-
-
     def _load_user_item(self):
         """
         :return:

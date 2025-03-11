@@ -3,6 +3,7 @@
 
 import pandas as pd
 import argparse
+import os
 
 def parse_args():
     parser = argparse.ArgumentParser(description="data process")
@@ -45,9 +46,9 @@ def eval_data_gen(args):
     output_df = pd.DataFrame(columns=['model', 'label', 'history', 'target item', 'question'])
 
     for i in range(len(all_dfs[model_names[0]])):
-        label = all_dfs[model_names].loc[i, 'label']
-        history = eval(all_dfs[model_names].loc[i, 'history'])
-        target_item = all_dfs[model_names].loc[i, 'target item']
+        label = all_dfs[model_names[0]].loc[i, 'label']
+        history = eval(all_dfs[model_names[0]].loc[i, 'history'])
+        target_item = all_dfs[model_names[0]].loc[i, 'target item']
 
         for model in model_names:
             output_df = output_df._append({'model': model, 'label': label, 'history': history, 'target item': target_item, 'question': template.format(', '.join(history), target_item, label, all_dfs[model].loc[i, 'answer'])}, ignore_index=True)
@@ -64,7 +65,7 @@ def eval_metric(args):
     
     for i in range(len(df)):
         model = df.loc[i, 'model']
-        answer = df.loc[i, 'response-gpt-4'].strip().lower()
+        answer = df.loc[i, 'score'].strip().lower()
         if answer == '<score>a</score>':
             results[model]['A'] += 1
         elif answer == '<score>b</score>':
@@ -81,6 +82,7 @@ def eval_metric(args):
 if __name__ == '__main__':
     args = parse_args()
     if args.judge_query_file is not None:
+        os.makedirs(os.path.dirname(args.judge_query_file), exist_ok=True)
         eval_data_gen(args)
     else:
         eval_metric(args)

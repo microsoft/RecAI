@@ -247,3 +247,65 @@ negquery2item_template = [
     "Search for games excluding these features: {}.",
     "Search for games not including {}",
 ]
+
+dialog_template = '''Assume that a user is looking for some games recommendation, and the user would chat with a conversational recommendation assistant for help. 
+    And user's historical games are:
+
+    {{history}}
+
+    Information about target game that the user is looking for: 
+                        
+    {{target_info}}
+                        
+    Please generate a conversation between the user and the recommendation assistant. Here are some rules:
+    1. Do not mention games not in history and do not mention the target item's name.
+    2. The assistant doesn't know the user's history, so the user should tell the history in conversation.
+    3. In the final turn of the conversation, the assistant should recommend the target the user is looking for. Use '<item>' as placeholder to represent the target.
+    4. Do not give too much information in one message and keep each message short.
+    5. The conversation should consist of {{num_round}} rounds.
+    6. Only the user has the information about target item in his mind. The assistant could only guess from user's messages.
+    7. The conversation require {{difficulty}} level education to understand.{{neg_requirement}}
+                        
+    Use the following format:
+    
+    [{"role": "User", "text": "xxxxx"}, {"role": "Assistant", "text": "xxxxx"}, ...]
+    '''
+
+usersummary_template = '''You are a human game enthusiast. Please make your own user game summary based on your historical play records.
+    Please adhere to the following guidelines: 
+    1.The user summary should be under {num_words} words.
+    2.The user summary should highlight patterns and traits from past games so that it is helpful to identify preferences and predict future game choices.
+    3.The writing style should be {writing_style}. 
+    4.Do not mention the future predictions in the summary. 
+    5.The summary is {clarity} and requires {difficulty} level education to comprehend.
+    
+    Here is the game play history: {history}
+'''
+
+query_template = '''
+Based on the given game properties, please generate a query for conveying your likings or search intentions for certain game properties.          
+
+Information about the game is given in json format as follows, with several key value pairs.
+{target_info}
+ 
+Please adhere to the following guidelines: 
+1. Do not mention the name of the game in the query.
+2. Select several key value pairs from the game properties and generate a query based on them.
+3. You can rewrite some values while keeping the meaning unchanged, such as replacing it with synonyms or replacing it with some relative values. For example, "price: 22$" can be replaced with "Cost less than 30$", "release date: September 30, 2022" can be replaced with "Released in 2022" and so on. But do not change the value of "developer" and "publisher".
+4. The writing style should be {writing_style}.
+5. The query should be under {num_words} words.
+6. The query is {clarity} and requires {difficulty} level education to comprehend.
+'''
+neg_query_template = '''
+Based on the given game properties, please generate a query for conveying your dislikings or hatings for certain game properties and wanting to exclude those properties when searching for games.          
+
+Information about the game is given in json format as follows, with several key value pairs.
+{target_info}
+
+Please adhere to the following guidelines: 
+1. Do not mention the name of the game in the query.
+2. Select several key value pairs from the game properties and generate a query based on them. Be as diverse as possible.
+3. The writing style should be {writing_style}.
+4. The query should be under {num_words} words.
+5. The query is {clarity} and requires {difficulty} level education to comprehend.
+'''

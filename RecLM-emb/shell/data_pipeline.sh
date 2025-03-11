@@ -50,10 +50,36 @@ else
 
     echo "generate gpt_response_file"
 
-    python preprocess/gpt_api/query_api.py --query_file $gpt_query_file'.csv' --response_file $gpt_response_file'.csv' 
+    python preprocess/gpt_api/api.py --input_file $gpt_query_file'.csv' --output_file $gpt_response_file'.csv' 
 fi
 
 echo "generate gpt_data_file"
 python preprocess/merge.py --in_seq_data $in_seq_data --in_meta_data $in_meta_data \
     --in_u2i $out_u2i_file --in_q2i $out_q2i_file --in_q2i_misspell $out_q2i_misspell_file \
     --gpt_path $gpt_response_file --out_gpt $out_gpt --neg_num $neg_num
+
+
+out_conv=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/conv_data.json
+out_gpt_conv=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/gpt_conv_data
+out_user_sum=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/user_sum_data.json
+out_gpt_user_sum=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/gpt_user_sum_data
+out_query=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/query_data.json
+out_gpt_query=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/gpt_query_data
+out_neg_query=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/neg_query_data.json
+out_gpt_neg_query=$EXE_DIR/$OUTPUT_FLAG/gpt4_v2/gpt_neg_query_data
+out_gpt_v2="$EXE_DIR/$OUTPUT_FLAG/gpt4_data_v2.jsonl"
+
+echo "generate gpt_data_file v2"
+python preprocess/data_process_v2.py --in_seq_data $in_seq_data --in_meta_data $in_meta_data \
+    --out_conv $out_conv --out_gpt_conv $out_gpt_conv --out_user_sum $out_user_sum --out_gpt_user_sum $out_gpt_user_sum \
+    --out_query $out_query --out_gpt_query $out_gpt_query --out_neg_query $out_neg_query --out_gpt_neg_query $out_gpt_neg_query
+
+python preprocess/gpt_api/api.py --input_file $out_gpt_conv'.csv' --output_file $out_gpt_conv'_response.csv' 
+python preprocess/gpt_api/api.py --input_file $out_gpt_user_sum'.csv' --output_file $out_gpt_user_sum'_response.csv'
+python preprocess/gpt_api/api.py --input_file $out_gpt_query'.csv' --output_file $out_gpt_query'_response.csv'
+python preprocess/gpt_api/api.py --input_file $out_gpt_neg_query'.csv' --output_file $out_gpt_neg_query'_response.csv'
+
+python preprocess/merge_v2.py --in_seq_data $in_seq_data --in_meta_data $in_meta_data \
+    --out_conv $out_conv --out_gpt_conv $out_gpt_conv'_response.csv' --out_user_sum $out_user_sum --out_gpt_user_sum $out_gpt_user_sum'_response.csv' \
+    --out_query $out_query --out_gpt_query $out_gpt_query'_response.csv' --out_neg_query $out_neg_query --out_gpt_neg_query $out_gpt_neg_query'_response.csv' \
+    --out_new_gpt $out_gpt_v2 --neg_num $neg_num

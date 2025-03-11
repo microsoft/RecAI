@@ -132,27 +132,27 @@ def gen_query_file(args):
     Now here are the properties of the target video game: {} Please give your answer:"
 
     q2i_misspell_template = "I will give you a game title. Please rewrite the game title to imitate the spelling errors that humans may make when searching for this game. Please print 10 possible misspellings, concatenate them with '#SEP#' without order numbers and output only one string line. These 10 misspellings are required to be as diverse as possible, and each misspelling can contain one or multiple spelling errors. Here is the game title: {}. Please give your answer:"
-    ## generate an empty pandas dataframe, with columns: 'question', 'response', "target"
-    df = pandas.DataFrame(columns=['question', 'response', 'target'])
-    ## insert a row to the dataframe with values: 'question': 'What is the meaning of life?', 'response': '42', 'target': '42'
+    ## generate an empty pandas dataframe, with columns: 'question'
+    df = pandas.DataFrame(columns=['question'])
+    ## insert a row to the dataframe with values: 'question': 'What is the meaning of life?'
     
     with open(args.out_u2i_file, 'r') as f:
         for line in f:
             line = json.loads(line)
             query = line['query']
-            df.loc[len(df)] = [u2i_template.format(query), '0', '0']
+            df.loc[len(df)] = [u2i_template.format(query)]
     
     with open(args.out_q2i_file, 'r') as f:
         for line in f:
             line = json.loads(line)
             query = line['query']
-            df.loc[len(df)] = [q2i_template.format(query), '0', '0']
+            df.loc[len(df)] = [q2i_template.format(query)]
 
     with open(args.out_q2i_misspell_file, 'r') as f:
         for line in f:
             line = json.loads(line)
             query = line['query']
-            df.loc[len(df)] = [q2i_misspell_template.format(query), '0', '0']
+            df.loc[len(df)] = [q2i_misspell_template.format(query)]
     ## save the dataframe to a csv file
     
     # split_index = len(df) // 2   

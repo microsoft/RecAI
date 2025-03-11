@@ -33,7 +33,13 @@ class ModelArguments:
     peft_model_name: Optional[str] = field(
         default=None, metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
-    flash_attn_2_enabled: bool = field(default=False, metadata={"help": "whether to enable flash attention 2"})
+    attn_implementation: Optional[str] = field(
+        default="eager", 
+        metadata={
+            "help": "The attention implementation to use: 'eager', 'sdpa', 'flash_attention_2'",
+            "choices": ["eager", "sdpa", "flash_attention_2"],
+        }, 
+    )
     torch_dtype: Optional[str] = field(
         default=None,
         metadata={
@@ -82,5 +88,6 @@ class DataArguments:
 @dataclass
 class RetrieverTrainingArguments(TrainingArguments):
     negatives_cross_device: bool = field(default=False, metadata={"help": "share negatives across devices"})
+    in_batch_negatives: bool = field(default=True, metadata={"help": "share negatives in a batch"})
     temperature: Optional[float] = field(default=0.01)
     fix_position_embedding: bool = field(default=False, metadata={"help": "Freeze the parameters of position embeddings"})

@@ -6,7 +6,7 @@ loguru==0.7.0
 faiss-cpu==1.7.4
 rapidfuzz==3.2.0
 chromadb==0.4.7
-openai==0.27.9
+openai>=1.5.0
 sentence_transformers==2.2.2
 tiktoken==0.4.0
 guidance==0.0.64
@@ -14,3 +14,4 @@ SQLAlchemy==1.4.46
 --extra-index-url https://download.pytorch.org/whl/cu113
 torch>=1.12.1,<=1.13.1
 unirec>=0.0.1a4
+pandas<2.1.0

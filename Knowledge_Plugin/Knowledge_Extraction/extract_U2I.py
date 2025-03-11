@@ -69,6 +69,7 @@ def prepare_U2I_dict(embedding, sequential_data, candidate_data):
         candidate_scores = [(item2_id, score) for item2_id, score in enumerate(user_item_score[idx]) if item2_id in candidates]
         U2I_candidate_dict[user] = sorted(candidate_scores, key=lambda x:-x[1])[:20]
     return U2I_dict, U2I_candidate_dict
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='extract CF information')
     parser.add_argument('--dataset', type=str, default='steam', help='dataset')

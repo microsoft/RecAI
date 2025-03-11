@@ -6,6 +6,7 @@ python main.py \
     --maxlen=50 \
     --test_neg_num=19 \
     --sample_type=pop \
+    --num_epochs=100 \
     --dropout_rate=0.5 > logs/ml1m.log 
 
     # --inference_only \

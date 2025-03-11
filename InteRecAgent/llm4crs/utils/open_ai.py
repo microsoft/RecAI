@@ -2,11 +2,14 @@
 # Licensed under the MIT license.
 
 import time
+import json
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Dict, List, Tuple, Union
+import traceback
 
 import openai
+from openai import OpenAI, AzureOpenAI
 
 TOKEN_USAGE_VAR = ContextVar(
     "openai_token_usage",
@@ -37,7 +40,7 @@ class OpenAICall:
         temperature: float = 0.0,
         model_type: str = "chat_completion",
         timeout: int = 60,
-        engine: str = None,
+        # engine: str = None,
         retry_limits: int = 5,
         stop_words: Union[str, List[str]] = None,
     ) -> None:
@@ -48,11 +51,9 @@ class OpenAICall:
         self.api_version = api_version if api_type!="open_ai" else None
         self.temperature = temperature
         self.model_type = model_type
-        self.engine = engine  # deployment id
         self.retry_limits = retry_limits
         self.timeout = timeout
         self.stop_words = stop_words
-        self._openai_cache = {}
 
         if (self.api_type) and (self.api_type not in {"open_ai", "azure"}):
             raise ValueError(
@@ -65,6 +66,18 @@ class OpenAICall:
                 f"Only chat_completion and completion types are supported, while got {model_type}"
             )
 
+        if self.api_type == "azure":
+            self.openai_client = AzureOpenAI(
+                azure_endpoint=self.api_base,
+                api_key=self.api_key,
+                api_version=self.api_version,
+            )
+        else:
+            self.openai_client = OpenAI(
+                api_key=self.api_key,
+                base_url=self.api_base,
+            )
+
     def call(
             self,
             user_prompt: str,
@@ -72,13 +85,12 @@ class OpenAICall:
             max_tokens: int = 512, 
             temperature: float = None
             ) -> str:
-        self._set()
         errors = [
-            openai.error.Timeout,
-            openai.error.APIError,
-            openai.error.APIConnectionError,
-            openai.error.RateLimitError,
-            openai.error.ServiceUnavailableError,
+            openai.Timeout,
+            openai.APIError,
+            openai.APIConnectionError,
+            openai.RateLimitError,
+            openai.InternalServerError,
         ]
         temperature = temperature if (temperature is not None) else self.temperature
         retry = False
@@ -105,6 +117,7 @@ class OpenAICall:
                     success = True
                     break
             except Exception as e:
+                print(traceback.format_exc())
                 for err in errors:
                     if isinstance(e, err):
                         retry = True
@@ -116,7 +129,6 @@ class OpenAICall:
                 else:
                     raise e
 
-        self._reset()
         _prev_usuage = TOKEN_USAGE_VAR.get()
         _total_usuage = {
             k: _prev_usuage.get(k, 0) + result[1].get(k, 0)
@@ -131,28 +143,18 @@ class OpenAICall:
             reply = result[0]
         return reply
 
-    def _set(self):
-        for attr in ["api_key", "api_type", "api_version", "api_base"]:
-            self._openai_cache[attr] = getattr(openai, attr)
-            setattr(openai, attr, getattr(self, attr))
-
-    def _reset(self):
-        for attr in ["api_key", "api_type", "api_version", "api_base"]:
-            setattr(openai, attr, self._openai_cache[attr])
-
     def _chat_completion(self, msgs: List, max_tokens: int, temperature: float) -> Tuple[str, Dict]:
         kwargs = {
             "model": self.model,
             "messages": msgs,
             "temperature": temperature,
-            "request_timeout": self.timeout,
+            "timeout": self.timeout,
             "max_tokens": max_tokens,
         }
-        if self.api_type != "open_ai":
-            kwargs["engine"] = self.model
         if self.stop_words:
             kwargs["stop"] = self.stop_words
-        resp = openai.ChatCompletion.create(**kwargs)
+        model_resp = self.openai_client.chat.completions.create(**kwargs)
+        resp = json.loads(model_resp.json())
         if "choices" in resp:
             message = resp["choices"][0].get("message", None)
             if message:
@@ -173,14 +175,13 @@ class OpenAICall:
             "model": self.model,
             "prompt": prompt,
             "temperature": temperature,
-            "request_timeout": self.timeout,
+            "timeout": self.timeout,
             "max_tokens": max_tokens,
         }
-        if self.api_type != "open_ai":
-            kwargs["engine"] = self.model
         if self.stop_words:
             kwargs["stop"] = self.stop_words
-        resp = openai.Completion.create(**kwargs)
+        model_resp = self.openai_client.chat.completions.create(**kwargs)
+        resp = json.loads(model_resp.json())
         if "choices" in resp:
             content: str = resp["choices"][0].get("text", None)
             if content:
@@ -197,12 +198,26 @@ __all__ = ["OpenAICall", "get_openai_tokens"]
 
 
 if __name__ == "__main__":
-    # azure OpenAI key
-    azure_api_key = "your-azure-openai-api-key"
-    azure_api_engine = "your-deploymentid"
-    azure_api_base = "your-azure-api-base"
-    azure_api_version = "version"
+    import os
+    prompt_msgs = "Which city is the capital of the US?"
+
+    # fastchat API - Vicuna
+    # see https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md
     llm0 = OpenAICall(
+        model="vicuna-7b-v1.5-16k",
+        api_key="EMPTY",
+        api_base="http://localhost:8000/v1",
+        model_type="chat_completion",
+    )
+
+    print(f"Completion from vicuna: {llm0.call(prompt_msgs)}")
+
+    # azure OpenAI key
+    azure_api_key = os.getenv("AZURE_API_KEY")
+    azure_api_engine = "gpt-4o"
+    azure_api_base = os.getenv("AZURE_API_BASE")
+    azure_api_version = os.getenv("AZURE_API_VERSION")
+    llm1 = OpenAICall(
         model=azure_api_engine,
         api_key=azure_api_key,
         api_type="azure",
@@ -212,23 +227,16 @@ if __name__ == "__main__":
         stop_words=["\n"]
     )
 
-    # personal OpenAI key
-    personal_api_key = "your-openai-api-key"
-    llm1 = OpenAICall(
-        model="gpt-3.5-turbo", api_key=personal_api_key, model_type="chat_completion"
-    )
+    print("Azure OpenAI: ", llm1.call(prompt_msgs))
 
-    # fastchat API - Vicuna
-    # see https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md
+    # personal OpenAI key
+    personal_api_key = os.getenv("OPENAI_API_KEY")
+    personal_api_base = os.getenv("OPENAI_API_BASE")
     llm2 = OpenAICall(
         model="gpt-3.5-turbo",
-        api_key="EMPTY",
-        api_base="http://localhost:8000/v1",
+        api_base=personal_api_base,
+        api_key=personal_api_key,
         model_type="chat_completion",
+        api_type="open_ai",
     )
-
-    prompt_msgs = "Which city is the capital of the US?"
-
-    print("Azure OpenAI: ", llm0.call(prompt_msgs))
-    print("OpenAI: ", llm1.call(prompt_msgs))
-    print("Fastchat Vicuna: ", llm2.call(prompt_msgs))
+    print("OpenAI: ", llm2.call(prompt_msgs))
