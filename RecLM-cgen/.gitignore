@@ -1,0 +1,9 @@
+.idea/
+data/*
+!data/dataset
+data/dataset/*
+!data/dataset/general_task
+snap*/
+unirec/config/dataset/
+unirec/data/
+unirec/output/
