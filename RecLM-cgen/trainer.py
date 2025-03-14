@@ -17,7 +17,6 @@ from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.optimization import get_polynomial_decay_schedule_with_warmup
 
-from data.dataset.general_task.GSM8K.GSM8K import clean_answer, is_correct
 from train_utils.dataset import SFTDataset, Train_task_group_mapping, Val_task_group_mapping, Test_task_group_mapping
 from train_utils.loss import CrossEntropyLoss_e
 from train_utils.metrics import Metrics
@@ -923,9 +922,9 @@ class SFTTrainer(nn.Module):
         acc_res = []
         ctl_res = []
         for example in test_data_list:
-            pred = clean_answer(example[f'{self.args.SFT_load}_output_gsm8k'])
+            pred = gsm8K_clean_answer(example[f'{self.args.SFT_load}_output_gsm8k'])
             label = example["gsm8k_answer"]
-            acc = is_correct(pred, label)
+            acc = gsm8K_is_correct(pred, label)
             acc_res.append(acc)
             ctl_res.append(example[f'{self.args.SFT_load}_output_gsm8k'].count('<SOI>') + example[f'{self.args.SFT_load}_output_gsm8k'].count('<EOI>'))
 

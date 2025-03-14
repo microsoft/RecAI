@@ -12,7 +12,8 @@
 # default parameters for local run
 MODEL_NAME='SASRec' # [ MF, AvgHist, AttHist, SVDPlusPlus, GRU, SASRec, ConvFormer, FASTConvFormer]
 loss_type='fullsoftmax' # [bce, bpr, softmax]
-DATASET_NAME=$1
+DATASET_NAME="movies"
+MODEL_PATH="./unirec/output/movies/SASRec/train/checkpoint_.../SASRec-SASRec-movies.pth"
 max_seq_len=10
 verbose=2
 
@@ -27,6 +28,7 @@ CUDA_VISIBLE_DEVICES=0 python unirec/asyc_server.py \
     --model=$MODEL_NAME \
     --dataloader=$DATA_TYPE \
     --dataset=$DATASET_NAME \
+    --model_path=$MODEL_PATH \
     --embedding_size=128 \
     --hidden_size=256 \
     --use_pre_item_emb=0 \
@@ -35,9 +37,9 @@ CUDA_VISIBLE_DEVICES=0 python unirec/asyc_server.py \
     --has_user_bias=0 \
     --has_item_bias=0 \
     --history_mask_mode='autoregressive' \
-    --num_workers=$3 \
+    --num_workers=1 \
     --verbose=$verbose \
     --use_wandb=0 \
     --exp_name=sub_movie_server \
-    --port=$2
+    --port=$1
 # done

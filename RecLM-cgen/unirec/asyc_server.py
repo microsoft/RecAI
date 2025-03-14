@@ -41,18 +41,15 @@ class HandlingError(Exception):
         self.handling_msg = msg
 
 
-model_path = {
-    "games": "/home/lws/projects/scope-rec/unirec/output/games/SASRec/train/checkpoint_2025-03-10_182057_5/SASRec-SASRec-games.pth"
-}
 print(' '.join(sys.argv))
 config = argument_parser.parse_arguments()
 config['port'] = [_.split('=')[1] for _ in sys.argv if _.startswith('--port=')][0]
 config['device'] = torch.device('cuda:0')
 dataset = config['dataset']
-config['dataset_path'] = f'data/{dataset}'
+model_path = config['model_path']
 
-category2item = load_json(f'unirec/{config["dataset_path"]}/category.jsonl')
-map_dict = load_pickle(f'unirec/{config["dataset_path"]}/map.pkl')
+category2item = load_json(f'unirec/data/{dataset}/category.jsonl')
+map_dict = load_pickle(f'unirec/data/{dataset}/map.pkl')
 
 
 def process_output(batched_data):
@@ -128,7 +125,7 @@ class ModelRunner:
         self.queue_lock = None
 
         self.model = general.get_class_instance(model_name, 'unirec/model')(config).to(config['device'])
-        checkpoint = torch.load(model_path[dataset], map_location=config["device"])
+        checkpoint = torch.load(model_path, map_location=config["device"])
         self.model.load_state_dict(checkpoint["state_dict"])
         self.model.eval()
         self.model.requires_grad_(False)

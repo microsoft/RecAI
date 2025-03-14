@@ -1,18 +1,35 @@
 
 # RecLM-cgen
 ## Introduction
-xxx
+This project is mainly contributed by College of Computer Science and Software Engineering, Shenzhen University.
    
 Our implementation leverages the [`transformers`](https://github.com/huggingface/transformers) library by Hugging Face.  
    
 
-## Intermediate dataset format
+## Raw dataset preprocess
+We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the intermediate dataset with above format from the downloaded raw dataset. 
+
+Firstly, download `Movies_and_TV_5.json.gz` and `meta_Movies_and_TV.json.gz` from [Amazon](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/), then place them in `data/dataset/movies/` and run the next command.
+
+Then, change the data path and dataset full name in [./scripts/data_preprocess_amazon.sh](scripts/data_preprocess_amazon.sh).
+```shell
+TOKENIZER_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
+DATASET_FULL_NAME="Movies_and_TV"
+DATASET_NAME="movies"     # used for selecting dataset in subsequent experiments.
+DATA_PATH="./data/dataset/${DATASET_NAME}/"
+UNIREC_DATA_PATH="./unirec/data/${DATASET_NAME}/"
+UNIREC_CONFIG_PATH="./unirec/config/dataset/${DATASET_NAME}.yaml"
+```
+After that, run the command `./scripts/data_preprocess_amazon.sh` to generate the intermediate dataset.
+
+
+### Intermediate dataset format
 
 To use this repo, you'll need an intermediate dataset comprising at least three files located in `data_path`: `category.jsonl`, `meta.pickle`, and `sequential.jsonl`.
 
 **A volunteer has prepared a copy of data for reproducing the experiments. You can download it from [Google Drive link](https://drive.google.com/file/d/1jZMa0Sx-zVccCpkep5KiY6VXoOdl6PCl/view?usp=drive_link). Thanks [Luuuk12321](https://github.com/Luuuk12321)!**
 
-### category.jsonl
+#### category.jsonl
 This file contains a dictionary where the keys are category names, and the values are lists of item IDs belonging to those categories.
 ```json
 {
@@ -22,8 +39,8 @@ This file contains a dictionary where the keys are category names, and the value
   "category_k": ["item_id_j", "..."]
 }
 ```
-### meta.pickle
-This file contains a dictionary where the keys are item IDs, and the values are dictionaries with at least one type of item index (such as `title_t`). 
+#### meta.pickle
+This file contains a dictionary where the keys are item IDs, and the values are dictionaries with at least one field of item index. This field is used for prefix tree construction (such as `title_t`). 
 ```json
 {
   "item_id_1": {"title": "...", "title_t": "...", "description": "..."},
@@ -33,7 +50,7 @@ This file contains a dictionary where the keys are item IDs, and the values are 
 }
 ```
 
-### sequential.jsonl
+#### sequential.jsonl
 This file contains a dictionary where the keys are user IDs, and the values are lists of item IDs that represent the user's historical interactions in a time-dependent order.  
    
 ```json
@@ -43,23 +60,6 @@ This file contains a dictionary where the keys are user IDs, and the values are 
   "user_id_m": ["item_id_1", "...", "item_id_y"]
 }
 ```
-
-
-### Raw dataset preprocess
-We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the intermediate dataset with above format from the downloaded raw dataset. 
-
-Firstly, download `Movies_and_TV_5.json.gz` and `meta_Movies_and_TV.json.gz` from [Amazon](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/), then place them in `data/dataset/movies/` and run the next command.
-
-Then, change the data path and dataset full name in [./scripts/data_preprocess_amazon.sh](https://github.com/Luuuk12321/RecLM-cgen/blob/main/scripts/data_preprocess_amazon.sh).
-```shell
-TOKENIZER_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
-DATASET_FULL_NAME="Movies_and_TV"
-DATASET_NAME="movies"     # used for selecting dataset in subsequent experiments.
-DATA_PATH="./data/dataset/${DATASET_NAME}/"
-UNIREC_DATA_PATH="./unirec/data/${DATASET_NAME}/"
-UNIREC_CONFIG_PATH="./unirec/config/dataset/${DATASET_NAME}.yaml"
-```
-After that, run the command `./scripts/data_preprocess_amazon.sh`.
 
 
 ## 1. SASRec Server
@@ -95,9 +95,9 @@ pip install dist/unirec-*.whl
 ### 1.2. SASRec dataset and model
 Model parameters and weights are saved in `unirec/output/`.
 
-The dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.jsonl` (as described in the intermediate dataset format) should be placed in `unirec/data/movies/`. 
+After running of `./scripts/data_preprocess_amazon.sh`, the dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.jsonl` will be placed in `unirec/data/movies/`. 
 
-Use these files to train the SASRec model with the UniRec library.
+We can use these files to train the SASRec model with the UniRec library.
 
 ### 1.3. SASRec model training
 
@@ -109,55 +109,33 @@ Train the model by specifying the dataset name (e.g., `movies`):
 
 ### 1.4. SASRec Server start
 
-Update the `model_path` in `unirec/async_server.py` to point to the model files:  
+Update the `MODEL_PATH` and `DATASET_NAME` in [./scripts/unirec_serve.sh](./scripts/unirec_serve.sh) to point to the model files:  
 
 ```python
-model_path = {
-    'movies': "unirec/output/movies/SASRec/train/checkpoint_.../SASRec-SASRec-movies.pth",
-}
+DATASET_NAME="movies"
+MODEL_PATH="./unirec/output/movies/SASRec/train/checkpoint_.../SASRec-SASRec-movies.pth"
 ```
 
-Start the server by specifying the dataset name (`movies`), port (`2068`), and number of workers (`1`):  
+Start the server by specifying the serve port(`2068`):  
 
 ```shell
-./scripts/unirec_serve.sh movies 2068 1
+./scripts/unirec_serve.sh 2068
 ```
 
 
 ## 2. SFT stage
 
-### 2.1. Train dataset format
+### 2.1. SFT train
 
-For the SFT stage, the dataset should be formatted as a `List[List[Dict]]`.  
-
-- Each inner `List[Dict]` represents the training data for a specific epoch.  
-- Each `Dict` within the list is an individual training sample containing the keys `"input_text"` and `"output_text"`, which are essential for traditional SFT. 
-- Additional keys such as `"task"` and `"input_field_data"` are used to calculate metrics for the domain in question.  
-   
-```js
-[
-  [ //Epoch 1
-    {"input_text": "...", "output_text": "...", "task": "...", "input_field_data": {"...": "..."}},
-    "...",
-    {"input_text": "...", "output_text": "...", "task": "...", "input_field_data": {"...": "..."}}
-  ],
-  [ //Epoch 2
-    "..."
-  ]
-]
-```
-
-### 2.2. SFT train
-
-The training dataset is dynamically generated during the `__getitem__` function call of the dataset class. An example script for training can be found at [./scripts/train_RecLM_cgen.sh](https://github.com/Luuuk12321/RecLM-cgen/blob/main/scripts/train_RecLM_cgen.sh) for **RecLM-cgen** and [./scripts/train_RecLM_ret.sh](https://github.com/Luuuk12321/RecLM-cgen/blob/main/scripts/train_RecLM_ret.sh) for **RecLM-ret**.
+The training dataset is dynamically generated during the `__getitem__` function call of the dataset class. An example script for training can be found at [./scripts/train_RecLM_cgen.sh](scripts/train_RecLM_cgen.sh) for **RecLM-cgen** and [./scripts/train_RecLM_ret.sh](scripts/train_RecLM_ret.sh) for **RecLM-ret**.
 ```shell
 ./scripts/train_RecLM_cgen.sh movies  # RecLM-cgen
 ./scripts/train_RecLM_ret.sh movies   # RecLM-ret
 ```
 
-### 2.3. SFT model merge
+### 2.2. SFT model merge
 
-Merge the trained models using the script found at [./scripts/run_SFT_merge.sh](https://github.com/Luuuk12321/RecLM-cgen/blob/main/scripts/run_SFT_merge.sh). The merged model will be saved to `snap/.../SFT_Epoch20/`.
+Merge the trained models using the script found at [./scripts/run_SFT_merge.sh](scripts/run_SFT_merge.sh). The merged model will be saved to `snap/.../SFT_Epoch20/`.
 ```shell
 ./scripts/run_SFT_merge.sh
 ```
@@ -253,21 +231,23 @@ python main.py \
 --SFT_load snap/.../Epoch20_SFT_Embedding
 ```
 
-## 5. Customized recommendation domain
-You can customize the recommendation domain following the next code.
+## 5. Build domain item prefix tree for enabling constrained generation
+You can customize the recommendation domain and build the domain item prefix tree for enabling constrained generation following the next code.
 ```python
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor, Trie_link
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 tokenizer = AutoTokenizer.from_pretrained(...)
+tokenizer.soi_token_id = xxx    # specific a <SOI> token
+tokenizer.eoi_token_id = xxx    # specific a <EOI> token
 model = AutoModelForCausalLM.from_pretrained(...)
 
-in_domain_titles: list[str] = [...]     # customizer domain titles
-item_ids = tokenizer.batch_encode_plus(item_list).data['input_ids']
+in_domain_titles: list[str] = [...]     # customized domain titles
+item_ids = tokenizer.batch_encode_plus(in_domain_titles).data['input_ids']
 
 num_beams = 1
 # create prefix tree
-item_prefix_tree = Trie_link(input_ids, tokenizer)
+item_prefix_tree = Trie_link(item_ids, tokenizer)
 # create logit processor base on prefix tree
 processor = FastPrefixConstrainedLogitsProcessor(
     item_prefix_tree.constrain_search_list, 

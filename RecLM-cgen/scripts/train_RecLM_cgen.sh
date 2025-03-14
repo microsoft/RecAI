@@ -4,17 +4,10 @@ SFT_TRAIN_TASKS="SFTSeqRec-MR"
 DATASET=$1
 TRAIN_ARGS=""
 DATA_PATH="data/dataset/$DATASET/"
-USE_CONTROL_SYMBOL="1"  # [0, 1]
-USE_SCOPE_MASK="1"    # [0, 1]
+USE_CONTROL_SYMBOL="1"  # in {0, 1}. whether to use control symbol? must be '1' for RecLM-ret and RecLM-cgen.
+USE_SCOPE_MASK="1"    # in {0, 1}. whether to use scope mask for RecLM-cgen?
 IDX="1"
-MULTI_ROUND_RATIO="0.1"
-
-SCOPE_MASK_TYPE="3"   # [1, 2, 3] if USE_SCOPE_MASK==1 else []
-LOSS_TYPE="3"         # [1, 2, 3] if USE_SCOPE_MASK==1 else [3]
-FL_GAMMA="2"          # Float if USE_SCOPE_MASK==1 and LOSS_TYPE!=3 else None
-if [ "$USE_SCOPE_MASK" = "0" ]; then
-  LOSS_TYPE="3"
-fi
+MULTI_ROUND_RATIO="0.1"     # between [0, 1]. the ratio of multi round data in train dataset.
 
 OUTPUT_PATH="snap/$(date "+%m%d")-$DATASET"
 
@@ -70,8 +63,5 @@ nohup accelerate launch --num_processes=2 --gpu_ids=4,5 --main_process_port 1333
 --multi_round_ratio $MULTI_ROUND_RATIO \
 --chat_template llama-3 \
 --FA2 \
---loss_type $LOSS_TYPE \
---scope_mask_type $SCOPE_MASK_TYPE \
---fl_gamma $FL_GAMMA \
 --CBS_type 2 \
 $TRAIN_ARGS > "$OUTPUT_PATH"output.log 2>&1 &

@@ -209,3 +209,22 @@ def process_train_sample_llama2(input_texts, output_texts, tokenizer):
             labels[-1] = tokenizer.eos_token_id
 
     return input_ids, complete_ids, labels, infer_text
+
+
+def gsm8K_extract_answer(completion):
+    try:
+        last_number = re.findall(r'-?[0-9]+[0-9.,]?', completion)[-1].rstrip('.').replace(',', '')
+        return eval(last_number)
+    except:
+        return "[invalid]"
+
+
+def gsm8K_is_correct(completion, answer):
+    gold = gsm8K_extract_answer(answer)
+    assert gold != "[invalid]", "No ground truth answer found in the document."
+    return gsm8K_extract_answer(completion) == gold
+
+
+def gsm8K_clean_answer(text):
+    text = text.split("Question:")[0]
+    return text

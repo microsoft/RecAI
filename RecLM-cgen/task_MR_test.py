@@ -13,9 +13,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from train_utils.dataset import Test_task_group_mapping, SFTDataset
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor
-from data.dataset.general_task.GSM8K.GSM8K import clean_answer, is_correct
 from train_utils.metrics import Metrics
-from train_utils.utils import save_json, get_ctrl_item, rm_idx, load_json, load_pickle, side_tokenizer, process_train_sample
+from train_utils.utils import save_json, get_ctrl_item, rm_idx, load_json, load_pickle, side_tokenizer, process_train_sample, gsm8K_clean_answer, gsm8K_is_correct
 
 headers = {"User-Agent": "Test Client"}
 GSM8K_Q1 = '''Question: In 2004, there were 60 kids at a cookout. In 2005, half the number of kids came to the cookout as compared to 2004. In 2006, 2/3 as many kids came to the cookout as in 2005. How many kids came to the cookout in 2006?'''
@@ -215,9 +214,9 @@ if __name__ == "__main__":
     acc_res = []
     ctl_res = []
     for example in test_data_list:
-        pred = clean_answer(example[f'{args.model_name}_output_gsm8k'])
+        pred = gsm8K_clean_answer(example[f'{args.model_name}_output_gsm8k'])
         label = example["gsm8k_answer"]
-        acc = is_correct(pred, label)
+        acc = gsm8K_is_correct(pred, label)
         acc_res.append(acc)
         ctl_res.append(example[f'{args.model_name}_output_gsm8k'].count('<SOI>') + example[f'{args.model_name}_output_gsm8k'].count('<EOI>'))
 

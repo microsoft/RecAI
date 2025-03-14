@@ -1,10 +1,5 @@
 .idea/
 data/*
-!data/dataset
-data/dataset/*
-!data/dataset/general_task
-data/dataset/general_task/*
-!data/dataset/general_task/GSM8K
 snap*/
 unirec/config/dataset/
 unirec/data/
