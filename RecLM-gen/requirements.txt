@@ -12,7 +12,7 @@ sanic==23.12.1
 torch==2.1.2
 tqdm==4.66.1
 transformers==4.36.2
-vllm==0.2.7
+vllm==0.8.0
 flash-attn==2.3.6
 Levenshtein~=0.23.0
 unirec~=0.0.1a5
