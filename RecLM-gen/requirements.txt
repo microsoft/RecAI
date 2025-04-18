@@ -9,7 +9,7 @@ peft==0.5.0
 python_Levenshtein==0.25.0
 Requests~=2.25.1
 sanic==23.12.1
-torch==2.1.2
+torch==2.6.0
 tqdm==4.66.1
 transformers==4.36.2
 vllm==0.2.7
