@@ -32,7 +32,7 @@ def chat(user_message, history, target_domain):
         history = []
 
     chat_history.append({'role': "user", 'content': user_message})
-    prompt = tokenizer.apply_chat_template(chat_history, tokenize=False)
+    prompt = tokenizer.apply_chat_template(chat_history, tokenize=False, add_generation_prompt=True)
     print('prompt: ', prompt)
     input_data = tokenizer.batch_encode_plus([prompt], add_special_tokens=False, return_tensors='pt').to(device=args.gpu).data
     input_ids_length = input_data['input_ids'].shape[1]

@@ -19,6 +19,7 @@ def add_args_SFT(parser):
     parser.add_argument('--embedding_model', type=str, default=None, help='embedding model path')
     parser.add_argument('--domain', type=str, default='', help='domain')
     parser.add_argument('--emb_alpha', type=float, default=1.0, help='the weight of emb loss in RecLM-ret')
+    parser.add_argument('--teacher_port', type=float, default=2068, help='port of teacher model')
     return parser
 
 

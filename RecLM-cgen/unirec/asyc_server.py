@@ -43,10 +43,10 @@ class HandlingError(Exception):
 
 print(' '.join(sys.argv))
 config = argument_parser.parse_arguments()
-config['port'] = [_.split('=')[1] for _ in sys.argv if _.startswith('--port=')][0]
+model_path = [_.split('=')[1] for _ in sys.argv if _.startswith('--model_path=')][0]
+port = [_.split('=')[1] for _ in sys.argv if _.startswith('--port=')][0]
 config['device'] = torch.device('cuda:0')
 dataset = config['dataset']
-model_path = config['model_path']
 
 category2item = load_json(f'unirec/data/{dataset}/category.jsonl')
 map_dict = load_pickle(f'unirec/data/{dataset}/map.pkl')
@@ -110,7 +110,7 @@ def process_input(data):
         'candidate_item_list': candidate_item_lists[0] if candidate_item_lists else None,
         'target_category': target_category[0] if target_category else None,
         "time": app.loop.time(),
-        "done_event": asyncio.Event(loop=app.loop)
+        "done_event": asyncio.Event()
     }
     if k is not None:
         batched_data['k'] = k
@@ -162,8 +162,8 @@ class ModelRunner:
         return scores.softmax(dim=1)
 
     async def model_runner(self):
-        self.queue_lock = asyncio.Lock(loop=app.loop)
-        self.needs_processing = asyncio.Event(loop=app.loop)
+        self.queue_lock = asyncio.Lock()
+        self.needs_processing = asyncio.Event()
         logger.info("started model runner for {}".format(self.model_name))
         # while True: Infinite loop, the program will be in a listening state
         while True:
@@ -260,4 +260,4 @@ app.add_task(style_transfer_runner.model_runner())
 
 if __name__ == '__main__':
     # mp.set_start_method(None, force=True)
-    app.run(host="0.0.0.0", port=int(config['port']), debug=True, workers=int(config['num_workers']))
+    app.run(host="0.0.0.0", port=int(port), debug=True, workers=int(config['num_workers']))

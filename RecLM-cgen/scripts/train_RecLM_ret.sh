@@ -61,7 +61,7 @@ nohup accelerate launch --num_processes=2 --gpu_ids=8,9 --main_process_port 1333
 --val_epoch 0 \
 --multi_round_ratio $MULTI_ROUND_RATIO \
 --chat_template llama-3 \
---FA2 \
 --embedding_model $EMB_MODEL \
 --emb_alpha $EMB_ALPHA \
+--teacher_port 2068 \
 $TRAIN_ARGS > "$OUTPUT_PATH"output_dot.log 2>&1 &

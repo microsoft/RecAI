@@ -22,12 +22,6 @@ class SFTDataset(Dataset):
         self.tokenizer = tokenizer
         self.immediately = immediately
 
-        if 'steam' in args.data_path:
-            self.teacher_port = 2066
-        elif 'toys' in args.data_path:
-            self.teacher_port = 2067
-        else:  # movies
-            self.teacher_port = 2068
         self.category2item = data['category']
         self.metas = data['metas']
         self.sequential = data['sequential']
@@ -178,7 +172,7 @@ class SFTDataset(Dataset):
     def get_output_item_list(self, task, user=None, sub_sequential=None, target_item=None, item_count=None, has_candidate=False):
         output_items, candidate_items = [], []
         if task in ['SFTSeqRec', 'SFTSeqRec-CS', 'SFTSeqRec-MR', 'SFTSeqRec-CS-MR', 'SFTTestSeqRanking', 'SFTTestEmbedding']:
-            output_items = get_item_list(self.args.backup_ip, [user], [sub_sequential], item_count, port=self.teacher_port, immediately=self.immediately)
+            output_items = get_item_list(self.args.backup_ip, [user], [sub_sequential], item_count, port=self.args.teacher_port, immediately=self.immediately)
             if target_item in output_items:
                 output_items.remove(target_item)
             output_items = ([target_item] + output_items)[:item_count]

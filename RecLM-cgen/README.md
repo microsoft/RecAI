@@ -1,10 +1,19 @@
 
 # RecLM-cgen
 ## Introduction
+**RecLM-cgen** is a generative recommendation framework. This framework divides the output space of LLMs into item generation and general text generation parts by introducing item control tokens, and simultaneously employs a decoding strategy with prefix tree constraints to prevent the generation of out-of-domain items. RecLM-cgen enables LLMs to acquire the ability to recommend products without sacrificing their original general capabilities. 
+
+The RecLM-cgen framework seamlessly integrates LLMs with recommendation scenarios. Interacting with RecLM-cgen is just like interacting with general LLMs, enabling users to complete recommendation tasks and other general tasks in multi-round conversations.
+
+The pipeline of RecLM-cgen has 4 steps:
+1. Preprocessing raw dataset
+2. Training teacher model
+3. Deploying teacher model service
+4. Training LLMs
+
 This project is mainly contributed by College of Computer Science and Software Engineering, Shenzhen University.
-   
+
 Our implementation leverages the [`transformers`](https://github.com/huggingface/transformers) library by Hugging Face.  
-   
 
 ## Raw dataset preprocess
 We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the intermediate dataset with above format from the downloaded raw dataset. 
@@ -27,7 +36,7 @@ After that, run the command `./scripts/data_preprocess_amazon.sh` to generate th
 
 To use this repo, you'll need an intermediate dataset comprising at least three files located in `data_path`: `category.jsonl`, `meta.pickle`, and `sequential.jsonl`.
 
-**A volunteer has prepared a copy of data for reproducing the experiments. You can download it from [Google Drive link](https://drive.google.com/file/d/1jZMa0Sx-zVccCpkep5KiY6VXoOdl6PCl/view?usp=drive_link). Thanks [Luuuk12321](https://github.com/Luuuk12321)!**
+**A volunteer has prepared a copy of data for reproducing the experiments. You can download it from [Google Drive link](https://drive.google.com/file/d/1jZMa0Sx-zVccCpkep5KiY6VXoOdl6PCl/view?usp=drive_link), and place each file of it in the respective path. Thanks [Luuuk12321](https://github.com/Luuuk12321)!**
 
 #### category.jsonl
 This file contains a dictionary where the keys are category names, and the values are lists of item IDs belonging to those categories.
@@ -39,7 +48,7 @@ This file contains a dictionary where the keys are category names, and the value
   "category_k": ["item_id_j", "..."]
 }
 ```
-#### meta.pickle
+#### metas.pickle
 This file contains a dictionary where the keys are item IDs, and the values are dictionaries with at least one field of item index. This field is used for prefix tree construction (such as `title_t`). 
 ```json
 {
@@ -107,7 +116,7 @@ Train the model by specifying the dataset name (e.g., `movies`):
 ./scripts/unirec_train.sh movies
 ```
 
-### 1.4. SASRec Server start
+### 1.4. SASRec service deploying
 
 Update the `MODEL_PATH` and `DATASET_NAME` in [./scripts/unirec_serve.sh](./scripts/unirec_serve.sh) to point to the model files:  
 

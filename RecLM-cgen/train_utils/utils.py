@@ -143,7 +143,7 @@ def get_ctrl_item(out_titles):
 
 def process_train_sample(input_texts, output_texts, tokenizer):
     system_input = 'You are an expert recommender engine as well as a helpful, respectful and honest assistant.'
-    max_len = 400
+    max_len = 500
     ignore_index = -100
     input_ids, complete_ids, labels = [], [], []
     system_text = f"<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_input}<|eot_id|>"

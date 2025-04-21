@@ -28,11 +28,6 @@ if [ "$IDX" = "1" ]; then
   OUTPUT_PATH=$OUTPUT_PATH"-IDX"
 fi
 
-OUTPUT_PATH=$OUTPUT_PATH"-LT$LOSS_TYPE"
-if [ "$LOSS_TYPE" != "3" ]; then
-  OUTPUT_PATH=$OUTPUT_PATH"-GAMMA$FL_GAMMA"
-fi
-
 OUTPUT_PATH=$OUTPUT_PATH"-MRA$MULTI_ROUND_RATIO/"
 mkdir -p "$OUTPUT_PATH"
 echo "$OUTPUT_PATH"
@@ -62,6 +57,6 @@ nohup accelerate launch --num_processes=2 --gpu_ids=4,5 --main_process_port 1333
 --val_epoch 0 \
 --multi_round_ratio $MULTI_ROUND_RATIO \
 --chat_template llama-3 \
---FA2 \
 --CBS_type 2 \
+--teacher_port 2068 \
 $TRAIN_ARGS > "$OUTPUT_PATH"output.log 2>&1 &
