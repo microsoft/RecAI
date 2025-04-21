@@ -6,16 +6,16 @@
 The RecLM-cgen framework seamlessly integrates LLMs with recommendation scenarios. Interacting with RecLM-cgen is just like interacting with general LLMs, enabling users to complete recommendation tasks and other general tasks in multi-round conversations.
 
 The pipeline of RecLM-cgen has 4 steps:
-1. Preprocessing raw dataset
-2. Training teacher model
-3. Deploying teacher model service
-4. Training LLMs
+1. Preprocessing raw dataset (Section 1)
+2. Training teacher model (Section 2.3)
+3. Deploying teacher model service (Section 2.4)
+4. Training RecLM-cgen (Section 3.1)
 
 This project is mainly contributed by College of Computer Science and Software Engineering, Shenzhen University.
 
 Our implementation leverages the [`transformers`](https://github.com/huggingface/transformers) library by Hugging Face.  
 
-## Raw dataset preprocess
+## 1. Raw dataset preprocess
 We provide the code in `preprocess/data_preprocess_amazon.py` to automatically generate the intermediate dataset with above format from the downloaded raw dataset. 
 
 Firstly, download `Movies_and_TV_5.json.gz` and `meta_Movies_and_TV.json.gz` from [Amazon](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/), then place them in `data/dataset/movies/` and run the next command.
@@ -71,10 +71,10 @@ This file contains a dictionary where the keys are user IDs, and the values are 
 ```
 
 
-## 1. SASRec Server
+## 2. SASRec Server
 We utilize the [UniRec](https://github.com/microsoft/UniRec) library to implement the SASRec teacher model and deploy as a server.  
 
-### 1.1. Install UniRec
+### 2.1. Install UniRec
 
 Clone the UniRec repository and install the necessary packages: 
 
@@ -101,14 +101,14 @@ python setup.py sdist bdist_wheel
 pip install dist/unirec-*.whl   
 ```  
 
-### 1.2. SASRec dataset and model
+### 2.2. SASRec dataset and model
 Model parameters and weights are saved in `unirec/output/`.
 
 After running of `./scripts/data_preprocess_amazon.sh`, the dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.jsonl` will be placed in `unirec/data/movies/`. 
 
 We can use these files to train the SASRec model with the UniRec library.
 
-### 1.3. SASRec model training
+### 2.3. SASRec model training
 
 Train the model by specifying the dataset name (e.g., `movies`):  
 
@@ -116,7 +116,7 @@ Train the model by specifying the dataset name (e.g., `movies`):
 ./scripts/unirec_train.sh movies
 ```
 
-### 1.4. SASRec service deploying
+### 2.4. SASRec service deploying
 
 Update the `MODEL_PATH` and `DATASET_NAME` in [./scripts/unirec_serve.sh](./scripts/unirec_serve.sh) to point to the model files:  
 
@@ -132,9 +132,9 @@ Start the server by specifying the serve port(`2068`):
 ```
 
 
-## 2. SFT stage
+## 3. SFT stage
 
-### 2.1. SFT train
+### 3.1. SFT train
 
 The training dataset is dynamically generated during the `__getitem__` function call of the dataset class. An example script for training can be found at [./scripts/train_RecLM_cgen.sh](scripts/train_RecLM_cgen.sh) for **RecLM-cgen** and [./scripts/train_RecLM_ret.sh](scripts/train_RecLM_ret.sh) for **RecLM-ret**.
 ```shell
@@ -142,16 +142,16 @@ The training dataset is dynamically generated during the `__getitem__` function 
 ./scripts/train_RecLM_ret.sh movies   # RecLM-ret
 ```
 
-### 2.2. SFT model merge
+### 3.2. SFT model merge
 
 Merge the trained models using the script found at [./scripts/run_SFT_merge.sh](scripts/run_SFT_merge.sh). The merged model will be saved to `snap/.../SFT_Epoch20/`.
 ```shell
 ./scripts/run_SFT_merge.sh
 ```
 
-## 3. RecLM-cgen testing
+## 4. RecLM-cgen testing
 
-### 3.1. Recommendation testing
+### 4.1. Recommendation testing
 ```shell
 python task_test.py \
 --data_path data/dataset/movies/ \
@@ -168,7 +168,7 @@ python task_test.py \
 # setting --data_path to `data/dataset/toys/` for cross-domain evaluation.
 ```
 
-### 3.2. Multi-round conversation testing
+### 4.2. Multi-round conversation testing
 ```shell
 python task_MR_test.py \
 --data_path data/dataset/movies/ \
@@ -183,16 +183,16 @@ python task_MR_test.py \
 --idx
 ```
 
-### 3.3. SFT model deploying
+### 4.3. SFT model deploying
 ```shell
 python cli_serve.py \
 --model_name snap/.../SFT_Epoch20/ \
 --gpu cuda:0
 ```
 
-## 4. RecLM-ret testing
+## 5. RecLM-ret testing
 
-### 4.1. Recommendation testing
+### 5.1. Recommendation testing
 ```shell
 python main.py \
 --seed 0 \
@@ -216,7 +216,7 @@ python main.py \
 --SFT_load snap/.../Epoch20_SFT_Embedding
 ```
 
-### 4.2. Multi-round conversation testing
+### 5.2. Multi-round conversation testing
 ```shell
 python main.py \
 --seed 0 \
@@ -240,7 +240,7 @@ python main.py \
 --SFT_load snap/.../Epoch20_SFT_Embedding
 ```
 
-## 5. Build domain item prefix tree for enabling constrained generation
+## 6. Build domain item prefix tree for enabling constrained generation
 You can customize the recommendation domain and build the domain item prefix tree for enabling constrained generation following the next code.
 ```python
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor, Trie_link
