@@ -34,7 +34,8 @@ After that, run the command `./scripts/data_preprocess_amazon.sh` to generate th
 
 ### Intermediate dataset format
 
-To use this repo, you'll need an intermediate dataset comprising at least three files located in `data_path`: `category.jsonl`, `meta.pickle`, and `sequential.jsonl`.
+To use this repo, you'll need an intermediate dataset comprising at least three files located in data_path: `category.jsonl`, `metas.jsonl`, and `sequential.jsonl`.
+You can prepare your own dataset in this format to train the model.
 
 **A volunteer has prepared a copy of data for reproducing the experiments. You can download it from [Google Drive link](https://drive.google.com/file/d/1jZMa0Sx-zVccCpkep5KiY6VXoOdl6PCl/view?usp=drive_link), and place each file of it in the respective path. Thanks [Luuuk12321](https://github.com/Luuuk12321)!**
 
@@ -48,8 +49,8 @@ This file contains a dictionary where the keys are category names, and the value
   "category_k": ["item_id_j", "..."]
 }
 ```
-#### metas.pickle
-This file contains a dictionary where the keys are item IDs, and the values are dictionaries with at least one field of item index. This field is used for prefix tree construction (such as `title_t`). 
+#### metas.jsonl
+This file contains a dictionary where the keys are item IDs, and the values are dictionaries with at least one field of item index. This field is used for prefix tree construction (such as `title` or `title_t`). 
 ```json
 {
   "item_id_1": {"title": "...", "title_t": "...", "description": "..."},
@@ -101,12 +102,13 @@ python setup.py sdist bdist_wheel
 pip install dist/unirec-*.whl   
 ```  
 
-### 2.2. SASRec dataset and model
-Model parameters and weights are saved in `unirec/output/`.
+### 2.2. Unirec dataset for SASRec model training
+You need the dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.jsonl` to train SASRec model with UniRec library.
 
-After running of `./scripts/data_preprocess_amazon.sh`, the dataset files `train.pkl`, `valid.pkl`, `test.pkl`, `user_history.pkl`, `map.pkl`, and `category.jsonl` will be placed in `unirec/data/movies/`. 
+1. After running of `./scripts/data_preprocess_amazon.sh`, these files will be placed in `./unirec/data/movies/`. 
 
-We can use these files to train the SASRec model with the UniRec library.
+2. If you had prepared the intermediate dataset, these files will be automatically generated according to the intermediate dataset in `./data/dataset/movies/`.
+
 
 ### 2.3. SASRec model training
 
@@ -115,6 +117,7 @@ Train the model by specifying the dataset name (e.g., `movies`):
 ```shell
 ./scripts/unirec_train.sh movies
 ```
+Model parameters and weights are saved in `./unirec/output/`.
 
 ### 2.4. SASRec service deploying
 

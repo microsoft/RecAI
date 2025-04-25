@@ -35,6 +35,16 @@ ALL_RESULTS_ROOT="$OUTPUT_ROOT/$DATASET_NAME/$MODEL_NAME"
 mkdir -p $ALL_RESULTS_ROOT
 ### train ###################################
 
+if [ ! -d "$ALL_DATA_ROOT/$DATASET_NAME" ]; then
+  TOKENIZER_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
+  python preprocess/transform2unirec.py \
+      --data_path "./data/dataset/${DATASET_NAME}/" \
+      --unirec_data_path "$ALL_DATA_ROOT/${DATASET_NAME}" \
+      --unirec_config_path "${UNIREC_ROOT}/config/dataset/${DATASET_NAME}.yaml" \
+      --tokenizer_path $TOKENIZER_PATH
+fi
+
+
 CUDA_VISIBLE_DEVICES=0 python -m unirec.main.main \
     --config_dir="unirec/config" \
     --model=$MODEL_NAME \

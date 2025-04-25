@@ -355,7 +355,7 @@ def main_process(data_name, args, data_type='Amazon'):
     if not os.path.exists(args.data_path):
         os.makedirs(args.data_path)
     save_json(user_items, os.path.join(args.data_path, 'sequential.jsonl'))
-    save_pickle(meta_infos, os.path.join(args.data_path, 'metas.pickle'))
+    save_json(meta_infos, os.path.join(args.data_path, 'metas.jsonl'))
     save_json(category_infos, os.path.join(args.data_path, 'category.jsonl'))
 
     train_data = {'user_id': [], 'item_id': []}

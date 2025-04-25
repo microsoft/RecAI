@@ -41,7 +41,7 @@ class SFTTrainer(nn.Module):
 
         self.data = {
             'category': load_json(args.data_path + 'category.jsonl'),
-            'metas': load_pickle(args.data_path + 'metas.pickle'),
+            'metas': load_json(args.data_path + 'metas.jsonl'),
             'sequential': load_json(args.data_path + 'sequential.jsonl'),
             'share_chat_gpt': load_pickle('data/share_chat_gpt2.pickle'),
         }
@@ -124,14 +124,14 @@ class SFTTrainer(nn.Module):
                 [f"{t}\n{des}" for t, des in zip(batch_item_titles, batch_item_descriptions)],
                 batch_size=batch_size,
                 max_length=max_length
-            )['dense_vecs']
+            )['dense_vecs'].tolist()
 
             for _id, emb in zip(batch_item_ids, batch_embeddings):
                 self.data['metas'][_id][field_name] = emb
 
         del model
         if has_updated:
-            save_pickle(self.data['metas'], os.path.join(self.args.data_path, 'metas.pickle'))
+            save_json(self.data['metas'], os.path.join(self.args.data_path, 'metas.jsonl'))
 
         item_emb = np.stack([v[field_name] for k, v in self.data['metas'].items()])
         item_emb = torch.tensor(item_emb, dtype=torch.bfloat16, device=self.device)
@@ -176,7 +176,7 @@ class SFTTrainer(nn.Module):
 
         del model
         if has_updated:
-            save_pickle(self.data['metas'], os.path.join(self.args.data_path, 'metas.pickle'))
+            save_json(self.data['metas'], os.path.join(self.args.data_path, 'metas.jsonl'))
 
         item_emb = np.stack([v[field_name] for k, v in self.data['metas'].items()])
         item_emb = torch.tensor(item_emb, dtype=torch.bfloat16, device=self.device)

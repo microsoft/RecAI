@@ -110,7 +110,7 @@ if __name__ == "__main__":
     print(json.dumps(args.__dict__, ensure_ascii=False, indent=2))
     data = {
         'category': load_json(args.data_path + 'category.jsonl'),
-        'metas': load_pickle(args.data_path + 'metas.pickle'),
+        'metas': load_json(args.data_path + 'metas.jsonl'),
         'sequential': load_json(args.data_path + 'sequential.jsonl'),
         'share_chat_gpt': None,
     }

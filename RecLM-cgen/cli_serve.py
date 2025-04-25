@@ -7,8 +7,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor, Trie_link
-from train_utils.utils import load_pickle
-
+from train_utils.utils import load_json
 
 domains = ["steam", "movies", "toys"]
 system_message = {
@@ -19,7 +18,7 @@ chat_history = [system_message]
 
 
 def create_PCLP(data_path):
-    metas = load_pickle(os.path.join(data_path, 'metas.pickle'))
+    metas = load_json(os.path.join(data_path, 'metas.jsonl'))
     item_list = [metas[_]['title_t'] for _ in metas]
     item_ids = tokenizer.batch_encode_plus(item_list, add_special_tokens=False).data['input_ids']
     item_prefix_tree = Trie_link(item_ids, tokenizer)
