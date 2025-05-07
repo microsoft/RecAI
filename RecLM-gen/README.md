@@ -295,13 +295,7 @@ If you find this project useful in your research, please cite our research paper
 ```
 @inproceedings{lu-etal-2024-aligning,
     title = "Aligning Large Language Models for Controllable Recommendations",
-    author = "Lu, Wensheng  and
-      Lian, Jianxun  and
-      Zhang, Wei  and
-      Li, Guanghua  and
-      Zhou, Mingyang  and
-      Liao, Hao  and
-      Xie, Xing",
+    author = "Lu, Wensheng  and Lian, Jianxun  and Zhang, Wei  and Li, Guanghua  and Zhou, Mingyang  and Liao, Hao  and Xie, Xing",
     editor = "Ku, Lun-Wei  and
       Martins, Andre  and
       Srikumar, Vivek",
