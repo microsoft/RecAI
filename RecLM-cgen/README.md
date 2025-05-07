@@ -277,5 +277,10 @@ output = model.generate(
 If you find this project useful in your research, please cite our research paper:
 
 ```
-xxx
+@article{liao2025avoid,
+  title={Avoid Recommending Out-of-Domain Items: Constrained Generative Recommendation with LLMs}, 
+  author={Liao, Hao and Lu, Wensheng and Lian, Jianxun and Wu, Mingqi and Wang, Shuo and Zhang, Yong and Huang, Yitian and Zhou, Mingyang and Xie, Xing},
+  journal={arXiv preprint arXiv:2505.03336}
+  year={2025},
+}
 ```
