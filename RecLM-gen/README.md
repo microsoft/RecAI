@@ -293,10 +293,17 @@ export ENGINE=gpt-3.5-turbo-1106
 If you find this project useful in your research, please cite our research paper:
 
 ```
-@article{lu2024aligning,
-  title={Aligning Large Language Models for Controllable Recommendations},
-  author={Lu, Wensheng and Lian, Jianxun and Zhang, Wei and Li, Guanghua and Zhou, Mingyang and Liao, Hao and Xie, Xing},
-  journal={arXiv preprint arXiv:2403.05063},
-  year={2024}
+@inproceedings{lu-etal-2024-aligning,
+    title = "Aligning Large Language Models for Controllable Recommendations",
+    author = "Lu, Wensheng  and Lian, Jianxun  and Zhang, Wei  and Li, Guanghua  and Zhou, Mingyang  and Liao, Hao  and Xie, Xing",
+    editor = "Ku, Lun-Wei  and Martins, Andre  and Srikumar, Vivek",
+    booktitle = "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.acl-long.443/",
+    doi = "10.18653/v1/2024.acl-long.443",
+    pages = "8159--8172",
 }
 ```

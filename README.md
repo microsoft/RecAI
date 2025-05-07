@@ -113,13 +113,122 @@ Please refer to [RecAI: Responsible AI FAQ](./RAI_FAQ.md) for document on the pu
 
 
 ## Citation
-If this project aids your research, please cite our following paper and any related paper in the respective subfolder.
-
+If this project aids your research, please cite our following paper:
+#### RecAI Overview:
 ```
-@article{lian2024recai,
-  title={RecAI: Leveraging Large Language Models for Next-Generation Recommender Systems},
-  author={Lian, Jianxun and Lei, Yuxuan and Huang, Xu and Yao, Jing and Xu, Wei and Xie, Xing},
-  journal={arXiv preprint arXiv:2403.06465},
-  year={2024}
+@inproceedings{10.1145/3589335.3651242,
+    author = {Lian, Jianxun and Lei, Yuxuan and Huang, Xu and Yao, Jing and Xu, Wei and Xie, Xing},
+    title = {RecAI: Leveraging Large Language Models for Next-Generation Recommender Systems},
+    year = {2024},
+    isbn = {9798400701726},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3589335.3651242},
+    doi = {10.1145/3589335.3651242},
+    booktitle = {Companion Proceedings of the ACM Web Conference 2024},
+    pages = {1031–1034},
+    numpages = {4},
+    keywords = {large language models, recommender systems},
+    location = {Singapore, Singapore},
+    series = {WWW '24}
+}
+```
+And corresponding paper in the subfolder:
+
+#### InteRecAgent:
+```
+@article{10.1145/3731446,
+    author = {Huang, Xu and Lian, Jianxun and Lei, Yuxuan and Yao, Jing and Lian, Defu and Xie, Xing},
+    title = {Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations},
+    year = {2025},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    issn = {1046-8188},
+    url = {https://doi.org/10.1145/3731446},
+    doi = {10.1145/3731446},
+    note = {Just Accepted},
+    journal = {ACM Trans. Inf. Syst.},
+    month = apr,
+    keywords = {Conversational Recommendation, Large Language Models, Interactive Agents}
+}
+```
+
+#### Knowledge_Plugin:
+```
+@misc{yao2023knowledgepluginsenhancinglarge,
+      title={Knowledge Plugins: Enhancing Large Language Models for Domain-Specific Recommendations}, 
+      author={Jing Yao and Wei Xu and Jianxun Lian and Xiting Wang and Xiaoyuan Yi and Xing Xie},
+      year={2023},
+      eprint={2311.10779},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2311.10779}, 
+}
+```
+
+#### RecExplainer:
+```
+@inproceedings{10.1145/3637528.3671802,
+    author = {Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Huang, Xu and Lian, Defu and Xie, Xing},
+    title = {RecExplainer: Aligning Large Language Models for Explaining Recommendation Models},
+    year = {2024},
+    isbn = {9798400704901},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3637528.3671802},
+    doi = {10.1145/3637528.3671802},
+    booktitle = {Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+    pages = {1530–1541},
+    numpages = {12},
+    keywords = {large language models, model explainability, recommender systems},
+    location = {Barcelona, Spain},
+    series = {KDD '24}
+}
+```
+
+#### RecLM-cgen:
+```
+@article{liao2025avoid,
+    title={Avoid Recommending Out-of-Domain Items: Constrained Generative Recommendation with LLMs}, 
+    author={Liao, Hao and Lu, Wensheng and Lian, Jianxun and Wu, Mingqi and Wang, Shuo and Zhang, Yong and Huang, Yitian and Zhou, Mingyang and Xie, Xing},
+    journal={arXiv preprint arXiv:2505.03336}
+    year={2025},
+}
+```
+
+#### RecLM-emb:
+```
+@inproceedings{10.1145/3589335.3651468,
+    author = {Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Wu, Mingqi and Lian, Defu and Xie, Xing},
+    title = {Aligning Language Models for Versatile Text-based Item Retrieval},
+    year = {2024},
+    isbn = {9798400701726},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3589335.3651468},
+    doi = {10.1145/3589335.3651468},
+    booktitle = {Companion Proceedings of the ACM Web Conference 2024},
+    pages = {935–938},
+    numpages = {4},
+    keywords = {item retrieval, search and recommendation, text embedding},
+    location = {Singapore, Singapore},
+    series = {WWW '24}
+}
+```
+
+#### RecLM-gen:
+```
+@inproceedings{lu-etal-2024-aligning,
+    title = "Aligning Large Language Models for Controllable Recommendations",
+    author = "Lu, Wensheng  and Lian, Jianxun  and Zhang, Wei  and Li, Guanghua  and Zhou, Mingyang  and Liao, Hao  and Xie, Xing",
+    editor = "Ku, Lun-Wei  and Martins, Andre  and Srikumar, Vivek",
+    booktitle = "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.acl-long.443/",
+    doi = "10.18653/v1/2024.acl-long.443",
+    pages = "8159--8172",
 }
 ```

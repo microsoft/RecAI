@@ -51,3 +51,19 @@ python call_openai.py \
     --dataset ml1m
 bash metric.bash out/result/ml1m/ChatGPT_popneg_his_I2I ml1m
 ```
+
+
+## Citation
+If you find this project useful in your research, please cite our research paper:
+
+```
+@misc{yao2023knowledgepluginsenhancinglarge,
+      title={Knowledge Plugins: Enhancing Large Language Models for Domain-Specific Recommendations}, 
+      author={Jing Yao and Wei Xu and Jianxun Lian and Xiting Wang and Xiaoyuan Yi and Xing Xie},
+      year={2023},
+      eprint={2311.10779},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2311.10779}, 
+}
+```
