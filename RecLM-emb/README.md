@@ -148,11 +148,20 @@ bash shell/demo.sh
 If you find this project useful in your research, please cite our research paper:
 
 ```
-@inproceedings{lei2024aligning,
-  title={Aligning Language Models for Versatile Text-based Item Retrieval},
-  author={Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Wu, Mingqi and Lian, Defu and Xie, Xing},
-  booktitle={Companion Proceedings of the ACM on Web Conference 2024},
-  pages={935--938},
-  year={2024}
+@inproceedings{10.1145/3589335.3651468,
+        author = {Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Wu, Mingqi and Lian, Defu and Xie, Xing},
+        title = {Aligning Language Models for Versatile Text-based Item Retrieval},
+        year = {2024},
+        isbn = {9798400701726},
+        publisher = {Association for Computing Machinery},
+        address = {New York, NY, USA},
+        url = {https://doi.org/10.1145/3589335.3651468},
+        doi = {10.1145/3589335.3651468},
+        booktitle = {Companion Proceedings of the ACM Web Conference 2024},
+        pages = {935–938},
+        numpages = {4},
+        keywords = {item retrieval, search and recommendation, text embedding},
+        location = {Singapore, Singapore},
+        series = {WWW '24}
 }
 ```

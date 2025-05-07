@@ -1,7 +1,9 @@
 
 # RecLM-cgen
 ## Introduction
-**RecLM-cgen** is a generative recommendation framework. This framework divides the output space of LLMs into item generation and general text generation parts by introducing item control tokens, and simultaneously employs a decoding strategy with prefix tree constraints to prevent the generation of out-of-domain items. RecLM-cgen enables LLMs to acquire the ability to recommend products without sacrificing their original general capabilities. 
+This project introduces methods for avoid recommending out-of-domain items in LLM-based recsys. It contains the code for implementing two methods in (arXiv preprint arXiv:2505.03336), i.e., RecLM-cgen and RecLM-ret.
+
+**RecLM-cgen** is a generative recommendation framework in the native structure of LLMs. This framework divides the output space of LLMs into item generation and general text generation parts by introducing item control tokens, and simultaneously employs a decoding strategy with prefix tree constraints to prevent the generation of out-of-domain items. RecLM-cgen enables LLMs to acquire the ability to recommend products without sacrificing their original general capabilities. 
 
 The RecLM-cgen framework seamlessly integrates LLMs with recommendation scenarios. Interacting with RecLM-cgen is just like interacting with general LLMs, enabling users to complete recommendation tasks and other general tasks in multi-round conversations.
 

@@ -175,15 +175,21 @@ InteRecAgent consists of 4 necessary components:
 
 
 ## Citation
-Please cite the following paper as the reference if you use our code or data[![Paper](https://img.shields.io/badge/arxiv-PDF-red)](https://arxiv.org/abs/2308.16505).
+Please cite the following paper if the project helps you in anyway:
 
 ```
-@misc{huang2023recommender,
-      title={Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations}, 
-      author={Xu Huang and Jianxun Lian and Yuxuan Lei and Jing Yao and Defu Lian and Xing Xie},
-      year={2023},
-      eprint={2308.16505},
-      archivePrefix={arXiv},
-      primaryClass={cs.IR}
+@article{10.1145/3731446,
+        author = {Huang, Xu and Lian, Jianxun and Lei, Yuxuan and Yao, Jing and Lian, Defu and Xie, Xing},
+        title = {Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations},
+        year = {2025},
+        publisher = {Association for Computing Machinery},
+        address = {New York, NY, USA},
+        issn = {1046-8188},
+        url = {https://doi.org/10.1145/3731446},
+        doi = {10.1145/3731446},
+        note = {Just Accepted},
+        journal = {ACM Trans. Inf. Syst.},
+        month = apr,
+        keywords = {Conversational Recommendation, Large Language Models, Interactive Agents}
 }
 ```

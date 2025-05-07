@@ -196,11 +196,21 @@ bash discriminator/run_reg.sh
 If you find this project useful in your research, please consider citing:
 
 ```
-@article{lei2023recexplainer,
-  title={RecExplainer: Aligning Large Language Models for Recommendation Model Interpretability},
-  author={Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Huang, Xu and Lian, Defu and Xie, Xing},
-  journal={arXiv preprint arXiv:2311.10947},
-  year={2023}
+@inproceedings{10.1145/3637528.3671802,
+        author = {Lei, Yuxuan and Lian, Jianxun and Yao, Jing and Huang, Xu and Lian, Defu and Xie, Xing},
+        title = {RecExplainer: Aligning Large Language Models for Explaining Recommendation Models},
+        year = {2024},
+        isbn = {9798400704901},
+        publisher = {Association for Computing Machinery},
+        address = {New York, NY, USA},
+        url = {https://doi.org/10.1145/3637528.3671802},
+        doi = {10.1145/3637528.3671802},
+        booktitle = {Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+        pages = {1530–1541},
+        numpages = {12},
+        keywords = {large language models, model explainability, recommender systems},
+        location = {Barcelona, Spain},
+        series = {KDD '24}
 }
 ```
 
