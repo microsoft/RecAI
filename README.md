@@ -221,9 +221,7 @@ And corresponding paper in the subfolder:
 @inproceedings{lu-etal-2024-aligning,
     title = "Aligning Large Language Models for Controllable Recommendations",
     author = "Lu, Wensheng  and Lian, Jianxun  and Zhang, Wei  and Li, Guanghua  and Zhou, Mingyang  and Liao, Hao  and Xie, Xing",
-    editor = "Ku, Lun-Wei  and
-      Martins, Andre  and
-      Srikumar, Vivek",
+    editor = "Ku, Lun-Wei  and Martins, Andre  and Srikumar, Vivek",
     booktitle = "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
     month = aug,
     year = "2024",
