@@ -1,0 +1,6 @@
+.idea/
+data/*
+snap*/
+unirec/config/dataset/
+unirec/data/
+unirec/output/
