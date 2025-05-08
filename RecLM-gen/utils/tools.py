@@ -47,7 +47,7 @@ def save_pickle(data, filename):
         pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def side_tokenizer(text: list[str] or list[list[str]], padding_side, tokenizer, **kwargs):
+def side_tokenizer(text: list[str] | list[list[str]], padding_side, tokenizer, **kwargs):
     """
     :param text:
     :param padding_side: in ['left', 'right']

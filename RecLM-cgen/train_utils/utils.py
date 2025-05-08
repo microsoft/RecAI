@@ -55,7 +55,7 @@ def save_json(data, filename):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def side_tokenizer(text: list[str] or list[list[str]], padding_side, tokenizer, **kwargs):
+def side_tokenizer(text: list[str] | list[list[str]], padding_side, tokenizer, **kwargs):
     tokenizer.padding_side = padding_side
     tokenizer.truncation_side = padding_side
     tokenizer_res = tokenizer.batch_encode_plus(text, **kwargs)
