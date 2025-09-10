@@ -15,10 +15,52 @@ allow_regenerate = os.getenv("ALLOW_REGENERATE", "False").lower() == "true"
 
 ## If you use customerized deployment names, don't forget to add them to this list
 OPENAI_MODELS = ["gpt-35-turbo", "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", 
-                 "gpt-4o", "gpt-4o-mini", "o1-preview", "o1-mini", "chatgpt-4o-latest"]
+                 "gpt-4o", "gpt-4o-mini", "gpt-4.1", "o1-preview", "o1-mini", "chatgpt-4o-latest"]
 
 if __name__ == "__main__":
     args = parse_args()
+
+    # ------------------------------------------------------------------
+    # Support *multiple* benchmark datasets in a single command.
+    # We launch a new Python subprocess of the same script for every
+    # additional dataset beyond the first.  This keeps the original
+    # evaluation logic untouched while providing the desired behaviour.
+    # ------------------------------------------------------------------
+    if len(getattr(args, "bench_names", [args.bench_name])) > 1:
+        import subprocess, sys
+
+        def _strip_bench_args(argv):
+            """Remove --bench-name(s) flag and *all* of its positional values.
+
+            Because the number of dataset names is unknown (nargs="+"), we
+            keep consuming tokens until we encounter the next option that
+            starts with "--" or reach the end of argv.
+            """
+            cleaned = []
+            i = 0
+            while i < len(argv):
+                tok = argv[i]
+                if tok in ("--bench-name", "--bench-names"):
+                    i += 1  # skip the flag itself
+                    # skip all following non-option tokens (dataset names)
+                    while i < len(argv) and not argv[i].startswith("--"):
+                        i += 1
+                    continue  # continue outer while loop without increment
+                cleaned.append(tok)
+                i += 1
+            return cleaned
+
+        # The arguments that are *not* benchmark specific remain the same
+        base_argv = _strip_bench_args(sys.argv[1:])
+
+        # Kick off a separate subprocess for each benchmark
+        for bench in args.bench_names:
+            cmd = [sys.executable, sys.argv[0], "--bench-name", bench] + base_argv
+            print(f"\n[Multi-bench] Launching evaluation for dataset '{bench}' → {' '.join(cmd)}")
+            subprocess.run(cmd, check=True)
+
+        # All work delegated; terminate parent process successfully.
+        sys.exit(0)
 
     meta_data_file = f"data/{args.bench_name}/metadata.json"
     all_prompt_config = load_prompt_config()
@@ -41,7 +83,10 @@ if __name__ == "__main__":
                     system_prompt = prompt_config.get("api_system_prompt", None)
                     gen_api_chat_answer(args.model_path_or_name, question_file, answer_file, args, system_prompt)
             all_metric = compute_metrics_on_title_recommend(answer_file, meta_data_file)
-            compute_errors_on_title_ranking(answer_file, meta_data_file, 0.8)
+            error_metric = compute_errors_on_title_ranking(answer_file, meta_data_file, 0.8)
+            all_metric = {**all_metric, **error_metric}
+            # --- save metrics ---
+            record_metrics(args.bench_name, args.model_path_or_name, task_name, all_metric)
             
         if task_name == "multi_choices":
             question_file = f"data/{args.bench_name}/{task_name}.jsonl"
@@ -53,9 +98,45 @@ if __name__ == "__main__":
                 else:
                     system_prompt = prompt_config.get("api_system_prompt", None)
                     gen_api_chat_answer(args.model_path_or_name, question_file, answer_file, args, system_prompt)
-            score = compute_metrics_on_multi_choices(answer_file, meta_data_file)
-            print("Model's multi-choices score is:", score)
+            # Compute accuracy@1 for multiple-choice questions
+            acc1, none_ratio = compute_metrics_on_multi_choices(answer_file)
+            # --- save metrics ---
+            record_metrics(args.bench_name, args.model_path_or_name, task_name, {"acc@1": acc1, "none_ratio": none_ratio})
+            print(f"Model's multi-choices acc@1: {acc1:.3f}, none_ratio: {none_ratio:.3f}")
             
+        # === CF / Sequential  ===
+        #   cf_ranking_mc: reuse the retrieval metric (title-similarity + threshold)
+        if task_name == "cf_ranking_mc":
+            question_file = f"data/{args.bench_name}/{task_name}.jsonl"
+            answer_file = f"output/{args.bench_name}/{parse_model_name_to_dirname(args.model_path_or_name)}/{task_name}.jsonl"
+            if allow_regenerate or not os.path.exists(answer_file):
+                if args.model_path_or_name not in OPENAI_MODELS:
+                    system_prompt = prompt_config.get("local_model_system_prompt", None)
+                    gen_model_chat_answer(args.model_path_or_name, question_file, answer_file, args, system_prompt)
+                else:
+                    system_prompt = prompt_config.get("api_system_prompt", None)
+                    gen_api_chat_answer(args.model_path_or_name, question_file, answer_file, args, system_prompt)
+            # Use multiple-choice accuracy as the metric
+            cf_acc1, cf_none = compute_metrics_on_multi_choices(answer_file)
+            record_metrics(args.bench_name, args.model_path_or_name, task_name, {"acc@1": cf_acc1, "none_ratio": cf_none})
+            print(f"Model's cf_ranking_mc acc@1: {cf_acc1:.3f}, none_ratio: {cf_none:.3f}")
+
+        elif task_name == "seq_ranking_mc":
+            question_file = f"data/{args.bench_name}/{task_name}.jsonl"
+            answer_file = f"output/{args.bench_name}/{parse_model_name_to_dirname(args.model_path_or_name)}/{task_name}.jsonl"
+            if allow_regenerate or not os.path.exists(answer_file):
+                if args.model_path_or_name not in OPENAI_MODELS:
+                    system_prompt = prompt_config.get("local_model_system_prompt", None)
+                    gen_model_chat_answer(args.model_path_or_name, question_file, answer_file, args, system_prompt)
+                else:
+                    system_prompt = prompt_config.get("api_system_prompt", None)
+                    gen_api_chat_answer(args.model_path_or_name, question_file, answer_file, args, system_prompt)
+
+            # Sequential recommendation also evaluated as multiple-choice
+            seq_acc1, seq_none = compute_metrics_on_multi_choices(answer_file)
+            record_metrics(args.bench_name, args.model_path_or_name, task_name, {"acc@1": seq_acc1, "none_ratio": seq_none})
+            print(f"Model's seq_ranking_mc acc@1: {seq_acc1:.3f}, none_ratio: {seq_none:.3f}")
+
         if task_name == "chatbot":
             question_file = f"data/{args.bench_name}/chatbot.jsonl" 
             # generate response of each model
@@ -259,3 +340,5 @@ if __name__ == "__main__":
             elif "retrieval" in task_name:
                 gen_retrieval_result(user_embedding_path, item_embedding_path, sequential_path, answer_file)
             all_metric = compute_metrics_on_id_recommend(answer_file)
+            # --- save metrics ---
+            record_metrics(args.bench_name, args.model_path_or_name, task_name, all_metric)

@@ -12,11 +12,17 @@ from evaluates.TFIDF_model import string_match_score
 def parse_args():
     parser = argparse.ArgumentParser()
 
+    # Allow evaluating MULTIPLE datasets in one run.  Both --bench-name and
+    # --bench-names are supported for backward-compatibility, but they now map
+    # to the same destination variable ``bench_names`` which is *a list*.
+    # Example:  --bench-names steam Books Movies_and_TV
     parser.add_argument(
-        "--bench-name", 
-        type=str, 
-        default='steam', 
-        help="The name of the benchmark question set.",
+        "--bench-names", "--bench-name",
+        dest="bench_names",
+        type=str,
+        nargs="+",
+        default=["steam"],
+        help="One or more benchmark dataset names (folder names under ./data).",
     )
     parser.add_argument(
         "--task-names",
@@ -34,7 +40,7 @@ def parse_args():
     parser.add_argument('--nr', type=int, default=0, help='ranking within the nodes')
     parser.add_argument("--master_port", type=str, default='12343')
 
-    parser.add_argument("--max_new_tokens", type=int, default=256, help="Maximum number of tokens to generate, prompt+max_new_tokens should be less than 2048.")
+    parser.add_argument("--max_new_tokens", type=int, default=2048, help="Maximum number of tokens to generate, prompt+max_new_tokens should be less than 2048.")
     parser.add_argument("--batch_size", type=int, default=4)
 
     # pair-wise evaluation config
@@ -51,6 +57,19 @@ def parse_args():
     parser.add_argument("--summary-model", type=str, default="gpt-3.5-turbo", help="The name of the model used to summary user preference.")
 
     args = parser.parse_args()
+
+    # ------------------------------------------------------------------
+    # Backward compatibility layer
+    # ------------------------------------------------------------------
+    # Most of the existing code expects ``args.bench_name`` to be a *single*
+    # string.  We keep that attribute pointing to the **first** dataset so
+    # that unchanged code continues to work when only one benchmark is given.
+    # When more than one benchmark is supplied, the caller should iterate over
+    # ``args.bench_names``;   the legacy ``args.bench_name`` is still defined
+    # (pointing to the first element) to avoid AttributeError in old paths.
+    if len(args.bench_names) > 0:
+        args.bench_name = args.bench_names[0]
+
     return args
 
 def ReadLineFromFile(path):
@@ -85,8 +104,70 @@ def gen_judge_prompts(eval_model_answer_file, base_model_answer_file, question_f
 
 def parse_model_name_to_dirname(model_path_or_name):
     if os.path.exists(model_path_or_name):
-        return os.path.basename(os.path.normpath(model_path_or_name)).replace('/','_').strip('_')
-    return model_path_or_name.replace('/','_').strip('_')
+        return os.path.basename(os.path.normpath(model_path_or_name)).replace('/', '_').strip('_')
+    return model_path_or_name.replace('/', '_').strip('_')
+
+# -------------------------------
+# Metric recording helper
+# -------------------------------
+
+def record_metrics(bench_name: str, model_path_or_name: str, task_name: str, metrics):
+    """Append evaluation metrics of a task to a *human-readable* TXT file.
+
+    The file will be saved to::
+
+        output/{bench_name}/{model_dir}/metrics.txt
+
+    Example content::
+
+        --------------------------------------------------
+        [2025-08-07 13:22:14] Task: ranking
+        NDCG@1  Rec@1  Hits@1 Prec@1 MAP@1  MRR@1
+        0.4021  0.3500  0.3500 0.3500 0.4021 0.4021
+        ...
+        --------------------------------------------------
+    """
+    import datetime, os
+
+    model_dir = parse_model_name_to_dirname(model_path_or_name)
+    out_dir = os.path.join("output", bench_name, model_dir)
+    os.makedirs(out_dir, exist_ok=True)
+    out_file = os.path.join(out_dir, "metrics.txt")
+
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    lines = ["-"*60,
+             f"[{timestamp}] Task: {task_name}"]
+
+    # ---- pretty table for @1/5/10/20 ----
+    header_tpl = "{:<7}{:<7}{:<7}{:<7}{:<7}{:<7}"
+    row_tpl    = "{:<7.4f}{:<7.4f}{:<7.4f}{:<7.4f}{:<7.4f}{:<7.4f}"
+    lines.append("")
+    for k in [1, 5, 10, 20]:
+        if f"ndcg@{k}" not in metrics:
+            continue
+        # header row
+        lines.append(header_tpl.format(f"NDCG@{k}", f"Rec@{k}", f"Hits@{k}", f"Prec@{k}", f"MAP@{k}", f"MRR@{k}"))
+        # metric values
+        lines.append(row_tpl.format(
+            metrics.get(f"ndcg@{k}", 0.0),
+            metrics.get(f"recall@{k}", 0.0),
+            metrics.get(f"hit@{k}", 0.0),
+            metrics.get(f"precision@{k}", 0.0),
+            metrics.get(f"map@{k}", 0.0),
+            metrics.get(f"mrr@{k}", 0.0),
+        ))
+        lines.append("")
+
+    # ---- additional (non-@K) metrics, e.g. accuracy ----
+    other_metrics = {k: v for k, v in metrics.items() if "@" not in k or k == "acc@1"}
+    if other_metrics:
+        for k in sorted(other_metrics.keys()):
+            lines.append(f"{k} = {other_metrics[k]}")
+
+    lines.append("-"*60)
+
+    with open(out_file, "a", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
 
 def gen_user_simulator_prompts(eval_model_answer_file, simulator_question_file):
     os.makedirs(os.path.dirname(simulator_question_file), exist_ok=True)
