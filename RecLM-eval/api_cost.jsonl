@@ -12,3 +12,4 @@
 {"text-embedding-3-small": {"input": 0.02, "output": 0}}
 {"text-embedding-3-large": {"input": 0.13, "output": 0}}
 {"ada v2": {"input": 0.1, "output": 0}}
+{"gpt-4.1": {"input": 3.0, "output": 12.0}}
