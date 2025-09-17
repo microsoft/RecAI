@@ -15,6 +15,10 @@ pip install -r requirements.txt
 # Leave empty (or comment out) to use all visible GPUs.
 GPU_IDS="0"        # ← adjust for your machine
 export CUDA_VISIBLE_DEVICES=${GPU_IDS}
+# ---------------- TOP-K SETTING ----------------
+# Control the length of recommendation list (e.g. Recall@K). vllm_models.py and
+# other scripts will read this value via --top_k.
+TOP_K=20            # ← change this to 10 / 50 … as needed
 # ------------------------------------------
 
 # Which dataset(s) to evaluate – list one or more names below.
@@ -38,8 +42,9 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
             --bench-name "${DATASETS[@]}" \
-            --model_path_or_name /home/data/model/qwen3-8B \
-            --batch_size 256
+            --model_path_or_name /Qwen/Qwen3-8B \
+            --batch_size 256 \
+            --top_k ${TOP_K}
     done
 
 
@@ -52,7 +57,8 @@ for task in "${tasks[@]}"
             --bench-name steam \
             --user_emb_type summary \
             --summary-model gpt-35-turbo \
-            --item_emb_type title
+            --item_emb_type title \
+            --top_k ${TOP_K}
     done
 
 
@@ -61,9 +67,10 @@ for task in "${tasks[@]}"
     do
         echo "Running task: $task"
         python eval.py --task-names $task \
-                --model_path_or_name /data/share/models/Qwen3-8B \
+                --model_path_or_name /Qwen/Qwen3-8B \
                 --judge-model gpt-4o \
-                --baseline-model gpt-35-turbo
+                --baseline-model gpt-35-turbo \
+                --top_k ${TOP_K}
     done
 
 tasks=("explanation")
@@ -72,9 +79,10 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
                --bench-name steam \
-                --model_path_or_name /data/share/models/Qwen3-8B \
+                --model_path_or_name /Qwen/Qwen3-8B \
                 --judge-model gpt-4o \
-                --baseline-model gpt-35-turbo
+                --baseline-model gpt-35-turbo \
+                --top_k ${TOP_K}
     done
 
 tasks=("conversation")
@@ -83,8 +91,9 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
             --bench-name steam \
-            --model_path_or_name /data/share/models/Qwen3-8B \
+            --model_path_or_name /Qwen/Qwen3-8B \
             --simulator-model gpt-35-turbo \
-            --max_turn 5
+            --max_turn 5 \
+            --top_k ${TOP_K}
     done
 

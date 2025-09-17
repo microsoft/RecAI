@@ -25,7 +25,7 @@ huggingface-hub==0.34.3
 # Optional acceleration
 xformers==0.0.31
 triton==3.3.1      # CUDA kernels for xformers
-# flash-attn 需要在已有 torch 环境中手动安装；请在完成 requirements 安装后运行：
+# flash-attn need to be manually installed in an existing torch environment; please run after completing the requirements installation:
 # pip install flash-attn==2.6.1 --no-build-isolation --no-cache-dir
 #flash-attn==2.6.1
 

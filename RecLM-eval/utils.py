@@ -43,6 +43,11 @@ def parse_args():
     parser.add_argument("--max_new_tokens", type=int, default=2048, help="Maximum number of tokens to generate, prompt+max_new_tokens should be less than 2048.")
     parser.add_argument("--batch_size", type=int, default=4)
 
+    # length of recommendation list (e.g. Recall@K). Used by vllm_models.py and
+    # post-processing logic to pad/truncate outputs.
+    parser.add_argument("--top_k", type=int, default=20,
+                        help="Recommendation list length K for @K metrics.")
+
     # pair-wise evaluation config
     parser.add_argument("--judge-model", type=str, default="gpt-3.5-turbo", help="The model path or name used to perform judge during pairwise evaluation.")
     parser.add_argument("--baseline-model", type=str, default="gpt-3.5-turbo", help="The model path or name acts as a baseline during pairwise evaluation.")

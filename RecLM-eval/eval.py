@@ -14,8 +14,8 @@ allow_regenerate = os.getenv("ALLOW_REGENERATE", "False").lower() == "true"
 
 
 ## If you use customerized deployment names, don't forget to add them to this list
-OPENAI_MODELS = ["gpt-35-turbo", "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", 
-                 "gpt-4o", "gpt-4o-mini", "gpt-4.1", "o1-preview", "o1-mini", "chatgpt-4o-latest"]
+OPENAI_MODELS = ["gpt-35-turbo", "gpt-4o", "gpt-4o-mini", "gpt-4.1"]
+
 
 if __name__ == "__main__":
     args = parse_args()

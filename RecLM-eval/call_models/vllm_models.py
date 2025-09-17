@@ -15,12 +15,17 @@ import vllm
 import functools
 
 def map_gpu_count(m):
+    """Return the nearest supported tensor parallel size (1, 2, 4 or 8)
+    that does not exceed the available GPU count. vLLM requires the tensor
+    parallel size to be a power-of-two within this set.
+    """
     n_values = [1, 2, 4, 8]
     for n in reversed(n_values):
         if m >= n:
             return n
     return None  
 def env(var_name):
+    """Tiny wrapper around :pyfunc:`os.getenv` for brevity."""
     return os.getenv(var_name)
 if not env("VLLM_TENSOR_PARALLEL_SIZE"):
     gpu_count = torch.cuda.device_count()
@@ -38,17 +43,11 @@ else:
 DEFAULT_SYSTEM_PROMPT = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions."
 
 class vllmModel:
-    """A thin wrapper around :pyclass:`vllm.LLM` that automatically chooses
-    an appropriate ``max_model_len``.
+    """Lightweight convenience wrapper around :pyclass:`vllm.LLM`.
 
-    * If ``max_model_len`` is ``None`` we **do not** pass it to vLLM, letting
-      vLLM read the setting from the model's ``config.json`` (field
-      ``max_position_embeddings``).
-    * If a value is provided we forward it verbatim.
-
-    This guarantees the wrapper works out-of-the-box for 4 K, 8 K, 32 K …
-    context models, while still allowing the caller to override the length
-    to trade accuracy for memory when necessary.
+    The class infers a safe ``max_model_len`` from the model configuration,
+    instantiates an internal ``vllm.LLM`` object accordingly and exposes a
+    higher-level :pyfunc:`batch_predict` method for batch generation.
     """
 
     def __init__(self, model_name: str, max_model_len: Optional[int] = None, dtype: str = "bfloat16"):
@@ -74,6 +73,20 @@ class vllmModel:
         self.tokenizer = self.llm.get_tokenizer()
 
     def batch_predict(self, prompts: list[str], max_new_tokens: int = 1000) -> list[str]:
+        """Generate one answer for every prompt in *prompts*.
+
+        Parameters
+        ----------
+        prompts : list[str]
+            A batch of plain text prompts or chat-formatted strings.
+        max_new_tokens : int, default=1000
+            Maximum number of tokens to generate for each prompt.
+
+        Returns
+        -------
+        list[str]
+            Model outputs, order-aligned with the input *prompts*.
+        """
         responses = self.llm.generate(
             prompts,
             vllm.SamplingParams(
@@ -250,12 +263,13 @@ def run_chat(model_path_or_name, question_file, answer_file, args, system_prompt
                 mapped_titles = [t.strip() for t in raw.split('<end>') if t.strip()]
             # filter history
             mapped_titles = [t for t in mapped_titles if t not in history]
-            # pad if necessary with remaining candidates
-            if len(mapped_titles) < 20:
+            # Pad / truncate to ``top_k`` so evaluation metrics match expectation.
+            top_k = getattr(args, "top_k", 20)
+            if len(mapped_titles) < top_k:
                 pool = [c for c in candidates if c not in mapped_titles and c not in history]
                 random.shuffle(pool)
-                mapped_titles.extend(pool[:20 - len(mapped_titles)])
-            mapped_titles = mapped_titles[:20]
+                mapped_titles.extend(pool[:top_k - len(mapped_titles)])
+            mapped_titles = mapped_titles[:top_k]
             fixed_answer = '<end>'.join(mapped_titles) + '<end>'
             data["answer"] = fixed_answer
             fd.write(json.dumps(data, ensure_ascii=False) + '\n')
