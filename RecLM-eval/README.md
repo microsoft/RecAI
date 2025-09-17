@@ -191,7 +191,7 @@ Each test instance contains 1 positive item and 9 negatives (10 candidates in to
 
 
 |       Model      |      acc@1      |        none_ratio        |
-|------------------|--------|--------|--------|--------|--------|
+|------------------|-----------------|--------------------------|
 |   Random guess   |      0.100      |                          |
 |   Qwen2.5-3B-it  |      0.255      |          0.014           |
 |   gemma3-4B-it   |      0.265      |          0.000           |
@@ -204,7 +204,7 @@ Each test instance contains 1 positive item and 9 negatives (10 candidates in to
 Each test instance contains 1 positive item and 9 negatives (10 candidates in total).  The tables report the metrics acc@1 and one error indicators none_ratio defined in *RecLM-eval*.
 
 |       Model      |      acc@1      |        none_ratio        |
-|------------------|--------|--------|--------|--------|--------|
+|------------------|-----------------|--------------------------|
 |   Random guess   |      0.100      |                          |
 |   Qwen2.5-3B-it  |      0.250      |          0.002           |
 |   gemma3-4B-it   |      0.269      |          0.000           |
