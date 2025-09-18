@@ -32,7 +32,7 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
             --bench-name "${DATASETS[@]}" \
-            --model_path_or_name /Qwen/qwen3-8B \
+            --model_path_or_name Qwen/qwen3-8B \
             --batch_size 256 \
             --top_k ${TOP_K}
     done

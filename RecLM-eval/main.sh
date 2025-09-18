@@ -42,7 +42,7 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
             --bench-name "${DATASETS[@]}" \
-            --model_path_or_name /Qwen/Qwen3-8B \
+            --model_path_or_name Qwen/Qwen3-8B \
             --batch_size 256 \
             --top_k ${TOP_K}
     done
@@ -67,7 +67,7 @@ for task in "${tasks[@]}"
     do
         echo "Running task: $task"
         python eval.py --task-names $task \
-                --model_path_or_name /Qwen/Qwen3-8B \
+                --model_path_or_name Qwen/Qwen3-8B \
                 --judge-model gpt-4o \
                 --baseline-model gpt-35-turbo \
                 --top_k ${TOP_K}
@@ -79,7 +79,7 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
                --bench-name steam \
-                --model_path_or_name /Qwen/Qwen3-8B \
+                --model_path_or_name Qwen/Qwen3-8B \
                 --judge-model gpt-4o \
                 --baseline-model gpt-35-turbo \
                 --top_k ${TOP_K}
@@ -91,7 +91,7 @@ for task in "${tasks[@]}"
         echo "Running task: $task"
         python eval.py --task-names $task \
             --bench-name steam \
-            --model_path_or_name /Qwen/Qwen3-8B \
+            --model_path_or_name Qwen/Qwen3-8B \
             --simulator-model gpt-35-turbo \
             --max_turn 5 \
             --top_k ${TOP_K}

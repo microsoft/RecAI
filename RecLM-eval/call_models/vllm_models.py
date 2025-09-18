@@ -13,6 +13,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import vllm
 import functools
+import inspect
 
 def map_gpu_count(m):
     """Return the nearest supported tensor parallel size (1, 2, 4 or 8)
@@ -109,6 +110,10 @@ class ChatDataset(Dataset):
         self.tokenizer = tokenizer
         self.max_seq_len = max_seq_len
         self.system_prompt = system_prompt if system_prompt else DEFAULT_SYSTEM_PROMPT
+        # Check whether tokenizer.apply_chat_template supports enable_thinking
+        self.support_enable_thinking = (
+            "enable_thinking" in inspect.signature(self.tokenizer.apply_chat_template).parameters
+        )
             
     def __len__(self):
         return len(self.test_dataset)
@@ -116,33 +121,21 @@ class ChatDataset(Dataset):
     def __getitem__(self, idx):
         data = self.test_dataset[idx]
         
-        try:
-            if isinstance(data["prompt"], str):
-                conv = [{"role": "system", "content": self.system_prompt}, {"role": "user", "content": data["prompt"]}]
-                # Disable "thought" (chain-of-thought) generation for models that support it (e.g. Qwen3)
-                inputs = self.tokenizer.apply_chat_template(
-                    conv,
-                    tokenize=False,
-                    add_generation_prompt=True,
-                    enable_thinking=False  # <- turn off thought mode
-                )
-            else:
-                data["prompt"].insert(0, {"role": "system", "content": self.system_prompt})
-                inputs = self.tokenizer.apply_chat_template(
-                    data["prompt"],
-                    tokenize=False,
-                    add_generation_prompt=True,
-                    enable_thinking=False  # <- turn off thought mode
-                )
-        except (AttributeError, ValueError):
-            # Fallback: simply concatenate messages when chat_template is missing
-            if isinstance(data["prompt"], str):
-                inputs = f"{self.system_prompt}\nUser: {data['prompt']}\nAssistant:"
-            else:
-                messages = data["prompt"]
-                if messages and messages[0].get("role") != "system":
-                    messages.insert(0, {"role": "system", "content": self.system_prompt})
-                inputs = "\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in messages]) + "\nAssistant:"
+        # Always use apply_chat_template; dynamically pass enable_thinking if supported
+        kwargs = dict(tokenize=False, add_generation_prompt=True)
+        if self.support_enable_thinking:
+            kwargs["enable_thinking"] = False  # Disable thinking mode (if supported)
+
+        if isinstance(data["prompt"], str):
+            conv = [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": data["prompt"]},
+            ]
+            inputs = self.tokenizer.apply_chat_template(conv, **kwargs)
+        else:
+            # Ensure the first message is the system prompt
+            data["prompt"].insert(0, {"role": "system", "content": self.system_prompt})
+            inputs = self.tokenizer.apply_chat_template(data["prompt"], **kwargs)
         inputs = inputs[-self.max_seq_len:]
         return inputs
 
