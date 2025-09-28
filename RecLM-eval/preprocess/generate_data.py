@@ -4,6 +4,8 @@
 import os
 import re
 import json
+# ---- patch: import universal task templates ----
+from all_steam_templates import all_tasks as all_task_templates
 import gzip
 import math
 import random
@@ -58,38 +60,58 @@ class Test_Dataset():
         self.raw_id2meta_id = {}
         for meta in parse(os.path.join('./data', dataset, 'metadata.json')):
             self.meta_data.append(meta)
-            meta["app_name"] = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', meta["app_name"])
+            meta["title"] = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', meta["title"])
             self.raw_id2meta_id[meta['id']] = len(self.meta_data) - 1
         self.search_data = None
         if os.path.exists(os.path.join('./data', dataset, 'search_data.csv')):
             self.search_data = pd.read_csv(os.path.join('./data', dataset, 'search_data.csv'))
+
+    def _token_to_id(self, token):
+        """Robustly map **any** external token to an *internal* item index.
+
+        Strategy:
+        1. Always check ``raw_id2meta_id`` first (regardless of whether the
+           token is numeric).
+        2. If not found **and** the token is numeric, treat it as an already
+           internal index *only if* ``0 <= idx < len(meta_data)``.
+        3. Otherwise return 0 (padding token).
+        """
+        token_str = str(token)
+        mapped = self.raw_id2meta_id.get(token_str)
+        if mapped is not None:
+            return mapped
+        if token_str.isdigit():
+            idx = int(token_str)
+            if 0 <= idx < len(self.meta_data):
+                return idx
+        return 0
 
     def gen_retrieval_data(self, sample_num):
         datasets = []
         sample_num = min(sample_num, len(self.sequential_data))
         for idx in range(sample_num):
             retrieval_datum = self.sequential_data[idx]
-            sequence = [int(x) for x in retrieval_datum.split()]
+            sequence = [self._token_to_id(x) for x in retrieval_datum.split()]
             click_history = sequence[1:-1]
             target_item = sequence[-1]
             history_titles = []
             for item_id in click_history:
                 item_datum = self.meta_data[item_id]
                 item_title = 'unknown title'
-                if 'app_name' in item_datum:
-                    item_title = item_datum['app_name']
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
                 history_titles.append(item_title)
             
             target_item_datum = self.meta_data[target_item]
             target_item_title = 'unknown title'
-            if 'app_name' in target_item_datum:
-                target_item_title = target_item_datum['app_name']
+            if 'title' in target_item_datum:
+                target_item_title = target_item_datum['title']
 
             task_template = self.all_task_templates['retrieval']
             source_text = task_template['source'].format(', '.join(history_titles))
             target_text = task_template['target'].format(target_item_title)
-            source_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', source_text)
-            target_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', target_text)
+            source_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', source_text)
+            target_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_text)
             datasets.append({
                 "source": source_text,
                 "target": target_text,
@@ -103,42 +125,46 @@ class Test_Dataset():
         sample_num = min(sample_num, len(self.sequential_data))
         for idx in range(sample_num):
             ranking_datum = self.sequential_data[idx]
-            sequence = [int(x) for x in ranking_datum.split()]
+            sequence = [self._token_to_id(x) for x in ranking_datum.split()]
             click_history = sequence[1:-1]
             target_item = sequence[-1]
             history_titles = []
             for item_id in click_history:
                 item_datum = self.meta_data[item_id]
                 item_title = 'unknown title'
-                if 'app_name' in item_datum:
-                    item_title = item_datum['app_name']
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
                 history_titles.append(item_title)
             
             target_item_datum = self.meta_data[target_item]
             target_item_title = 'unknown title'
-            if 'app_name' in target_item_datum:
-                target_item_title = target_item_datum['app_name']
+            if 'title' in target_item_datum:
+                target_item_title = target_item_datum['title']
 
-            user_id = sequence[0]
-            assert user_id == int(self.negative_samples[int(user_id)-1].split(' ', 1)[0])
-            candidate_samples = self.negative_samples[int(user_id)-1].split(' ', 1)[1].split(' ')
-            candidate_samples = random.sample(candidate_samples, 20)
-            candidate_samples.extend([target_item])
+            user_token = sequence[0]
+            candidate_samples = self.negative_samples[idx].split()
+            # Remove the first token if it duplicates the user or target item token
+            if candidate_samples and candidate_samples[0] == str(user_token):
+                candidate_samples = candidate_samples[1:]
+            candidate_samples = random.sample(candidate_samples, min(20, len(candidate_samples)))
+            candidate_samples.append(target_item)
             random.shuffle(candidate_samples)
 
             candidate_titles = []
             for item_id in candidate_samples:
-                item_datum = self.meta_data[int(item_id)]
+                item_datum = self.meta_data[self._token_to_id(item_id)]
                 item_title = 'unknown title'
-                if 'app_name' in item_datum:
-                    item_title = item_datum['app_name']
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
                 candidate_titles.append(item_title)
 
             task_template = self.all_task_templates['ranking']
-            source_text = task_template['source'].format(', '.join(history_titles), ', '.join(candidate_titles))
+            # Build wrapped candidate list for prompt (index + delimiters)
+            wrapped_candidates = '\n'.join(f'<SOI>{t}<EOI>' for t in candidate_titles)
+            source_text = task_template['source'].format(', '.join(history_titles), wrapped_candidates)
             target_text = task_template['target'].format(target_item_title)
-            source_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', source_text)
-            target_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', target_text)
+            source_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', source_text)
+            target_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_text)
             datasets.append({
                 "source": source_text,
                 "target": target_text,
@@ -153,29 +179,29 @@ class Test_Dataset():
         sample_num = min(sample_num, len(self.sequential_data))
         for idx in range(sample_num):
             exp_datum = self.sequential_data[idx]
-            sequence = [int(x) for x in exp_datum.split()]
+            sequence = [self._token_to_id(x) for x in exp_datum.split()]
             click_history = sequence[1:-1]
             target_item = sequence[-1]
             history_titles = []
             for item_id in click_history:
                 item_datum = self.meta_data[item_id]
                 item_title = 'unknown title'
-                if 'app_name' in item_datum:
-                    item_title = item_datum['app_name']
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
                 history_titles.append(item_title)
             
             target_item_datum = self.meta_data[target_item]
             target_item_title = 'unknown title'
-            if 'app_name' in target_item_datum:
-                target_item_title = target_item_datum['app_name']
+            if 'title' in target_item_datum:
+                target_item_title = target_item_datum['title']
 
             task_template = self.all_task_templates['explanation']
             source_text = task_template['source'].format(', '.join(history_titles), target_item_title)
             target_text = task_template['target'].format("No ground truth.")
-            source_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', source_text)
-            target_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', target_text)
-            history_titles = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', ', '.join(history_titles))
-            target_item_title = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', target_item_title)
+            source_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', source_text)
+            target_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_text)
+            history_titles = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', ', '.join(history_titles))
+            target_item_title = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_item_title)
             datasets.append({
                 "source": source_text,
                 "history": history_titles,
@@ -188,24 +214,24 @@ class Test_Dataset():
         sample_num = min(sample_num, len(self.sequential_data))
         for idx in range(sample_num):
             exp_datum = self.sequential_data[idx]
-            sequence = [int(x) for x in exp_datum.split()]
+            sequence = [self._token_to_id(x) for x in exp_datum.split()]
             click_history = sequence[1:-1]
             target_item = sequence[-1]
             history_titles = []
             for item_id in click_history:
                 item_datum = self.meta_data[item_id]
                 item_title = 'unknown title'
-                if 'app_name' in item_datum:
-                    item_title = item_datum['app_name']
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
                 history_titles.append(item_title)
             
             target_item_datum = self.meta_data[target_item]
             target_item_title = 'unknown title'
-            if 'app_name' in target_item_datum:
-                target_item_title = target_item_datum['app_name']
+            if 'title' in target_item_datum:
+                target_item_title = target_item_datum['title']
 
-            history_titles = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', ', '.join(history_titles))
-            target_item_title = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', target_item_title)
+            history_titles = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', ', '.join(history_titles))
+            target_item_title = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_item_title)
             datasets.append({
                 "history": history_titles,
                 "target": target_item_title,
@@ -215,31 +241,150 @@ class Test_Dataset():
 
     def gen_search_data(self, sample_num):
         datasets = []
-        if self.search_data is None:
-            return datasets
-
         sample_num = min(sample_num, len(self.search_data))
         for idx in range(sample_num):
-            target_item_title = self.search_data['target'][idx]
-            response = self.search_data['response'][idx]
-            queries = response.strip().split(",")
-            test_query = random.sample(queries, 1)[0]
-
+            search_datum = self.search_data.iloc[idx]
+            query = search_datum['query']
+            target_item = search_datum['target']
+            candidates = search_datum['candidates'].split('|')
+            
             task_template = self.all_task_templates['search']
-            source_text = task_template['source'].format(test_query)
-            target_text = task_template['target'].format(target_item_title)
-            source_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', source_text)
-            target_text = re.sub('[^A-Za-z0-9_.,!?;:\n ]', '', target_text)
+            source_text = task_template['source'].format(query, ', '.join(candidates))
+            target_text = task_template['target'].format(target_item)
+            source_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', source_text)
+            target_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_text)
             datasets.append({
                 "source": source_text,
                 "target": target_text,
-                "task": "searching"
+                "query": query,
+                "candidates": candidates,
+                "task": "search"
             })
-        return datasets    
+        return datasets
+
+    def gen_cf_ranking_data(self, sample_num):
+        """Generate data for the *collaborative-filtering multiple-choice* task."""
+        datasets = []
+        sample_num = min(sample_num, len(self.sequential_data))
+        for idx in range(sample_num):
+            cf_datum = self.sequential_data[idx]
+            sequence = [self._token_to_id(x) for x in cf_datum.split()]
+            click_history = sequence[1:-1]
+            target_item = sequence[-1]
+            
+            # Shuffle user history order so that it is no longer chronological
+            random.shuffle(click_history)
+            
+            # Randomly select one item from history as the target to predict
+            target_item = random.choice(click_history)
+            click_history = [x for x in click_history if x != target_item]
+            
+            history_titles = []
+            for item_id in click_history:
+                item_datum = self.meta_data[item_id]
+                item_title = 'unknown title'
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
+                history_titles.append(item_title)
+            
+            target_item_datum = self.meta_data[target_item]
+            target_item_title = 'unknown title'
+            if 'title' in target_item_datum:
+                target_item_title = target_item_datum['title']
+
+            # Build candidates: 1 positive + 9 negatives
+            candidates = [target_item_title]
+            negative_items = self.negative_samples[idx].split()
+            for neg_item_id in negative_items[:9]:
+                neg_item_datum = self.meta_data[self._token_to_id(neg_item_id)]
+                neg_item_title = 'unknown title'
+                if 'title' in neg_item_datum:
+                    neg_item_title = neg_item_datum['title']
+                candidates.append(neg_item_title)
+
+            random.shuffle(candidates)
+
+            # Add letter indices A–J in front of each candidate title
+            letters = list("ABCDEFGHIJ")
+            lettered_candidates = [f"{letters[i]}. {candidates[i]}" for i in range(len(candidates))]
+            correct_letter = letters[candidates.index(target_item_title)]
+
+            task_template = self.all_task_templates['cf_ranking_mc']
+            source_text = task_template['source'].format(', '.join(history_titles), ', '.join(lettered_candidates))
+            target_text = task_template['target'].format(correct_letter)
+            source_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', source_text)
+            target_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_text)
+            datasets.append({
+                "source": source_text,
+                "target": target_text,
+                "history": history_titles,
+                "candidates": lettered_candidates,
+                "correct_answer": correct_letter,
+                "task": "cf_ranking_mc"
+            })
+        return datasets
+
+    def gen_sequential_ranking_data(self, sample_num):
+        """Generate data for the *sequential recommendation multiple-choice* task."""
+        datasets = []
+        sample_num = min(sample_num, len(self.sequential_data))
+        for idx in range(sample_num):
+            seq_datum = self.sequential_data[idx]
+            sequence = [self._token_to_id(x) for x in seq_datum.split()]
+            click_history = sequence[1:-1]
+            target_item = sequence[-1]  # The next (ground-truth) item
+            
+            history_titles = []
+            for item_id in click_history:
+                item_datum = self.meta_data[item_id]
+                item_title = 'unknown title'
+                if 'title' in item_datum:
+                    item_title = item_datum['title']
+                history_titles.append(item_title)
+            
+            target_item_datum = self.meta_data[target_item]
+            target_item_title = 'unknown title'
+            if 'title' in target_item_datum:
+                target_item_title = target_item_datum['title']
+
+            # Build candidate set (1 positive + 9 negatives)
+            candidates = [target_item_title]
+            negative_items = self.negative_samples[idx].split()
+            for neg_item_id in negative_items[:9]:  # Add 9 negative samples
+                neg_item_datum = self.meta_data[self._token_to_id(neg_item_id)]
+                neg_item_title = 'unknown title'
+                if 'title' in neg_item_datum:
+                    neg_item_title = neg_item_datum['title']
+                candidates.append(neg_item_title)
+
+            # Shuffle the candidate order
+            random.shuffle(candidates)
+
+            # Add index letters A-J to candidate titles
+            letters = list("ABCDEFGHIJ")
+            lettered_candidates = [f"{letters[i]}. {candidates[i]}" for i in range(len(candidates))]
+
+            # Find the letter index corresponding to the correct answer
+            correct_letter = letters[candidates.index(target_item_title)]
+
+            task_template = self.all_task_templates['seq_ranking_mc']
+            source_text = task_template['source'].format(', '.join(history_titles), ', '.join(lettered_candidates))
+            target_text = task_template['target'].format(correct_letter)
+            source_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', source_text)
+            target_text = re.sub('[^A-Za-z0-9_.,!?;:<>\n ]', '', target_text)
+            datasets.append({
+                "source": source_text,
+                "target": target_text,
+                "history": history_titles,
+                "candidates": lettered_candidates,
+                "correct_answer": correct_letter,
+                "task": "seq_ranking_mc"
+            })
+        return datasets
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tasks', type=str, default='ranking,retrieval,explanation,conversation', help='tasks for data generation.')
+    parser.add_argument('--tasks', type=str, default='ranking,retrieval,explanation,conversation,cf_ranking_mc,seq_ranking_mc', help='tasks for data generation.')
     parser.add_argument('--sample_num', type=int, default=1000, help='sample number for each task.')  
     parser.add_argument('--dataset', type=str, default='steam', help='the dataset to be evaluated, steam/beauty/sports')
     parser.add_argument("--split", type=str, default="train", help="Dataset split (train/val/test)") 
@@ -330,3 +475,35 @@ if __name__ == '__main__':
         fd.close()
 
         print(f"Successfully generated {len(combined_data)} samples for chatbot.")
+    
+    if "cf_ranking_mc" in args.tasks:
+        print(f'generating cf_ranking_mc data, sample number: {args.sample_num} ...')
+        data = dataset.gen_cf_ranking_data(args.sample_num)
+        fd = open(f"data/{args.dataset}/cf_ranking_mc.jsonl", "w")
+        for line in data:
+            line = {
+                "prompt": line["source"],
+                "target": line["target"],
+                "history": line["history"],
+                "candidates": line["candidates"],
+                "correct_answer": line["correct_answer"],
+                "task": line["task"],
+            }
+            fd.write(json.dumps(line)+'\n')
+        fd.close()
+    
+    if "seq_ranking_mc" in args.tasks:
+        print(f'generating seq_ranking_mc data, sample number: {args.sample_num} ...')
+        data = dataset.gen_sequential_ranking_data(args.sample_num)
+        fd = open(f"data/{args.dataset}/seq_ranking_mc.jsonl", "w")
+        for line in data:
+            line = {
+                "prompt": line["source"],
+                "target": line["target"],
+                "history": line["history"],
+                "candidates": line["candidates"],
+                "correct_answer": line["correct_answer"],
+                "task": line["task"],
+            }
+            fd.write(json.dumps(line)+'\n')
+        fd.close()
