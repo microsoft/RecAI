@@ -1,12 +1,34 @@
+# Core
 nltk==3.9.1
-numpy==1.26.4
-openai==1.47.1
+numpy==2.0.2
 pandas==2.2.3
-PyYAML==6.0.2
-scikit-learn==1.5.2
-torch==2.4.0
-vllm==0.6.1.post2
-tqdm==4.66.5
-transformers==4.44.2
+torch==2.7.1
+transformers==4.54.1
+tokenizers==0.21.4
 accelerate==0.34.2
+vllm==0.10.0
+tqdm==4.66.5
+
+# OpenAI / Azure
+openai==1.90.0
+PyYAML==6.0.2
 azure-identity==1.18.0
+
+# Data & metrics
+scikit-learn==1.5.2
+datasets==4.0.0
+sentencepiece==0.2.0
+safetensors==0.5.3
+einops==0.8.1
+huggingface-hub==0.34.3
+
+# Optional acceleration
+xformers==0.0.31
+triton==3.3.1      # CUDA kernels for xformers
+# flash-attn need to be manually installed in an existing torch environment; please run after completing the requirements installation:
+# pip install flash-attn==2.6.1 --no-build-isolation --no-cache-dir
+#flash-attn==2.6.1
+
+# Server / API (conversation task)
+aiohttp==3.12.15
+fastapi==0.116.1

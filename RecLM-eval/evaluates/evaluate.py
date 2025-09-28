@@ -12,7 +12,7 @@ from tqdm import tqdm
 from collections import defaultdict
 
 from .metrics4rec import evaluate_all, evaluate_all_id
-from .TFIDF_model import TFIDF_model, string_match_score
+from .TFIDF_model import TFIDF_model, string_match_score, _clean_string
 
 # compute ranking metrics for retrieval/ranking/searching
 def compute_metrics_on_title_recommend(result_file_path, metadata_file_path, sim_threshold=0.6):
@@ -21,8 +21,20 @@ def compute_metrics_on_title_recommend(result_file_path, metadata_file_path, sim
     ground_truths = []
     for line in open(result_file_path, "r", encoding="utf-8"):
         line = json.loads(line)
+        # -----------------------------------------------------------------
+        # Build the final ranking list.
+        # If the original candidate list is present, use a robust parser that
+        # relies on longest-match search instead of naive ", " splitting.
+        # This prevents titles that contain ", " inside them from being
+        # accidentally cut and counted as OOV → candidate_error.
+        # -----------------------------------------------------------------
         if "result" not in line:
-            line["result"] = parse_recommendations(line["answer"])
+            if "candidate" in line and isinstance(line["candidate"], list):
+                line["result"] = parse_recommendations_with_candidates(
+                    line["answer"], line["candidate"]
+                )
+            else:
+                line["result"] = parse_recommendations(line["answer"])
         rankings.append(line["result"])
         ground_truths.append([line["target"]])
         results.append(line)
@@ -57,25 +69,88 @@ def compute_metrics_on_title_recommend(result_file_path, metadata_file_path, sim
     return all_metrics
 
 def compute_metrics_on_multi_choices(result_file_path):
+    """Compute accuracy for A–J multiple-choice questions with a TF-IDF fallback.
+
+    If the model output does not contain a standalone letter between A and J, we compute the TF-IDF cosine similarity between the full output text and each of the ten candidate titles. The letter corresponding to the candidate with the highest similarity is taken as the prediction. If that similarity is still below the threshold, the answer is considered incorrect."""
+
     score = 0
-    length = 0
+    total = 0
+    none_cnt = 0
+    # --- debug: collect up to 20 wrong cases for manual inspection ---
+    wrong_shown = 0  # counter for examples already printed
+    none_cnt = 0     # count predictions that cannot be recognized
 
-    for line in open(result_file_path, "r", encoding="utf-8"):
-        line = json.loads(line)  
-        length += 1 
+    for idx, raw in enumerate(open(result_file_path, "r", encoding="utf-8")):
+        data = json.loads(raw)
+        total += 1
 
-        stripped_result = line["result"].strip()
-        match = re.search(r'([a-zA-Z])', stripped_result)
-        
-        if match:
-            answer_letter = match.group(1).lower() 
-            target_letter = line["target"][0].lower() 
-            if answer_letter == target_letter: 
-                score += 1 
+        # --- Unify the result field ---
+        if "result" not in data:
+            data["result"] = data.get("answer", "")
 
-    if length != 0:
-        score /= length 
-    return score  
+        output_text = str(data["result"]).strip()
+
+        # --  Pre-processing: strip leading numbering such as "1. " or "1) " --
+        output_text_norm = re.sub(r"^\s*\d+\s*[\.\)]\s*", "", output_text, count=1)
+
+        # -- Search for the first *stand-alone* uppercase letter A–J (no dot/parenthesis required)
+        m = re.search(r"\b([A-J])\b", output_text_norm)
+        if m:
+            pred_letter = m.group(1).lower()
+        else:
+            # -- Title→letter mapping (substring, then difflib, finally TF-IDF)
+            letters_items = []  # [(letter, clean_title)]
+            raw_items = []      # Raw titles for TF-IDF
+            if "candidates" in data and isinstance(data["candidates"], list):
+                for cand in data["candidates"]:
+                    if not isinstance(cand, str):
+                        continue
+                    m_c = re.match(r"\s*([A-Ja-j])[\.\)]\s*(.+)", cand)
+                    if m_c:
+                        letters_items.append((m_c.group(1).lower(), _clean_string(m_c.group(2))))
+                        raw_items.append(m_c.group(2))
+
+            if not letters_items:
+                pred_letter = None
+                none_cnt += 1
+            else:
+                clean_output = _clean_string(output_text_norm)
+
+                # -- Direct substring containment
+                found = None
+                for lt, ct in letters_items:
+                    if ct and ct in clean_output:
+                        found = lt
+                        break
+
+                # -- difflib similarity
+                if found is None:
+                    import difflib
+                    best_sim, best_lt = 0.0, None
+                    for lt, ct in letters_items:
+                        sim = difflib.SequenceMatcher(None, clean_output, ct).ratio()
+                        if sim > best_sim:
+                            best_sim, best_lt = sim, lt
+                    if best_sim >= 0.55:
+                        found = best_lt
+
+                # -- (removed) — previously TF-IDF fallback. We now stop here.
+
+                pred_letter = found
+
+        target_letter = str(data["target"])[0].lower()
+        if pred_letter is None:
+            none_cnt += 1
+
+        if pred_letter is not None and pred_letter == target_letter:
+            score += 1
+        # No debug printing when prediction is incorrect
+        else:
+            pass
+
+    acc1 = score / total if total else 0.0
+    none_ratio = none_cnt / total if total else 0.0
+    return acc1, none_ratio
 
 # compute ranking metrics for retrieval/ranking/searching
 def compute_metrics_on_id_recommend(result_file_path):
@@ -152,8 +227,8 @@ def compute_errors_on_title_ranking(result_file_path, metadata_file_path, sim_th
         history_flag, duplicate_flag, candidate_flag = 0, 0, 0
         already_have = []
         for item in ranking:
-            ## recommend items that are already in the history
-            ## this implementation is not optimal, because items in a series may cause mistakes, such as Halo 1 and Halo 2. That's why we need to set a higher sim_threshold.
+            ## Recommend items that are already in the history
+            ## Note: this implementation is not optimal – items in a series (e.g. Halo 1 vs Halo 2) may trigger false positives, hence the higher sim_threshold.
             if history and string_match_score(tfidf_model, [item], history)[0]>=sim_threshold:  
                 history_flag = 1
             if already_have and string_match_score(tfidf_model, [item], already_have)[0]>=sim_threshold:  # recommend duplicate items
@@ -172,39 +247,40 @@ def compute_errors_on_title_ranking(result_file_path, metadata_file_path, sim_th
     print(f"history error rate: {history_error/len(all_data)}, duplicate error rate: {duplicate_error/len(all_data)}, candidate error rate: {candidate_error/len(all_data)}.")
     print(f"copy error: {copy_error/len(all_data)}")
 
-## parse the recommendation list returned by the llm, the format maybe invalid
+    # --- return a dictionary so that upstream can record it ---
+    return {
+        "history_error_rate": history_error/len(all_data),
+        "duplicate_error_rate": duplicate_error/len(all_data),
+        "candidate_error_rate": candidate_error/len(all_data),
+        "copy_error": copy_error/len(all_data),
+    }
+
+END_TOKEN = "<end>"
+# parse the recommendation list returned by the llm, the format maybe invalid
 def parse_recommendations(ranking_str):
-    if type(ranking_str) == list:
+    """Split the generated ranking string by the special END_TOKEN marker.
+
+    The model is instructed to output each title followed *immediately* by
+    the literal token "<end>".  We therefore recover the original list by
+    splitting on that token and stripping whitespace.
+    """
+    # Accept list response
+    if isinstance(ranking_str, list):
         ranking_str = ranking_str[0]
-    if type(ranking_str) != str:
-        return ["invalid ranking result"]
-    
-    ranking = []
-    lines = ranking_str.split("\n")
-    for idx, line in enumerate(lines):
-        if ranking == [] and len(line.split(", ")) >= 2:
-            if "Based on your" in line:
-                ranking.extend(": ".join(line.split(": ")[1:]).split(", "))
-            else:
-                ranking.extend(line.split(", "))
-        elif ranking == [] and len(line.split(". ")) >= 3 and line.split(". ")[0].isdigit():
-            ranking.extend([" ".join(x.split(" ")[:-1]) for x in line.split(". ")[1:]])
-        elif len(line.split(". ")) >= 2 and line.split(". ")[0].isdigit():
-            ranking.append(line.split(". ")[1])
-    
-    if ranking == []:
-        if len(lines) >= 5:
-            i1 = 0
-            while i1 < len(lines) and lines[i1] != "": i1 += 1
-            i2 = i1 + 1
-            while i2 < len(lines) and lines[i2] != "": i2 += 1
-            for i in range(i1 + 1, i2):
-                ranking.append(lines[i].strip())
+    if not isinstance(ranking_str, str):
+        return []
 
-    if ranking == []:
-        ranking = [lines[-1]]
+    parts = [p.strip() for p in ranking_str.split(END_TOKEN) if p.strip()]
+    return parts
 
-    return ranking
+# ------------------------------------------------------------------
+# With the new <end> delimiter we no longer need candidate-based
+# longest-substring matching.  The helper now simply falls back to the
+# universal parser above to avoid duplicated code.
+# ------------------------------------------------------------------
+
+def parse_recommendations_with_candidates(ranking_str: str, candidates: list):
+    return parse_recommendations(ranking_str)
 
 def get_args():
     parser = argparse.ArgumentParser()

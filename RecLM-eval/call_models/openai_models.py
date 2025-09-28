@@ -16,34 +16,59 @@ from datetime import datetime
 lock = threading.Lock()
 api_config = yaml.safe_load(open("openai_api_config.yaml"))
 
-if api_config["API_TYPE"] == "azure":
-    from openai import AzureOpenAI
-    from azure.identity import get_bearer_token_provider, AzureCliCredential  
-    credential = AzureCliCredential() 
-    token_provider = get_bearer_token_provider( credential, 
-    api_config['TOKEN_URL']) 
-    client = AzureOpenAI(
-        api_version= api_config['API_VERSION'],
-        azure_ad_token_provider=token_provider, 
-        azure_endpoint = api_config['API_BASE']
-    )
-else:
-    from openai import OpenAI
-    if api_config.get('API_BASE'):
-        client = OpenAI(  
-            api_base = api_config['API_BASE'],
-            api_key=api_config["API_KEY"]
-        )       
-    else: 
-        client = OpenAI(  
-            api_key=api_config["API_KEY"]
+from openai import AzureOpenAI
+
+# If the user provides TOKEN_URL, we treat it as Azure AD token flow authentication;
+# Otherwise, use api_key authentication directly to avoid relying on local Azure CLI.   
+if api_config.get('TOKEN_URL'):
+    from azure.identity import get_bearer_token_provider, AzureCliCredential
+
+    try:
+        credential = AzureCliCredential()  # depends on locally installed azure-cli
+    except Exception:
+        # Azure CLI unavailable, automatically fallback to api_key authentication
+        credential = None
+
+    if credential is not None:
+        token_provider = get_bearer_token_provider(credential, api_config['TOKEN_URL'])
+        client = AzureOpenAI(
+            api_version=api_config['API_VERSION'],
+            azure_ad_token_provider=token_provider,
+            azure_endpoint=api_config['API_BASE']
         )
+    else:
+        client = AzureOpenAI(
+            api_key=api_config['API_KEY'],
+            api_version=api_config['API_VERSION'],
+            azure_endpoint=api_config['API_BASE']
+        )
+else:
+    client = AzureOpenAI(
+        api_key=api_config['API_KEY'],
+        api_version=api_config['API_VERSION'],
+        azure_endpoint=api_config['API_BASE']
+    )
+
 
 cost = {}   # model_name: [input_tokens, output_tokens]
 MAX_THREADS = api_config['MAX_THREADS']
 MAX_RETRIES = api_config['MAX_RETRIES']
 INTERVAL = api_config['SLEEP_INP_INTERVAL']
 SLEEP_SECONDS = api_config['SLEEP_SECONDS']
+
+def get_openai_client():
+    global client
+    if client is None:
+        if api_config.get('API_BASE'):
+            client = OpenAI(
+                base_url=api_config['API_BASE'],
+                api_key=api_config["API_KEY"]
+            )
+        else: 
+            client = OpenAI(  
+                api_key=api_config["API_KEY"]
+            )
+    return client
 
 
 
@@ -140,6 +165,7 @@ def call_openai_chat(model, prompt, system_prompt, temp=0.0):
         text += prompt
     for i in range(MAX_RETRIES):
         try:
+            client = get_openai_client()
             response = client.chat.completions.create(
                 model=model, 
                 messages=text,
@@ -166,6 +192,7 @@ def call_openai_chat(model, prompt, system_prompt, temp=0.0):
 def call_openai_embedding(model, text):
     for i in range(MAX_RETRIES):
         try:
+            client = get_openai_client()
             response = client.embeddings.create(
                 model=model,
                 input = [text]
