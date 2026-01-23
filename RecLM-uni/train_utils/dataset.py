@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .processor import Trie_link
 from .template import *
 from .utils import get_item_list, get_output_text, get_history_text, \
-    process_train_sample, process_train_sample_llama2, save_json, load_json, pad_sequence
+    process_train_sample, process_train_sample_llama2, save_json, load_json, pad_sequence,ITEM_CODE_FIELD
 
 
 class SFTDataset(Dataset):
@@ -149,6 +149,9 @@ class SFTDataset(Dataset):
         return len(self.datum_info)
 
     def get_item_index(self, item):
+        token_seq = self.metas[item].get(ITEM_CODE_FIELD)
+        if token_seq:
+            return token_seq
         return self.metas[item][self.args.item_index]
 
     def get_sub_sequential(self, user):

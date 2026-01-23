@@ -7,6 +7,7 @@ import re
 import requests
 import torch
 
+ITEM_CODE_FIELD = 'rq_token_seq'
 
 def pad_sequence(seq: list[list], pad_token_id, device, pad_side='right'):
     max_len = max([len(s) for s in seq])
@@ -228,3 +229,43 @@ def gsm8K_is_correct(completion, answer):
 def gsm8K_clean_answer(text):
     text = text.split("Question:")[0]
     return text
+
+
+def load_item_code_mapping(data_path):
+    if data_path is None:
+        return None
+    dataset_root = os.path.normpath(data_path)
+    dataset_name = os.path.basename(dataset_root)
+    index_path = os.path.join(dataset_root, f"{dataset_name}.index.json")
+    mapping_path = os.path.join(dataset_root, f"{dataset_name}.item2id")
+    if not (os.path.exists(index_path) and os.path.exists(mapping_path)):
+        return None
+
+    index_data = load_json(index_path)
+    if not index_data:
+        return None
+
+    item2idx = {}
+    with open(mapping_path, 'r') as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) < 2:
+                continue
+            item2idx[parts[0]] = parts[1]
+
+    token_vocab = set()
+    item_seq = {}
+    missing_indices = 0
+    for item_id, idx in item2idx.items():
+        tokens = index_data.get(str(idx))
+        if not tokens:
+            missing_indices += 1
+            continue
+        item_seq[item_id] = ''.join(tokens)
+        token_vocab.update(tokens)
+
+    return {
+        'item_seq': item_seq,
+        'token_vocab': sorted(token_vocab),
+        'missing': missing_indices,
+    }

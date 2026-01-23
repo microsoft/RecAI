@@ -186,13 +186,16 @@ And corresponding paper in the subfolder:
 }
 ```
 
-#### RecLM-cgen:
+#### RecLM-uni:
 ```
-@article{liao2025avoid,
-    title={Avoid Recommending Out-of-Domain Items: Constrained Generative Recommendation with LLMs}, 
-    author={Liao, Hao and Lu, Wensheng and Lian, Jianxun and Wu, Mingqi and Wang, Shuo and Zhang, Yong and Huang, Yitian and Zhou, Mingyang and Xie, Xing},
-    journal={arXiv preprint arXiv:2505.03336}
-    year={2025},
+@misc{liao2026eliminatingoutofdomainrecommendationsllmbased,
+      title={Eliminating Out-of-Domain Recommendations in LLM-based Recommender Systems: A Unified View}, 
+      author={Hao Liao and Jiwei Zhang and Jianxun Lian and Wensheng Lu and Mingqi Wu and Shuo Wang and Yong Zhang and Yitian Huang and Mingyang Zhou and Rui Mao},
+      year={2026},
+      eprint={2505.03336},
+      archivePrefix={arXiv},
+      primaryClass={cs.IR},
+      url={https://arxiv.org/abs/2505.03336}, 
 }
 ```
 

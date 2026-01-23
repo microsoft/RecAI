@@ -45,6 +45,20 @@ class SFTTrainer(nn.Module):
             'sequential': load_json(args.data_path + 'sequential.jsonl'),
             'share_chat_gpt': load_pickle('data/share_chat_gpt2.pickle'),
         }
+
+        code_info = load_item_code_mapping(self.args.data_path)
+        self.args.item_code_tokens = []
+        if code_info:
+            self.args.item_code_tokens = code_info.get('token_vocab', [])
+            for item_id, token_seq in code_info.get('item_seq', {}).items():
+                if item_id in self.data['metas']:
+                    self.data['metas'][item_id][ITEM_CODE_FIELD] = token_seq
+            if self.args.is_main_process:
+                covered_items = sum(1 for _ in self.data['metas'].values() if ITEM_CODE_FIELD in _)
+                print(f"Loaded item code mapping for {covered_items} items "
+                      f"({len(self.args.item_code_tokens)} unique tokens, "
+                      f"{code_info.get('missing', 0)} missing indices).")
+                
         self.item_emb = self.create_embeddings() if self.args.train_stage in ['SFT_Embedding', 'SFT_Embedding_Test'] else None
         self.actor = BaseModel(args=self.args, device=self.args.gpu, item_emb=self.item_emb)
 

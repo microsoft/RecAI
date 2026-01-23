@@ -34,6 +34,7 @@ class BaseModel(nn.Module):
         self.model_config = self.create_model_config()
         self.tokenizer = self.create_tokenizer()
         self.model = self.create_model(device)
+        self.register_item_tokens()
         if args.use_control_symbol:
             self.resize_init_embedding(self.model, self.tokenizer)
 
@@ -151,6 +152,15 @@ class BaseModel(nn.Module):
                 tokenized_ids = tokenizer.convert_tokens_to_ids(tokenized)
                 new_embedding = model.get_input_embeddings().weight[tokenized_ids].mean(axis=0)
                 model.get_input_embeddings().weight[token_id, :] = new_embedding.clone().detach()
+
+    def register_item_tokens(self):
+        new_tokens = getattr(self.args, 'item_code_tokens', None)
+        if not new_tokens:
+            return
+        added = self.tokenizer.add_special_tokens({'additional_special_tokens': new_tokens})
+        if added > 0:
+            self.model.resize_token_embeddings(len(self.tokenizer))
+            self.model_config.vocab_size = len(self.tokenizer)
 
     def create_model_config(self):
         config_class = AutoConfig
