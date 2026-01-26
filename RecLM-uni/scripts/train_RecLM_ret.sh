@@ -1,4 +1,3 @@
-
 MODEL_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
 DATASET=$1
 TRAIN_ARGS=""

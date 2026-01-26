@@ -194,7 +194,7 @@ def main():
         try:
             model_init.print_trainable_parameters()
         except AttributeError:
-            pass
+            print("Note: print_trainable_parameters() method not available on this PEFT model type")
     else:
         model_init = args.model_path
 

@@ -1,8 +1,8 @@
-import os.path
-
+import os
 import math
-import numpy as np
 import torch
+
+import numpy as np
 from FlagEmbedding import BGEM3FlagModel
 from Levenshtein import distance
 from accelerate import Accelerator

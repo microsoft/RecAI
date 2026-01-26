@@ -1,7 +1,6 @@
 import argparse
 import json
 import os
-import re
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
@@ -14,7 +13,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from train_utils.dataset import Test_task_group_mapping, SFTDataset
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor
 from train_utils.metrics import Metrics
-from train_utils.utils import save_json, get_ctrl_item, rm_idx, load_json, load_pickle, side_tokenizer, process_train_sample, gsm8K_clean_answer, gsm8K_is_correct
+from train_utils.utils import save_json, get_ctrl_item, rm_idx, load_json, side_tokenizer, process_train_sample, gsm8K_clean_answer, gsm8K_is_correct
 
 headers = {"User-Agent": "Test Client"}
 GSM8K_Q1 = '''Question: In 2004, there were 60 kids at a cookout. In 2005, half the number of kids came to the cookout as compared to 2004. In 2006, 2/3 as many kids came to the cookout as in 2005. How many kids came to the cookout in 2006?'''

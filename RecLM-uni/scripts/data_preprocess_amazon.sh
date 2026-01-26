@@ -1,5 +1,3 @@
-
-
 TOKENIZER_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
 DATASET_FULL_NAME="Movies_and_TV"
 DATASET_NAME="movies"

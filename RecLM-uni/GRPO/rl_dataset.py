@@ -2,8 +2,8 @@ import random
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
 
-from SFT.SFT_templates import SeqRec_MR_group
-from utils import load_json, get_history_text, get_output_text
+from train_utils.template import SeqRec_MR_group
+from train_utils.utils import load_json, get_history_text, get_output_text
 
 
 SYSTEM_PROMPT = "You are an expert recommender engine as well as a helpful, respectful and honest assistant."
@@ -64,7 +64,7 @@ def build_rl_samples(
     valid_items = [iid for iid, meta in metas.items() if meta.get(item_index_field)]
     samples: List[RLSample] = []
 
-    for user, seq in sequential.items():
+    for _, seq in sequential.items():
         if len(samples) >= max_samples:
             break
         history, target_item = _sample_history(seq, max_item_length, rng)

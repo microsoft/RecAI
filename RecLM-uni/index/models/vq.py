@@ -67,7 +67,6 @@ class VectorQuantizer(nn.Module):
         if not self.initted and self.training:
             self.init_emb(latent)
 
-        # Calculate the L2 Norm between latent and Embedded weights
         d = torch.sum(latent**2, dim=1, keepdim=True) + \
             torch.sum(self.embedding.weight**2, dim=1, keepdim=True).t()- \
             2 * torch.matmul(latent, self.embedding.weight.t())
@@ -82,16 +81,11 @@ class VectorQuantizer(nn.Module):
                 print(f"Sinkhorn Algorithm returns nan/inf values.")
             indices = torch.argmax(Q, dim=-1)
 
-        # indices = torch.argmin(d, dim=-1)
-
         x_q = self.embedding(indices).view(x.shape)
-
-        # compute loss for embedding
         commitment_loss = F.mse_loss(x_q.detach(), x)
         codebook_loss = F.mse_loss(x_q, x.detach())
         loss = codebook_loss + self.beta * commitment_loss
 
-        # preserve gradients
         x_q = x + (x_q - x).detach()
 
         indices = indices.view(x.shape[:-1])

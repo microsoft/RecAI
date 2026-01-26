@@ -1,10 +1,9 @@
 import argparse
-import copy
 import json
 import os
-from concurrent.futures import ProcessPoolExecutor
-
 import torch
+
+from concurrent.futures import ProcessPoolExecutor
 from Levenshtein import distance
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -17,7 +16,6 @@ from train_utils.utils import (
     get_ctrl_item,
     rm_idx,
     load_json,
-    load_pickle,
     side_tokenizer,
     process_train_sample,
     load_item_code_mapping,

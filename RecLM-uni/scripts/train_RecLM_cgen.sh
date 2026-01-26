@@ -1,4 +1,3 @@
-
 MODEL_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
 SFT_TRAIN_TASKS="SFTSeqRec-MR"
 DATASET=$1

@@ -8,7 +8,6 @@ class EmbDataset(data.Dataset):
     def __init__(self,data_path):
 
         self.data_path = data_path
-        # self.embeddings = np.fromfile(data_path, dtype=np.float32).reshape(16859,-1)
         self.embeddings = np.load(data_path)
         self.dim = self.embeddings.shape[-1]
 

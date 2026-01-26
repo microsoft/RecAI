@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -87,15 +86,10 @@ class RQVAE(nn.Module):
         loss_total = loss_recon + self.quant_loss_weight * quant_loss
 
         if self.contrastive_loss_weight > 0:
-            # InfoNCE Loss
-            # Normalize vectors
             out_norm = F.normalize(out, p=2, dim=1)
             xs_norm = F.normalize(xs, p=2, dim=1)
-            
-            # Compute similarity matrix (Batch_Size, Batch_Size)
             logits = torch.matmul(out_norm, xs_norm.t()) / self.temperature
             
-            # Targets are the diagonal elements (0, 1, 2, ...)
             labels = torch.arange(logits.size(0), device=logits.device)
             
             loss_contrastive = F.cross_entropy(logits, labels)

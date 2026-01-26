@@ -313,17 +313,8 @@ def main_process(data_name, args, data_type='Amazon'):
     user_items = get_interaction(datas)  # dict of {user: interaction list sorted by time}
     print(f'{data_name} Raw data has been processed! Lower than {rating_score} are deleted!')
     print(f'User Num: {len(user_items)}')
-    # raw_id user: [item1, item2, item3...]
 
-    # user 25-core item 10-core
-    # user_core, item_core = 25, 10
-    # user_items = filter_Kcore(user_items, user_core=user_core, item_core=item_core)
-    # print(f'User {user_core}-core complete! Item {item_core}-core complete!')
-    # user_num, item_num, datamaps = id_map(user_items)  # get mapping dicts
-    # user_count, item_count, isKcore = check_Kcore(user_items, user_core=user_core, item_core=item_core)
-    # assert isKcore is True
 
-    # sample 10000 users, item max len is 17
     user_num, item_len = 10000, 17
     user_items = sample_inter(user_items, user_num=user_num, item_len=item_len)
     user_num, item_num, datamaps = id_map(user_items)  # get mapping dicts

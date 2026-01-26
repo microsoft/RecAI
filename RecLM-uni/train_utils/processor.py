@@ -1,7 +1,7 @@
-from typing import Callable, List
-
 import math
 import torch
+
+from typing import Callable, List
 from transformers import LogitsProcessor, add_start_docstrings
 from transformers.generation.logits_process import LOGITS_PROCESSOR_INPUTS_DOCSTRING
 

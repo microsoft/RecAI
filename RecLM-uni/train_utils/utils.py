@@ -3,11 +3,11 @@ import json
 import os.path
 import pickle
 import re
-
 import requests
 import torch
 
 ITEM_CODE_FIELD = 'rq_token_seq'
+
 
 def pad_sequence(seq: list[list], pad_token_id, device, pad_side='right'):
     max_len = max([len(s) for s in seq])

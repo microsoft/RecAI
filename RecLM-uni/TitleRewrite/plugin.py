@@ -1,28 +1,23 @@
-from math import exp
-import numpy as np
+import os
 import random
-from copy import deepcopy
+import openai
+import json
+import math
+import requests
+import faiss
+
+import numpy as np
 from typing import List, Dict, Any
 from transformers import AutoTokenizer
 from swift.plugin import ORM, orms
 from swift.utils import get_logger
-import openai
-import time
-import json
-import math
-import requests
 from scipy.stats import spearmanr
-from sklearn.metrics.pairwise import cosine_similarity
-import faiss
+
 from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
 
 logger = get_logger()
-
-# --- 全局配置与客户端 ---
-# 建议将这些配置项在顶层统一定义
-import os
 
 MODEL_PATH = os.getenv("MODEL_PATH", "meta-llama/Meta-Llama-3-8B-Instruct")
 TOKENIZER = AutoTokenizer.from_pretrained(MODEL_PATH, use_fast=True)
@@ -32,7 +27,7 @@ EMBEDDING_API_URL = os.getenv("EMBEDDING_API_URL", "http://localhost:8010/v1")
 EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY", "not-needed")
 EMBEDDING_CLIENT = openai.OpenAI(base_url=EMBEDDING_API_URL, api_key=EMBEDDING_API_KEY)
 
-MAX_WORKERS = int(os.getenv("MAX_WORKERS", "8"))  # 可根据您的系统和网络状况调整并发数
+MAX_WORKERS = int(os.getenv("MAX_WORKERS", "8"))  # Adjust concurrency based on your system and network conditions
 
 _embedding_file_cache = {}
 
@@ -48,11 +43,11 @@ def read_embedding_file_cached(embedding_path):
     _embedding_file_cache[embedding_path] = item2embedding
     return item2embedding
 
-# --- 优化的核心：用于Faiss索引和Embeddings的集中式资源管理器 ---
+# --- Optimization Core: Centralized resource manager for Faiss indexes and Embeddings ---
 class ResourceManager:
     """
-    处理加载、构建和缓存重量级资源（如Faiss索引和item embeddings），
-    以避免在批处理中重复进行I/O和计算。
+    Handles loading, building, and caching heavy resources (such as Faiss indexes and item embeddings)
+    to avoid repetitive I/O and computation during batch processing.
     """
     def __init__(self):
         self._faiss_indexes: Dict[str, Any] = {}
@@ -60,25 +55,25 @@ class ResourceManager:
         self._item_embeddings: Dict[str, Dict[str, List[float]]] = {}
 
     def _load_and_build(self, source: str, embedding_file: str):
-        # 如果该数据源的索引已存在，则直接返回
+        # If the index for this data source already exists, return directly
         if source in self._faiss_indexes:
             return
 
-        logger.info(f"为数据源构建Faiss索引: {source}...")
+        logger.info(f"Building Faiss index for data source: {source}...")
         item2embedding = read_embedding_file_cached(embedding_file)
         self._item_embeddings[source] = item2embedding
-        
+
         item_names = list(item2embedding.keys())
-        # 指定dtype为float32以兼容Faiss
+        # Specify dtype as float32 for Faiss compatibility
         embeddings_matrix = np.vstack([np.array(v, dtype=np.float32) for v in item2embedding.values()])
         faiss.normalize_L2(embeddings_matrix)
-        
+
         index = faiss.IndexFlatIP(embeddings_matrix.shape[1])
         index.add(embeddings_matrix)
-        
+
         self._item_names[source] = item_names
         self._faiss_indexes[source] = index
-        logger.info(f"为数据源 {source} 构建Faiss索引完成。")
+        logger.info(f"Faiss index construction completed for data source {source}.")
 
     def get_faiss_resources(self, source: str, embedding_file: str):
         self._load_and_build(source, embedding_file)
@@ -88,13 +83,13 @@ class ResourceManager:
         self._load_and_build(source, embedding_file)
         return self._item_embeddings[source]
 
-# 创建资源管理器的全局实例
+# Create global instance of resource manager
 resource_manager = ResourceManager()
 
 
-# --- 重构后的网络请求工具函数 ---
+# --- Refactored network request utility functions ---
 def _get_vllm_endpoints(source: str) -> List[str]:
-    # 将端点选择逻辑集中管理，便于维护
+    # Centralize endpoint selection logic for easier maintenance
     # Configure vLLM endpoints via environment variables or use defaults
     default_endpoints = os.getenv("VLLM_ENDPOINTS", "").split(",") if os.getenv("VLLM_ENDPOINTS") else []
 
@@ -107,7 +102,7 @@ def _get_vllm_endpoints(source: str) -> List[str]:
         "movies": os.getenv("VLLM_ENDPOINTS_MOVIES", "http://localhost:8020/v1").split(","),
         "toys": os.getenv("VLLM_ENDPOINTS_TOYS", "http://localhost:8020/v1").split(","),
     }
-    return endpoints.get(source, endpoints["steam"]) # 如果来源未知，默认使用steam的端点
+    return endpoints.get(source, endpoints["steam"])  # Default to steam endpoints if source is unknown
 
 def try_vllm_chat(prompt: str, source: str, max_tokens: int = 1, temperature: float = 0.0) -> str:
     for url in _get_vllm_endpoints(source):
@@ -122,10 +117,10 @@ def try_vllm_chat(prompt: str, source: str, max_tokens: int = 1, temperature: fl
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
-            logger.warning(f"[vLLM Chat] 请求失败于 {url}: {e}")
-    logger.error("所有vLLM聊天端点均请求失败。")
-    time.sleep(50)
-    return None
+            logger.warning(f"[vLLM Chat] Request failed at {url}: {e}")
+    logger.error("All vLLM chat endpoints failed.")
+    raise RuntimeError(f"All vLLM chat endpoints failed for source '{source}'.")
+
 
 def try_vllm_completion(prompt: str, source: str) -> object:
     for url in _get_vllm_endpoints(source):
@@ -140,8 +135,8 @@ def try_vllm_completion(prompt: str, source: str) -> object:
             )
             return response
         except Exception as e:
-            logger.warning(f"[vLLM Completion] 请求失败于 {url}: {e}")
-    logger.error("所有vLLM补全端点均请求失败。")
+            logger.warning(f"[vLLM Completion] Request failed at {url}: {e}")
+    logger.error("All vLLM completion endpoints failed.")
     return None
 
 @lru_cache(maxsize=10000)
@@ -163,20 +158,19 @@ def _get_request_embedding_url(source: str) -> str:
 @lru_cache(maxsize=10000)
 def cached_request_embedding(text: str, source: str) -> tuple:
     url = _get_request_embedding_url(source)
-    if not url:
-        logger.error(f"未知的embedding请求来源: {source}")
-        # 在出错时返回一个零向量，维度与预期一致
-        return tuple([0.0] * 1024)
-    response = requests.post(url, json={"text": text})
-    response.raise_for_status() # 如果请求失败 (如 4xx or 5xx), 抛出异常
-    return tuple(response.json()["embedding"])
+    try:
+        response = requests.post(url, json={"text": text}, timeout=30)
+        response.raise_for_status()  # Raise exception if request fails (e.g., 4xx or 5xx)
+        return tuple(response.json()["embedding"])
+    except requests.exceptions.RequestException as e:
+        logger.error(f"[Embedding] Request failed for source '{source}': {e}")
+        raise RuntimeError(f"Failed to get embedding for source '{source}': {e}") from e
 
-
-# --- 辅助函数 ---
+# --- Helper functions ---
 def spearman_rank_correlation(top10_positions, top10_items):
     original_ranks = list(range(1, len(top10_items) + 1))
     correlation, _ = spearmanr(original_ranks, top10_positions)
-    # 将Spearman相关系数从[-1, 1]范围映射到[0, 1]范围
+    # Map Spearman correlation coefficient from [-1, 1] range to [0, 1] range
     return (correlation + 1) / 2
 
 
@@ -199,7 +193,7 @@ class ConditionalPPL(ORM):
             logprobs = response.choices[0].logprobs.token_logprobs[split_index : split_index + output_len]
 
             if not logprobs or len(logprobs) != output_len:
-                logger.warning("[ConditionalPPL] Logprob长度不匹配。")
+                logger.warning("[ConditionalPPL] Logprob length mismatch.")
                 return 0.0
 
             cross_entropy = -np.mean(logprobs)
@@ -207,20 +201,20 @@ class ConditionalPPL(ORM):
             score = np.exp(-0.02 * ppl)
             return score
         except Exception as e:
-            logger.warning(f"[ConditionalPPL] 处理失败: {e}")
+            logger.warning(f"[ConditionalPPL] Processing failed: {e}")
             return 0.0
             
     def __call__(self, completions, task, solution, **kwargs) -> List[float]:
-        # 筛选出需要处理的任务
+        # Filter tasks that need processing
         single_tasks_args = [(c, s) for c, t, s in zip(completions, task, solution) if t == "single"]
-        
-        # 使用线程池并行执行网络请求
+
+        # Use thread pool to execute network requests in parallel
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             results_iter = executor.map(self._process_item, single_tasks_args)
-        
+
         results = list(results_iter)
-        
-        # 按原始顺序重组结果
+
+        # Reassemble results in original order
         final_rewards = []
         result_idx = 0
         for t in task:
@@ -231,7 +225,7 @@ class ConditionalPPL(ORM):
                 final_rewards.append(None)
         return final_rewards
 
-# ========= 2. LengthReward (该函数本身很快，做少量代码清理) =========
+# ========= 2. LengthReward (This function is fast, minimal code cleanup) =========
 class LengthReward(ORM):
     def __call__(self, completions, task, solution, **kwargs) -> List[float]:
         rewards = []
@@ -246,7 +240,7 @@ class LengthReward(ORM):
                     ratio = output_len / input_len
                     rewards.append(1.0 / (1.0 + ratio ** 2))
                 except Exception as e:
-                    logger.warning(f"[LengthReward] 计算失败: {e}")
+                    logger.warning(f"[LengthReward] Calculation failed: {e}")
                     rewards.append(0.0)
             else:
                 rewards.append(None)
@@ -279,7 +273,7 @@ class DiscriminativeReward(ORM):
                 return 1.0
             return 0.0
         except Exception as e:
-            logger.warning(f"[DiscriminativeReward] 处理失败: {e}")
+            logger.warning(f"[DiscriminativeReward] Processing failed: {e}")
             return 0.0
 
     def __call__(self, completions, task, solution, **kwargs) -> List[float]:
@@ -303,7 +297,7 @@ class DiscriminativeReward(ORM):
 # ========= 4. item2item (使用批量Faiss搜索进行优化) =========
 class Item2ItemReward(ORM):
     def __call__(self, completions, task, solution, **kwargs) -> List[float]:
-        # 按数据源对任务进行分组，以便复用Faiss索引
+        # Group tasks by data source to reuse Faiss indexes
         grouped_tasks = defaultdict(list)
         for i, (c, t, s) in enumerate(zip(completions, task, solution)):
             if t == "single":
@@ -316,8 +310,8 @@ class Item2ItemReward(ORM):
                 embedding_base_dir = os.getenv("EMBEDDING_DATA_DIR", "./data/embeddings")
                 embedding_file = f"{embedding_base_dir}/{source}_all_item_embedding.jsonl"
                 faiss_index, all_item_names = resource_manager.get_faiss_resources(source, embedding_file)
-                
-                # 步骤 1: 并行生成所有查询的embeddings
+
+                # Step 1: Parallel generation of all query embeddings
                 def get_embedding(task_item):
                     new_item_info = (f"The item's title : {task_item['completion']}\n"
                                      f"The item's description: {task_item['solution']['title_desc']}\n"
@@ -328,35 +322,35 @@ class Item2ItemReward(ORM):
                 content_embeddings = np.array([future.result() for future in embedding_futures], dtype=np.float32)
                 faiss.normalize_L2(content_embeddings)
 
-                # 步骤 2: 执行一次性的批量搜索
+                # Step 2: Execute one-time batch search
                 _, all_indices = faiss_index.search(content_embeddings, len(all_item_names))
 
-                # 步骤 3: 为批次中的每个项目计算分数
+                # Step 3: Calculate scores for each item in the batch
                 for i, task_item in enumerate(tasks):
-                    # 获取当前查询的排序结果
+                    # Get current query ranking results
                     sorted_items = [all_item_names[idx] for idx in all_indices[i]]
-                    
-                    # 从排序结果中移除查询项目本身，以获得更公平的排名
+
+                    # Remove the query item itself from the ranking results for a fairer ranking
                     original_title = task_item['solution']['recommend_item']
                     if original_title in sorted_items:
                         sorted_items.remove(original_title)
-                        
+
                     top10_items = task_item['solution']['similarity_top10']
                     try:
                         top10_positions = [sorted_items.index(item) + 1 for item in top10_items]
                         score = spearman_rank_correlation(top10_positions, top10_items)
-                    except ValueError: # 如果某个top10 item在新排名中未找到
-                        score = 0.0 
+                    except ValueError: # If a top10 item is not found in the new ranking
+                        score = 0.0
                     results[task_item['original_idx']] = score
 
-        # 按原始顺序重组最终的奖励列表
+        # Reassemble the final reward list in original order
         final_rewards = [results.get(i) for i in range(len(completions))]
         return final_rewards
 
 # ========= 5. User2Item (使用批量Faiss搜索进行优化) =========
 class User2ItemReward(ORM):
     def __call__(self, completions, task, solution, **kwargs) -> List[float]:
-        # 按数据源分组
+        # Group by data source
         grouped_tasks = defaultdict(list)
         for i, (c, t, s) in enumerate(zip(completions, task, solution)):
             if t == "group":
@@ -369,8 +363,8 @@ class User2ItemReward(ORM):
                 embedding_base_dir = os.getenv("EMBEDDING_DATA_DIR", "./data/embeddings")
                 embedding_file = f"{embedding_base_dir}/{source}_all_item_embedding_t-desc.jsonl"
                 faiss_index, item_names = resource_manager.get_faiss_resources(source, embedding_file)
-                
-                # 步骤 1: 并行生成所有embeddings
+
+                # Step 1: Parallel generation of all embeddings
                 def get_embedding(task_item):
                     prompt = (f"You need to generate a recommendation list considering user's preference from "
                               f"historical interactions. The historical interactions are provided as follows: "
@@ -382,26 +376,26 @@ class User2ItemReward(ORM):
                 embedding_futures = [executor.submit(get_embedding, task_item) for task_item in tasks]
                 prompt_embeddings = np.array([future.result() for future in embedding_futures], dtype=np.float32)
                 faiss.normalize_L2(prompt_embeddings)
-                
-                # 步骤 2: 执行一次性的批量搜索
+
+                # Step 2: Execute one-time batch search
                 _, all_indices = faiss_index.search(prompt_embeddings, len(item_names))
 
-                # 步骤 3: 计算分数
+                # Step 3: Calculate scores
                 for i, task_item in enumerate(tasks):
                     sorted_items = [item_names[idx] for idx in all_indices[i]]
                     item_title = task_item['solution']['target_item']
                     try:
                         item_rank = sorted_items.index(item_title) + 1
                         score = math.exp(-(item_rank - 1) / 2000)
-                    except ValueError: # 目标项目未在排名中找到
+                    except ValueError: # Target item not found in ranking
                         score = 0.0
                     results[task_item['original_idx']] = score
 
-        # 按原始顺序重组结果
+        # Reassemble results in original order
         final_rewards = [results.get(i) for i in range(len(completions))]
         return final_rewards
 
-# ========= 注册所有奖励函数 =========
+# ========= Register all reward functions =========
 orms['average_ppl'] = ConditionalPPL
 orms['length'] = LengthReward
 orms['discriminative'] = DiscriminativeReward

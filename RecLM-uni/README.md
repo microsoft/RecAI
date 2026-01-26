@@ -1,7 +1,7 @@
 
 # RecLM-uni
 ## Introduction
-This project introduces methods for avoid recommending out-of-domain items in LLM-based recsys. It contains the code for implementing three methods, i.e., RecLM-cgen, RecLM-ret and RecLM-token.
+This project introduces methods for avoiding recommending out-of-domain items in LLM-based recsys. It contains the code for implementing three methods, i.e., RecLM-cgen, RecLM-ret and RecLM-token.
 
 **RecLM-uni** is a generative recommendation framework in the native structure of LLMs. This framework divides the output space of LLMs into item generation and general text generation parts by introducing item control tokens, and simultaneously employs a decoding strategy with prefix tree constraints to prevent the generation of out-of-domain items. RecLM-uni enables LLMs to acquire the ability to recommend products without sacrificing their original general capabilities.
 
@@ -166,7 +166,7 @@ The embeddings should be saved as a numpy array with shape `(num_items, hidden_d
 
 ### 4.2. Step 2: Train RQ-VAE Model
 
-Train the Residual Quantized Variational AutoEncoder(RQ-VAE) to learn item codebook mappings using the `index/` module from RecLM-LC1 or RecLM-cgen:
+Train the Residual Quantized Variational AutoEncoder(RQ-VAE) to learn item codebook mappings using the `index/` module from RecLM-uni or RecLM-cgen:
 
 ```bash
 cd index

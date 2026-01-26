@@ -1,15 +1,14 @@
 import argparse
 import random
 import torch
-import numpy as np
-from time import time
 import logging
 
+import numpy as np
 from torch.utils.data import DataLoader
 
-from datasets import EmbDataset
-from models.rqvae import RQVAE
-from trainer import  Trainer
+from index.datasets import EmbDataset
+from index.models.rqvae import RQVAE
+from index.trainer import  Trainer
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Index")

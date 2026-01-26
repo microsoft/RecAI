@@ -1,4 +1,3 @@
-
 MODEL_PATH="meta-llama/Meta-Llama-3-8B-Instruct"
 OUTPUT_PATH="./snap/.../"
 LORA_PATH="${OUTPUT_PATH}Epoch20_SFT"

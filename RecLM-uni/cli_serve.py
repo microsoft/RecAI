@@ -1,13 +1,14 @@
 import argparse
 import html
-import os.path
+import os
+import torch
 
 import gradio as gr
-import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor, Trie_link
 from train_utils.utils import load_json
+
 
 domains = ["steam", "movies", "toys"]
 system_message = {

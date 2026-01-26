@@ -1,10 +1,9 @@
 import argparse
-import copy
 import json
 import os
-from concurrent.futures import ProcessPoolExecutor
-
 import torch
+
+from concurrent.futures import ProcessPoolExecutor
 from Levenshtein import distance
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -12,7 +11,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from train_utils.dataset import Test_task_group_mapping, SFTDataset
 from train_utils.processor import FastPrefixConstrainedLogitsProcessor
 from train_utils.metrics import Metrics
-from train_utils.utils import save_json, get_ctrl_item, rm_idx, load_json, load_pickle, side_tokenizer, process_train_sample
+from train_utils.utils import save_json, get_ctrl_item, rm_idx, load_json, side_tokenizer, process_train_sample
 
 
 @torch.no_grad()

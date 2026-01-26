@@ -1,20 +1,15 @@
-import collections
-import json
-import logging
 import argparse
+import collections
+import os
+import json
+import torch
 
 import numpy as np
-import torch
-from time import time
-from torch import optim
 from tqdm import tqdm
-
 from torch.utils.data import DataLoader
 
-from datasets import EmbDataset
-from models.rqvae import RQVAE
-
-import os
+from index.datasets import EmbDataset
+from index.models.rqvae import RQVAE
 
 def check_collision(all_indices_str):
     tot_item = len(all_indices_str)
