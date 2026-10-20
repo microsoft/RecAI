@@ -1,5 +1,20 @@
 # Test Examples
 
+The web integration tests run without model weights, catalog downloads, API keys
+or third-party packages:
+
+```bash
+cd InteRecAgent
+python -m unittest discover -s tests -p test_web_search.py -v
+```
+
+They exercise the production default resolver, plan-first agent and tool
+dispatcher using a scripted model and a small catalog fixture. They check result
+consumption, URLs, JSON/SSE MCP responses, request headers, disabled search,
+explicit configuration, conversation isolation/reset, errors, timeouts and
+interruption. They do not measure an LLM's ability to choose tools or run the
+Gradio application with the full recommendation resources.
+
 Here are some test examples/cases to test our Conversational Recommender System. Those examples are designed with different conditions:
 
 - Intention Only

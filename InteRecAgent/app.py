@@ -20,6 +20,7 @@ from llm4crs.ranking import RecModelTool
 from llm4crs.retrieval import SimilarItemTool, SQLSearchTool
 from llm4crs.query import QueryTool
 from llm4crs.utils import FuncToolWrapper
+from llm4crs.web_search import new_search_session
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default="7891")
@@ -123,6 +124,11 @@ parser.add_argument(
     choices=["concise", "detailed"],
     default="detailed",
     help="Reply style of the assistent. If detailed, details about the recommendation would be give. Otherwise, only item names would be given.",
+)
+
+parser.add_argument(
+    "--web_search", choices=["parallel", "disabled"], default="parallel",
+    help="Web evidence provider for the default direct plan-first agent; disabled prevents web tool requests",
 )
 
 args = parser.parse_args()
@@ -231,6 +237,7 @@ bot = AgentType(
     reflection_limits=args.reflection_limits,  # reflexion
     verbose=True,
     reply_style=args.reply_style,  # only supported for CRSAgentPlanFirstOpenAI
+    web_search=args.web_search,
 )
 
 logger.remove()
@@ -267,6 +274,9 @@ with gr.Blocks(css=css, elem_id="chatbot") as demo:
         elem_id="chatbot", label=f"{domain_map['Item']} RecAgent"
     )
     state = gr.State([])
+    # Gradio calls the factory for each browser session. This is separate from
+    # the shared bot/client and from the MCP transport's session identifier.
+    web_search_session = gr.State(new_search_session)
     with gr.Row(visible=True) as input_raws:
         with gr.Column(scale=4):
             txt = gr.Textbox(
@@ -281,13 +291,15 @@ with gr.Blocks(css=css, elem_id="chatbot") as demo:
     chatbot.value = [default_chat_value]
 
     txt.submit(user, [txt, state], [txt, state, chatbot]).then(
-        bot.run_gr, [state], [chatbot, state]
+        (bot.run_gr if AgentType is CRSAgentPlanFirstOpenAI else lambda s, _: bot.run_gr(s)),
+        [state, web_search_session], [chatbot, state]
     )
     txt.submit(candidate_buffer.clear, [], [])
     txt.submit(lambda: "", None, txt)
 
     send.click(user, [txt, state], [txt, state, chatbot]).then(
-        bot.run_gr, [state], [chatbot, state]
+        (bot.run_gr if AgentType is CRSAgentPlanFirstOpenAI else lambda s, _: bot.run_gr(s)),
+        [state, web_search_session], [chatbot, state]
     )
     send.click(candidate_buffer.clear, [], [])
     send.click(lambda: "", None, txt)
@@ -295,6 +307,7 @@ with gr.Blocks(css=css, elem_id="chatbot") as demo:
     style.change(bot.set_style, [style], None)
 
     clear.click(bot.clear)
+    clear.click(new_search_session, None, web_search_session)
     clear.click(lambda: [default_chat_value], None, chatbot)
     clear.click(lambda: [default_chat_value], None, state)
 

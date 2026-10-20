@@ -146,6 +146,28 @@ InteRecAgent consists of 4 necessary components:
 
     There are several optional features to enhance the agent.
 
+    The default direct plan-first agent (`--plan_first 1 --langchain 0`) also
+    includes web search and page fetching through
+    [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp).
+    Search uses Fast mode with no account or API key required. Ask about current
+    item information missing from the catalog, such as a game's recent updates
+    or official documentation. Web tools return evidence with source URLs;
+    catalog lookup, filtering, ranking and mapping still handle recommendations.
+
+    Web tools are available by default in this agent mode. Use
+    `python app.py --engine gpt-4 --web_search disabled` to disable them entirely.
+    Other agent modes retain their existing tools. The Python API accepts
+    `web_search="disabled"` on `CRSAgentPlanFirstOpenAI`; explicitly supplied web
+    tools are preserved when web search is enabled. No additional package is
+    needed for the web transport on Python 3.9.
+
+    Queries and requested URLs are sent to Parallel. Do not include private
+    data or user profiles. Anonymous usage has rate limits; an optional
+    `PARALLEL_API_KEY` environment variable enables authenticated usage.
+    Requests have a 30-second network timeout, and failures do not switch to
+    another provider. Clear/new chat starts a new search conversation; follow-up
+    searches and page fetches reuse that conversation's opaque ID.
+
     1. History Shortening
 
         - `enable_shorten`: if true, enable shortening chat history by LLM; else use all chat history
