@@ -273,6 +273,22 @@ class WebRuntimeTests(unittest.TestCase):
         self.assertIn(EVIDENCE, agent.run({'input': 'retry'}))
         self.assertEqual(calls(server)[-1]['arguments']['session_id'], identity)
 
+    def test_expired_transport_reconnects_on_next_user_retry(self):
+        client, server = fixture_client()
+        agent, _ = make_agent(client)
+        agent.agent.plan = [plan('Game Web Search Tool', SEARCH)]
+        self.assertIn(EVIDENCE, agent.run({'input': 'updates'}))
+        identity = agent._search_session_id
+        server.error = HTTPError(SEARCH_MCP_URL, 404, 'Session expired', {}, None)
+        self.assertIn('Something went wrong', agent.run({'input': 'followup'}))
+        self.assertFalse(client._initialized)
+        self.assertIsNone(client._transport_session)
+        self.assertEqual(len(calls(server)), 2)  # No automatic replay.
+        server.error = None
+        self.assertIn(EVIDENCE, agent.run({'input': 'retry'}))
+        self.assertEqual([p['method'] for _, _, p in server.requests].count('initialize'), 2)
+        self.assertEqual({p['arguments']['session_id'] for p in calls(server)}, {identity})
+
     def test_sse_tool_error_and_explicit_credentials(self):
         client, server = fixture_client(sse=True)
         client.api_key = 'explicit-test-key'

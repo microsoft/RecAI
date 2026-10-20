@@ -100,6 +100,12 @@ class ParallelSearchClient:
                 else:
                     raise WebSearchError("Unexpected web response content type")
         except HTTPError as exc:
+            if exc.code == 404 and self._transport_session:
+                # Streamable HTTP sessions can expire. Do not replay a failed
+                # tool call; let the next caller retry initialize a transport.
+                # The caller's conversation ID remains unchanged.
+                self._initialized = False
+                self._transport_session = None
             raise WebSearchError("Web service returned HTTP " + str(exc.code)) from exc
         except (URLError, TimeoutError, OSError) as exc:
             raise WebSearchError("Web service is unavailable or timed out") from exc
